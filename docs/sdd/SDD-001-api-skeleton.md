@@ -1,6 +1,6 @@
 # SDD-001 – API skeleton, Postings module, Docker & CI
 
-**Status:** Approved (2026-11-02) · **Week:** 1
+**Status:** Approved (2026-11-02) · Implemented locally (T1–T4), CI pending first push · **Week:** 1
 
 ## Goal
 A running NestJS API with hexagonal structure, PostgreSQL via Prisma, the `postings` module (create/list), Docker and CI.

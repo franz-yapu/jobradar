@@ -35,8 +35,26 @@ remote scope, seniority, English level, contract type and stack match, with a cl
 cp .env.example .env
 docker compose up -d      # postgres, n8n, grafana
 pnpm install
-pnpm dev                  # api + web
+pnpm db:deploy            # apply Prisma migrations to the dev database
+pnpm dev                  # API on http://localhost:3000 (web dashboard arrives in SDD-004)
 ```
+- Swagger UI: <http://localhost:3000/docs> · Health: <http://localhost:3000/health>
+- If a host port is already taken, change `POSTGRES_PORT`, `N8N_PORT` or `GRAFANA_PORT` in `.env`
+  (and the port inside `DATABASE_URL` / `TEST_DATABASE_URL`).
+
+### API (v0.1)
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/postings` | Create a posting. `201`, `400` invalid body, `409` URL already exists (tracking params and fragments are ignored) |
+| `GET` | `/postings?source=&q=&page=1&pageSize=20` | Paginated list, newest first. `q` matches title, company and description |
+| `GET` | `/health` | `200` with DB status, `503` if the database is down |
+
+### Quality
+```bash
+pnpm quality              # lint + typecheck + test (needs Postgres running)
+```
+Integration tests use `TEST_DATABASE_URL` (falls back to `DATABASE_URL`), apply migrations themselves and **delete data** in that database,
+so point it at a throwaway database such as `jobradar_test` (created by `docker compose`).
 
 ## Project structure
 ```
@@ -53,7 +71,7 @@ Spec-Driven Development with AI coding agents: every ticket has a design doc (`d
 architecture decisions live in `docs/adr/`, and Claude Code follows the rules and skills in `.claude/`.
 
 ## Roadmap
-- [ ] Week 1 – API skeleton, hexagonal structure, Postgres, Docker, CI
+- [x] Week 1 – API skeleton, hexagonal structure, Postgres, Docker, CI
 - [ ] Week 2 – AI scoring agent + tests + prompt evals
 - [ ] Week 3 – n8n workflows (collect postings, notify)
 - [ ] Week 4 – Dashboard, AWS deploy with Terraform, Grafana, live demo
