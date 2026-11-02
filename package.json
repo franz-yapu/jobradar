@@ -10,7 +10,9 @@
     "test": "pnpm -r --if-present test",
     "lint": "eslint .",
     "typecheck": "pnpm -r --if-present typecheck",
-    "quality": "pnpm lint && pnpm typecheck && pnpm test"
+    "quality": "pnpm lint && pnpm typecheck && pnpm test",
+    "db:deploy": "pnpm --filter @jobradar/api db:deploy",
+    "db:migrate": "pnpm --filter @jobradar/api db:migrate"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
