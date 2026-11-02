@@ -5,17 +5,19 @@ services:
       POSTGRES_USER: jobradar
       POSTGRES_PASSWORD: jobradar
       POSTGRES_DB: jobradar
-    ports: ["5432:5432"]
-    volumes: [pgdata:/var/lib/postgresql/data]
+    ports: ["${POSTGRES_PORT:-5432}:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
   n8n:
     image: n8nio/n8n:latest
-    ports: ["5678:5678"]
+    ports: ["${N8N_PORT:-5678}:5678"]
     environment:
       N8N_HOST: localhost
       WEBHOOK_URL: http://localhost:5678/
     volumes: [n8ndata:/home/node/.n8n]
   grafana:
     image: grafana/grafana:latest
-    ports: ["3001:3000"]
+    ports: ["${GRAFANA_PORT:-3001}:3000"]
     volumes: [grafanadata:/var/lib/grafana]
 volumes: { pgdata: {}, n8ndata: {}, grafanadata: {} }
