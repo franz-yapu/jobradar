@@ -1,0 +1,70 @@
+import { Body, ConflictException, Controller, Get, HttpCode, Inject, Post, Query } from "@nestjs/common";
+import {
+  ApiBadRequestResponse,
+  ApiBody,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from "@nestjs/swagger";
+import {
+  CreatePostingSchema,
+  ListPostingsQuerySchema,
+  PaginatedPostingsSchema,
+  PostingSchema,
+  type CreatePostingBody,
+  type ListPostingsQuery,
+  type PaginatedPostingsResponse,
+  type PostingResponse,
+} from "@jobradar/shared";
+import { ZodValidationPipe } from "../../shared/infrastructure/zod-validation.pipe.js";
+import { toSwaggerSchema } from "../../shared/infrastructure/swagger-schema.js";
+import { CreatePosting } from "../application/create-posting.use-case.js";
+import { ListPostings } from "../application/list-postings.use-case.js";
+import { DuplicatePostingError } from "../domain/posting.repository.js";
+import { toPostingResponse } from "./postings.presenter.js";
+
+@ApiTags("postings")
+@Controller("postings")
+export class PostingsController {
+  constructor(
+    @Inject(CreatePosting) private readonly createPosting: CreatePosting,
+    @Inject(ListPostings) private readonly listPostings: ListPostings,
+  ) {}
+
+  @Post()
+  @HttpCode(201)
+  @ApiBody({ schema: toSwaggerSchema(CreatePostingSchema, "input") })
+  @ApiCreatedResponse({ schema: toSwaggerSchema(PostingSchema) })
+  @ApiBadRequestResponse({ description: "Invalid body" })
+  @ApiConflictResponse({ description: "A posting with the same (normalized) URL already exists" })
+  async create(
+    @Body(new ZodValidationPipe(CreatePostingSchema)) body: CreatePostingBody,
+  ): Promise<PostingResponse> {
+    try {
+      const posting = await this.createPosting.execute({
+        ...body,
+        publishedAt: body.publishedAt ? new Date(body.publishedAt) : undefined,
+      });
+      return toPostingResponse(posting);
+    } catch (error) {
+      if (error instanceof DuplicatePostingError) throw new ConflictException(error.message);
+      throw error;
+    }
+  }
+
+  @Get()
+  @ApiQuery({ name: "source", required: false })
+  @ApiQuery({ name: "q", required: false, description: "Matches title, company or description" })
+  @ApiQuery({ name: "page", required: false, schema: { type: "integer", minimum: 1, default: 1 } })
+  @ApiQuery({ name: "pageSize", required: false, schema: { type: "integer", minimum: 1, maximum: 100, default: 20 } })
+  @ApiOkResponse({ schema: toSwaggerSchema(PaginatedPostingsSchema) })
+  @ApiBadRequestResponse({ description: "Invalid query" })
+  async list(
+    @Query(new ZodValidationPipe(ListPostingsQuerySchema)) query: ListPostingsQuery,
+  ): Promise<PaginatedPostingsResponse> {
+    const result = await this.listPostings.execute(query);
+    return { ...result, items: result.items.map(toPostingResponse) };
+  }
+}

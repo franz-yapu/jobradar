@@ -12,6 +12,7 @@ const databaseUrl = process.env["TEST_DATABASE_URL"] ?? process.env["DATABASE_UR
 export default defineConfig({
   test: {
     env: { DATABASE_URL: databaseUrl },
+    globalSetup: ["./test/global-setup.ts"],
     include: ["src/**/*.test.ts", "test/**/*.test.ts"],
   },
 });
