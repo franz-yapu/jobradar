@@ -6,3 +6,28 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum RemoteScope {
+  worldwide
+  latam
+  country
+  onsite
+  unknown
+}
+
+model Posting {
+  id          String      @id @default(uuid()) @db.Uuid
+  title       String
+  company     String
+  url         String      @unique
+  source      String
+  location    String?
+  remoteScope RemoteScope
+  description String
+  publishedAt DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@index([source])
+  @@index([createdAt])
+  @@map("postings")
+}
