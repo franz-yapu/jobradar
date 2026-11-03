@@ -4,7 +4,7 @@ import type { Posting } from "../../postings/domain/posting.js";
 import { BLOCKER_TYPES, VERDICTS } from "../domain/posting-score.js";
 
 /** Bump on every change to the instructions below; stored with each score. */
-export const SCORING_PROMPT_VERSION = "score-v2";
+export const SCORING_PROMPT_VERSION = "score-v3";
 
 /** Closed schema for the model's answer. */
 export const ScoringOutputSchema = z.object({
@@ -41,13 +41,16 @@ export function buildScoringSystem(profile: CandidateProfile): string {
     "- english: the posting requires a higher English level than the candidate's maximum.",
     "- seniority: the posting targets a clearly different seniority.",
     "- contract: the contract type is in the candidate's excluded list.",
-    "- stack: the core required technologies do not overlap with the candidate's stack.",
+    "- stack: the CORE technology of the role has no overlap with the candidate's stack (e.g. an iOS, Java/Oracle",
+    "  or machine learning role for a TypeScript developer). A missing secondary tool (Docker, CI, a cloud",
+    "  service, a nice-to-have language) is never a blocker: mention it in `reasons`.",
     "- other: any other hard incompatibility.",
     "Each blocker needs `evidence`: a short quote or paraphrase from the posting.",
     "Do not invent blockers from missing information. When something decisive is missing or unclear",
     "(location/remote scope not stated, English level not stated, seniority range or partly different stack,",
     "extra duties such as heavy DevOps), answer `maybe` and say what is missing in `reasons`.",
     "Use `fit` only when location, seniority, contract and stack are all clearly compatible.",
+    "Always include all three keys: `verdict`, `reasons` and `blockers` (use [] when there are none).",
     "`reasons` always has at least one short, concrete sentence in the language of the posting,",
     "also for `fit`.",
     "",
