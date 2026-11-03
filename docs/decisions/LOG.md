@@ -50,3 +50,9 @@
 - **Why:** the first three runs (table above) used a generic stand-in (TypeScript/NestJS/React/PostgreSQL/AWS), not the real stack (Angular first, Fastify/NestJS + Prisma + PostgreSQL, AWS only conceptual, English B1-B2 modelled as B2).
 - **Consequence:** the v1-v3 numbers belong to the generic profile and are not comparable one-to-one with future runs. The 32 labels were kept as they are on the owner's instruction; the next run is the baseline for `franz.json`.
 - **Open:** CV says English B1-B2; try `B1` in the profile to see which fit labels depend on it.
+
+## 2026-11-03 – Eval baseline with the owner's profile (`franz.json`, score-v3, Groq retry on)
+- **Result:** accuracy 84.4% (27/32), blocker recall 100%, unsafe fits 0, 0 errors (the retry removed the missing-`blockers` failures), 0.0061 USD per run, mean 1.3 s. Same accuracy as the generic profile, so thresholds are still NOT met by one case.
+- **Misses:** `fit-es-backend-aws-servicios` answered `reject` (stack blocker on SQS/Lambda; AWS is only conceptual in the CV, so the `fit` label is itself debatable with this profile) and four `maybe` labels answered `fit`. Labels were left untouched on the owner's instruction.
+- **Reading:** `gpt-oss-20b` almost never answers `maybe`; recall and safety are solid, the middle class is where it is weak. 32 cases and one-case swings (3.1 points) make 84.4% vs 85% statistically indistinguishable.
+- **Next:** run on the production model (`claude-sonnet-5-5`, needs `ANTHROPIC_API_KEY`); optionally `gpt-oss-120b` first. Owner to decide whether `fit-es-backend-aws-servicios` should be `fit` or `maybe` given AWS is conceptual.
