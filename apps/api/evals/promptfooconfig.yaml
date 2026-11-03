@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: JobRadar posting scoring (SDD-002 T4)
+
+# The provider builds the real prompt from the vars; this string only labels each row.
+prompts:
+  - "Score the posting: {{posting.title}}"
+
+providers:
+  - file://provider.ts
+
+defaultTest:
+  vars:
+    profile:
+      stack: [TypeScript, NestJS, Node.js, React, PostgreSQL, AWS]
+      seniority: senior
+      allowedLocations: [BO, latam, worldwide]
+      maxEnglishLevel: B2
+      excludedContractTypes: [temporary, internship, part_time]
+      summary: Senior full stack developer based in Bolivia, 6 years building TypeScript backends and React frontends.
+
+tests:
+  - file://dataset/synthetic.yaml
+  - file://dataset/real.yaml
+
+# Evals are not cached on purpose: each run measures the current model and prompt.
+evaluateOptions:
+  maxConcurrency: 4
+  cache: false

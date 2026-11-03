@@ -1,0 +1,4 @@
+# Anonymized real postings go here (same format as synthetic.yaml, origin: real).
+# Remove company names, URLs, emails and recruiter names before committing.
+# Label expectedVerdict/expectedBlockers yourself: the model must agree with YOU, not the other way round.
+[]

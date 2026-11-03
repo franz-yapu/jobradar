@@ -15,6 +15,6 @@ export default defineConfig({
     globalSetup: ["./test/global-setup.ts"],
     // Integration tests share one database and wipe tables, so files must not run concurrently.
     fileParallelism: false,
-    include: ["src/**/*.test.ts", "test/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "test/**/*.test.ts", "evals/**/*.test.ts"],
   },
 });
