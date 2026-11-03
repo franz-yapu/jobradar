@@ -102,7 +102,7 @@ architecture decisions live in `docs/adr/`, and Claude Code follows the rules an
 ## Roadmap
 - [x] Week 1 – API skeleton, hexagonal structure, Postgres, Docker, CI
 - [ ] Week 2 – AI scoring agent + tests + prompt evals (scoring and eval harness done; thresholds pending on Claude, see `docs/decisions/LOG.md`)
-- [ ] Week 3 – n8n workflows (collect postings, notify)
+- [x] Week 3 – n8n workflows: collect + score Get on Board postings, daily Telegram summary (`n8n/workflows/README.md`; the live Telegram send needs your bot, see its setup steps)
 - [ ] Week 4 – Dashboard, AWS deploy with Terraform, Grafana, live demo
 
 ## Author

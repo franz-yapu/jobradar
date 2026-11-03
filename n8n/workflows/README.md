@@ -7,6 +7,8 @@ Exported workflows (SDD-003). n8n is pinned in `docker-compose.yml` (`2.40.5`); 
 |---|---|---|
 | `01-collect-getonboard.json` | every 6 h, or manually | Reads up to 5 pages (100 each) of the Get on Board public API (programming category), keeps jobs published in the last 48 h, maps them (`../code/map-job.js`), `POST /postings` (`409` = already known) and scores the **new** ones with `POST /postings/:id/score`: at most 20 per run, stopping at the first `429` (daily AI budget spent). Ends with a run report (`Summary` node). |
 
+| `02-daily-summary-telegram.json` | every day 08:00 (La Paz), or manually | Reads the postings stored in the last 24 h (`GET /postings?createdSince=`, up to 300) and sends one Telegram message: counts per verdict, the ✅ list (title, company, first reason, link; up to 10), plus how many ⚠️ and unscored. No new postings → a short "none" message. If the API does not answer the run **fails** (visible in n8n) instead of sending a misleading message. Formatter: `../code/build-summary.js`. |
+
 ## Run it locally
 ```bash
 pnpm dev                                   # the API on :3000 (with a configured AI provider and a saved profile)
@@ -21,8 +23,18 @@ docker compose exec -e N8N_RUNNERS_BROKER_PORT=5690 n8n n8n execute --id=jobrada
 The workflow reaches the API through `$env.JOBRADAR_API_URL` (default `http://host.docker.internal:3000`, see `.env.example`).
 Never put tokens or keys in a workflow: use n8n credentials.
 
+## Telegram setup (workflow 2, once)
+1. In Telegram, talk to `@BotFather`, send `/newbot` and keep the **token** it gives you (a secret: never commit it or paste it in chat).
+2. Send any message to your new bot, then find your chat id in your own terminal:
+   `curl -s "https://api.telegram.org/bot<TOKEN>/getUpdates"` → `message.chat.id`.
+3. Put it in `.env` as `TELEGRAM_CHAT_ID=<id>` and recreate n8n: `docker compose up -d n8n`.
+4. In the n8n editor: *Credentials → New → Telegram API*, paste the token, name it `JobRadar Telegram bot`.
+   Open workflow 2, pick that credential in the *Send to Telegram* node and press *Execute workflow*.
+5. When both workflows work, switch them to *Active* so the schedules run (n8n must stay up).
+
 ## Notes
 - Get on Board's list is not sorted by date, so every run reads all 5 pages and filters by `published_at`.
 - Re-running is safe: URLs are deduplicated by the API, and only postings created in the run are scored.
 - Postings beyond the 20-per-run cap (or after a `429`) stay unscored; list them with `GET /postings?verdict=unscored`.
 - `../fixtures/getonboard-jobs.json` is a trimmed real response used by the mapper tests.
+- The summary text is in Spanish (the owner's language); change the strings in `../code/build-summary.js` and the embedded copy together (a test fails if they drift).

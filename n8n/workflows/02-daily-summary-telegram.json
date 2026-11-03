@@ -1,0 +1,184 @@
+{
+  "id": "jobradarSummary1",
+  "name": "JobRadar - 2 Daily summary to Telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "39e52c72-0c13-534d-99e1-9ccfe726e145",
+      "name": "Every day at 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "102df893-0d03-51d3-aa83-7e3c364f32d2",
+      "name": "Run manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Postings stored in the last 24 h: up to 3 pages of 100, newest first.\nconst WINDOW_HOURS = 24;\nconst since = new Date(Date.now() - WINDOW_HOURS * 3600 * 1000).toISOString();\nreturn [1, 2, 3].map((page) => ({ json: { page, since, windowHours: WINDOW_HOURS } }));\n"
+      },
+      "id": "3b72cd28-8e70-55c7-a843-a70b2a537234",
+      "name": "Window and pages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.JOBRADAR_API_URL }}/postings",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "createdSince",
+              "value": "={{ $json.since }}"
+            },
+            {
+              "name": "page",
+              "value": "={{ $json.page }}"
+            },
+            {
+              "name": "pageSize",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "c1501d39-2922-5ab6-a187-8420f50c810a",
+      "name": "Fetch recent postings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        100
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/*\n * Daily Telegram summary text from `GET /postings?createdSince=...` items (SDD-003).\n * Pure functions, no imports: embedded verbatim at the top of the \"Build summary\" Code node of\n * n8n/workflows/02-daily-summary-telegram.json (a test keeps both in sync) and unit-tested.\n * Plain text on purpose (no Telegram parse mode, so titles never need escaping).\n */\nconst MAX_FITS = 10; // fits listed in the message\nconst MAX_MESSAGE = 4000; // Telegram's limit is 4096 characters\nconst MAX_REASON = 160;\n\nfunction shorten(text, max) {\n  const clean = String(text || \"\").replace(/\\s+/g, \" \").trim();\n  return clean.length > max ? `${clean.slice(0, max - 1)}…` : clean;\n}\n\nfunction countByVerdict(items) {\n  const counts = { fit: 0, maybe: 0, reject: 0, unscored: 0 };\n  for (const item of items) counts[item.latestScore ? item.latestScore.verdict : \"unscored\"] += 1;\n  return counts;\n}\n\nfunction dateLabel(now) {\n  // en-GB: always dd/mm, whatever the ICU data of the host.\n  return now.toLocaleDateString(\"en-GB\", { timeZone: \"America/La_Paz\", day: \"2-digit\", month: \"2-digit\" });\n}\n\n/**\n * @param items   postings, newest first, each with `latestScore` (or null)\n * @param options { now: Date, windowHours: number, total?: number } `total` = how many the API reports in the window\n */\nfunction buildSummary(items, options) {\n  const { now, windowHours } = options;\n  const total = Math.max(options.total || 0, items.length);\n  const header = `JobRadar · resumen del ${dateLabel(now)}`;\n  if (total === 0) return `${header}\\nSin ofertas nuevas en las últimas ${windowHours} h.`;\n\n  const counts = countByVerdict(items);\n  const lines = [\n    `${header} (últimas ${windowHours} h)`,\n    `Ofertas nuevas: ${total}${total > items.length ? ` (resumen de las ${items.length} más recientes)` : \"\"}`,\n    `✅ ${counts.fit} · ⚠️ ${counts.maybe} · ❌ ${counts.reject} · ⏳ sin evaluar ${counts.unscored}`,\n  ];\n\n  const fits = items.filter((item) => item.latestScore && item.latestScore.verdict === \"fit\");\n  const footer = [];\n  if (counts.maybe > 0) footer.push(`⚠️ ${counts.maybe} para revisar a mano.`);\n  if (counts.unscored > 0) footer.push(`⏳ ${counts.unscored} sin evaluar (tope por corrida o presupuesto diario agotado).`);\n\n  const listed = [];\n  let omitted = 0;\n  fits.forEach((item, index) => {\n    const reason = item.latestScore.reasons && item.latestScore.reasons[0];\n    const entry = [`${index + 1}. ${shorten(item.title, 120)} — ${shorten(item.company, 60)}`];\n    if (reason) entry.push(`   ${shorten(reason, MAX_REASON)}`);\n    entry.push(`   ${item.url}`);\n    const candidate = [...lines, \"\", \"✅ Para revisar ahora:\", ...listed, ...entry, ...footer].join(\"\\n\");\n    if (index < MAX_FITS && candidate.length <= MAX_MESSAGE) listed.push(...entry);\n    else omitted += 1;\n  });\n\n  const out = [...lines];\n  if (listed.length > 0) out.push(\"\", \"✅ Para revisar ahora:\", ...listed);\n  if (omitted > 0) out.push(`… y ${omitted} ✅ más (GET /postings?verdict=fit).`);\n  out.push(...footer);\n  return out.join(\"\\n\");\n}\n\nif (typeof module !== \"undefined\" && module.exports) {\n  module.exports = { buildSummary, countByVerdict, MAX_FITS, MAX_MESSAGE };\n}\n\n\n// ---- n8n entry point: everything above is the tested formatter (n8n/code/build-summary.js) ----\nconst pages = $input\n  .all()\n  .map((item) => item.json)\n  .filter((json) => Array.isArray(json.items));\nif (pages.length === 0) throw new Error(\"The JobRadar API did not answer: cannot build the daily summary\");\nconst byId = new Map(pages.flatMap((json) => json.items).map((posting) => [posting.id, posting]));\nconst total = Math.max(...pages.map((json) => json.total || 0));\nconst windowHours = $(\"Window and pages\").first().json.windowHours;\nreturn [{ json: { text: buildSummary([...byId.values()], { now: new Date(), windowHours, total }) } }];\n"
+      },
+      "id": "f543e4dd-6f50-5817-93e2-4fe5428da6e1",
+      "name": "Build summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "f83c510c-bb36-56cc-84bd-337a5c3df55c",
+      "name": "Send to Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        960,
+        100
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "jobradarTelegram",
+          "name": "JobRadar Telegram bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every day at 08:00": {
+      "main": [
+        [
+          {
+            "node": "Window and pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run manually": {
+      "main": [
+        [
+          {
+            "node": "Window and pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window and pages": {
+      "main": [
+        [
+          {
+            "node": "Fetch recent postings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch recent postings": {
+      "main": [
+        [
+          {
+            "node": "Build summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build summary": {
+      "main": [
+        [
+          {
+            "node": "Send to Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/La_Paz"
+  },
+  "pinData": {}
+}

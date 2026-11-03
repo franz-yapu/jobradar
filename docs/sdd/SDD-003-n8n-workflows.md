@@ -1,6 +1,6 @@
 # SDD-003 – n8n workflows: collect postings and daily Telegram summary
 
-**Status:** Approved (2026-11-03) · **Week:** 3 · **Depends on:** SDD-001, SDD-002
+**Status:** Implemented (2026-11-03; live Telegram send pending the owner's bot) · Approved (2026-11-03) · **Week:** 3 · **Depends on:** SDD-001, SDD-002
 
 ## Context
 Postings only enter by hand and nothing triggers scoring or tells the candidate what was found. PRD features 1 (ingest from n8n) and 6 (daily notification) are covered here. The ticket said "RSS from Get on Board"; no RSS was found, but Get on Board has an official **public API** (no login). Verified with real requests on 2026-11-03: `GET https://www.getonbrd.com/api/v0/categories/programming/jobs?per_page=N&page=P&expand=["company"]` → `{ data: [job], meta: { page, per_page, total_pages } }`. The technical reference (`api-doc.getonbrd.com`) could not be read, so rate limits and terms of use are **not confirmed** (see Risks).

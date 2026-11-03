@@ -127,3 +127,42 @@ describe("01-collect-getonboard.json", () => {
     expect(params).toContain("expand");
   });
 });
+
+describe("02-daily-summary-telegram.json", () => {
+  const wf = load("02-daily-summary-telegram.json");
+  const node = (name: string) => {
+    const found = wf.nodes.find((n) => n.name === name);
+    if (!found) throw new Error(`node ${name} not found`);
+    return found;
+  };
+
+  it("embeds the tested formatter verbatim at the top of the Build summary node", () => {
+    const formatter = readFileSync(new URL("code/build-summary.js", root), "utf8");
+    expect(node("Build summary").parameters.jsCode?.startsWith(formatter)).toBe(true);
+  });
+
+  it("runs every day at 08:00 La Paz time and can also be started manually", () => {
+    const params = JSON.stringify(node("Every day at 08:00").parameters);
+    expect(params).toContain('"daysInterval":1');
+    expect(params).toContain('"triggerAtHour":8');
+    expect(JSON.stringify(wf)).toContain('"timezone":"America/La_Paz"');
+    expect(wf.connections["Run manually"]).toBeDefined();
+  });
+
+  it("reads the last 24 h with createdSince and sends to a chat id taken from the environment", () => {
+    expect(JSON.stringify(node("Fetch recent postings").parameters)).toContain("createdSince");
+    const send = node("Send to Telegram").parameters;
+    expect(send["chatId"]).toBe("={{ $env.TELEGRAM_CHAT_ID }}");
+    expect(send["text"]).toBe("={{ $json.text }}");
+  });
+
+  it("references the Telegram credential by name only (the token lives in n8n)", () => {
+    const credentials = (node("Send to Telegram") as unknown as { credentials: Record<string, Record<string, string>> }).credentials;
+    expect(Object.keys(credentials)).toEqual(["telegramApi"]);
+    expect(Object.keys(credentials["telegramApi"] ?? {}).sort()).toEqual(["id", "name"]);
+  });
+
+  it("fails loudly instead of claiming 'no postings' when the API did not answer", () => {
+    expect(node("Build summary").parameters.jsCode).toContain("did not answer");
+  });
+});
