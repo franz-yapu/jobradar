@@ -3,6 +3,9 @@
  * verdict invariant) for one labelled posting. Model comes from AI_MODEL, key from ANTHROPIC_API_KEY.
  * Cost: every call is billed. Run only with explicit approval (`pnpm --filter @jobradar/api eval`).
  */
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { SaveProfileSchema } from "@jobradar/shared";
 import { AiError, AiNotConfiguredError } from "../src/ai/domain/ai-provider.js";
 import { createAiProvider } from "../src/ai/infrastructure/create-ai-provider.js";
 import { loadEnv } from "../src/config/env.js";
@@ -16,7 +19,8 @@ import type { CandidateProfileData } from "../src/profile/domain/candidate-profi
 import type { Posting, RemoteScope } from "../src/postings/domain/posting.js";
 
 interface CaseVars {
-  profile: CandidateProfileData;
+  /** Object, JSON text or a path/`file://` to a JSON file; validated here like PUT /profile. */
+  profile: CandidateProfileData | string;
   posting: { title: string; company: string; location?: string; remoteScope: RemoteScope; description: string };
 }
 
@@ -33,13 +37,30 @@ interface ProviderResponse {
   metadata?: Record<string, unknown>;
 }
 
+function resolveProfile(profile: CaseVars["profile"]): CandidateProfileData {
+  let raw: unknown = profile;
+  if (typeof profile === "string") {
+    const text = profile.trimStart().startsWith("{")
+      ? profile // promptfoo inlines the content of a file:// JSON var as text
+      : readFileSync(profile.startsWith("file://") ? fileURLToPath(profile) : profile, "utf8");
+    raw = JSON.parse(text);
+  }
+  return SaveProfileSchema.parse(raw);
+}
+
 export default class ScoringEvalProvider {
   id(): string {
     return "jobradar-scoring";
   }
 
   async callApi(_prompt: string, context: CallContext): Promise<ProviderResponse> {
-    const { profile, posting } = context.vars as unknown as CaseVars;
+    const { posting, ...vars } = context.vars as unknown as CaseVars;
+    let profile: CandidateProfileData;
+    try {
+      profile = resolveProfile(vars.profile);
+    } catch (error) {
+      return { error: `Invalid eval profile: ${error instanceof Error ? error.message : String(error)}` };
+    }
     const ai = createAiProvider(loadEnv());
     const now = new Date();
     const startedAt = Date.now();

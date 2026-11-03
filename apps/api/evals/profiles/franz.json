@@ -1,0 +1,31 @@
+{
+  "stack": [
+    "TypeScript",
+    "Angular",
+    "Node.js",
+    "NestJS",
+    "Fastify",
+    "Prisma",
+    "PostgreSQL",
+    "RxJS",
+    "NGRX",
+    "Tailwind CSS",
+    "React",
+    "Next.js",
+    "Docker",
+    "Redis"
+  ],
+  "seniority": "senior",
+  "allowedLocations": [
+    "BO",
+    "latam",
+    "worldwide"
+  ],
+  "maxEnglishLevel": "B2",
+  "excludedContractTypes": [
+    "temporary",
+    "internship",
+    "part_time"
+  ],
+  "summary": "Full stack developer with 7+ years and 30+ production web projects, based in Bolivia and working remotely for a company in Panama. Main stack is TypeScript end to end: Angular (v9 to v19) with NGRX, RxJS, PrimeNG and Tailwind on the frontend; Node.js with Fastify or NestJS and Prisma over PostgreSQL on the backend. Recent React 19 and Next.js work. Independent contractor (freelance contracts are fine). AWS only at a conceptual level. English B1-B2 per CV; the profile uses B2, the optimistic reading. AI-assisted development and Anthropic SDK integration."
+}

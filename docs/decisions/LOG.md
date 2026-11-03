@@ -44,3 +44,9 @@
 - **What the evals found:** v1 never defined `allowedLocations`, so `worldwide` was read as "can work anywhere" and US-only / on-site Madrid / EU-only postings got `fit` (fixed in v2). v2 blocked a role for a missing secondary tool (Docker; fixed in v3). The small model sometimes omits the `blockers` key (1 error per run, different case each time).
 - **Open:** (1) 3 `maybe` cases (`mid-senior-range`, `heavy-devops`, `exceptional-remote`) are debatable labels; the owner should confirm them, labels are not tuned to the model. (2) Re-run on the production model (needs `ANTHROPIC_API_KEY`) before closing SDD-002; consider `gpt-oss-120b` meanwhile. (3) ~~Retry once on a schema mismatch~~: done in `GroqAiProvider` (both attempts are billed and logged as one call; truncation, HTTP and network errors are not retried). (4) Add ~10 real anonymized postings.
 - **Run notes:** a full run takes ~6.5 min because of Groq rate limits; one call took 62 s.
+
+## 2026-11-03 – Eval profile is now a selectable file, set to the owner's real stack
+- **Decision:** the eval profile moved from an inline block to `apps/api/evals/profiles/*.json` (default `franz.json`, built from the owner's CV; alternative `example.json`). The provider validates it with `SaveProfileSchema`, like `PUT /profile`.
+- **Why:** the first three runs (table above) used a generic stand-in (TypeScript/NestJS/React/PostgreSQL/AWS), not the real stack (Angular first, Fastify/NestJS + Prisma + PostgreSQL, AWS only conceptual, English B1-B2 modelled as B2).
+- **Consequence:** the v1-v3 numbers belong to the generic profile and are not comparable one-to-one with future runs. The 32 labels were kept as they are on the owner's instruction; the next run is the baseline for `franz.json`.
+- **Open:** CV says English B1-B2; try `B1` in the profile to see which fit labels depend on it.

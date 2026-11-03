@@ -1,0 +1,23 @@
+{
+  "stack": [
+    "TypeScript",
+    "NestJS",
+    "Node.js",
+    "React",
+    "PostgreSQL",
+    "AWS"
+  ],
+  "seniority": "senior",
+  "allowedLocations": [
+    "BO",
+    "latam",
+    "worldwide"
+  ],
+  "maxEnglishLevel": "B2",
+  "excludedContractTypes": [
+    "temporary",
+    "internship",
+    "part_time"
+  ],
+  "summary": "Senior full stack developer based in Bolivia, 6 years building TypeScript backends and React frontends."
+}

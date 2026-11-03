@@ -71,6 +71,10 @@ ones to `dataset/real.yaml`) and a [promptfoo](https://promptfoo.dev) config tha
 pnpm --filter @jobradar/api eval         # CALLS THE PAID API (~0.006 USD with a small model): 32 postings
 pnpm --filter @jobradar/api eval:check   # re-print metrics from evals/results/latest.json
 ```
+The candidate profile the evals score against lives in `apps/api/evals/profiles/*.json` (same fields and validation as `PUT /profile`).
+`franz.json` is the default; to change criteria edit it, switch `defaultTest.vars.profile` in `evals/promptfooconfig.yaml` to
+`file://profiles/example.json`, or add your own file. The labels in `dataset/` assume a senior TypeScript/Node profile with remote work from Bolivia.
+
 Thresholds (exit code 1 if missed): verdict accuracy ≥ 85%, hard-blocker recall ≥ 90%, **0** `fit` on postings labelled `reject`.
 Cost and latency are reported. Evals are not part of `pnpm quality` or CI. Results are stored in `docs/decisions/LOG.md`.
 
