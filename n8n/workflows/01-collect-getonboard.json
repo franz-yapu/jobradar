@@ -1,0 +1,368 @@
+{
+  "id": "jobradarCollect1",
+  "name": "JobRadar - 1 Collect Get on Board postings",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "79a98e58-48c6-50b6-9532-33a80bbb385a",
+      "name": "Every 6 hours",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "d63eb89b-364a-5496-aa4e-f7a99d8cb044",
+      "name": "Run manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get on Board does not sort by date: read up to 5 pages of 100 and keep the recent ones.\nreturn [1, 2, 3, 4, 5].map((page) => ({ json: { page } }));\n"
+      },
+      "id": "fe812e51-48e7-50f5-98f8-041ea85ce923",
+      "name": "Pages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.getonbrd.com/api/v0/categories/programming/jobs",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "per_page",
+              "value": "100"
+            },
+            {
+              "name": "page",
+              "value": "={{ $json.page }}"
+            },
+            {
+              "name": "expand",
+              "value": "[\"company\"]"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "jobradar-n8n (personal project)"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 1000
+            }
+          }
+        }
+      },
+      "id": "f4142765-d465-54bd-b7a0-08eb51015c14",
+      "name": "Fetch Get on Board page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        100
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/*\n * Get on Board job -> JobRadar `POST /postings` body (SDD-003).\n * Pure functions, no imports: this file is embedded verbatim at the top of the \"Map jobs\" Code node\n * of n8n/workflows/01-collect-getonboard.json (a test keeps both in sync) and is unit-tested with a saved\n * real API response (n8n/fixtures/getonboard-jobs.json).\n */\nconst MAX_DESCRIPTION = 12000; // bounds the AI cost of scoring one posting\nconst MAX_TEXT = 300; // title, company and location limits of CreatePostingSchema\n\n/** HTML (as sent by Get on Board) to readable plain text. Tolerates truncated or malformed markup. */\nfunction htmlToText(html) {\n  if (typeof html !== \"string\") return \"\";\n  return html\n    .replace(/<\\s*(script|style)[^>]*>[\\s\\S]*?<\\s*\\/\\s*\\1\\s*>/gi, \"\")\n    .replace(/<\\s*li[^>]*>/gi, \"- \")\n    .replace(/<\\s*\\/\\s*(p|h[1-6])\\s*>/gi, \"\\n\\n\")\n    .replace(/<\\s*br\\s*\\/?\\s*>|<\\s*\\/\\s*(div|li|ul|ol)\\s*>/gi, \"\\n\")\n    .replace(/<[^>]*>/g, \"\")\n    .replace(/<[^>]*$/, \"\")\n    .replace(/&nbsp;/gi, \" \")\n    .replace(/&lt;/gi, \"<\")\n    .replace(/&gt;/gi, \">\")\n    .replace(/&quot;/gi, '\"')\n    .replace(/&#x27;|&#39;|&rsquo;|&lsquo;/gi, \"'\")\n    .replace(/&#(\\d+);/g, (_, code) => String.fromCodePoint(Number(code)))\n    .replace(/&amp;/gi, \"&\")\n    .replace(/[ \\t]+\\n/g, \"\\n\")\n    .replace(/\\n{3,}/g, \"\\n\\n\")\n    .trim();\n}\n\nfunction buildDescription(attributes) {\n  const parts = [];\n  const add = (headline, html) => {\n    const text = htmlToText(html);\n    if (text) parts.push(headline ? `${headline}\\n${text}` : text);\n  };\n  add(null, attributes.projects);\n  add(attributes.functions_headline, attributes.functions);\n  add(attributes.description_headline, attributes.description);\n  add(attributes.desirable_headline, attributes.desirable);\n  add(attributes.benefits_headline, attributes.benefits);\n  return parts.join(\"\\n\\n\").slice(0, MAX_DESCRIPTION);\n}\n\nfunction listedCountries(attributes) {\n  return Array.isArray(attributes.countries)\n    ? attributes.countries.filter((c) => typeof c === \"string\" && c.trim()).map((c) => c.trim())\n    : [];\n}\n\n/**\n * Conservative on purpose: never guesses `worldwide`. When unsure it answers `unknown` and the AI decides from the text.\n * Observed `remote_modality` values: fully_remote, remote_local (remote, but only for residents of the listed\n * country; the country itself is only in ids or free text), hybrid, no_remote.\n */\nfunction remoteScope(attributes) {\n  const modality = attributes.remote_modality;\n  if (modality === \"hybrid\" || modality === \"no_remote\") return \"onsite\";\n\n  const zone = typeof attributes.remote_zone === \"string\" ? attributes.remote_zone.toLowerCase() : \"\";\n  const specific = listedCountries(attributes).filter((c) => c.toLowerCase() !== \"remote\");\n  if (modality === \"remote_local\") return \"country\"; // remote, but only for residents of some country\n  if (modality === \"fully_remote\") {\n    if (/latam|latin/.test(zone)) return \"latam\";\n    if (specific.length === 1) return \"country\";\n  }\n  return \"unknown\";\n}\n\nfunction buildLocation(attributes) {\n  const countries = listedCountries(attributes).join(\", \");\n  const zone = typeof attributes.remote_zone === \"string\" ? attributes.remote_zone.trim() : \"\";\n  let text = zone ? `${countries || \"Remote\"} (${zone})` : countries;\n  // Get on Board only exposes the allowed countries as ids or inside the text: say so, the AI reads the description.\n  if (attributes.remote_modality === \"remote_local\" && (!text || text.toLowerCase() === \"remote\")) {\n    text = \"Remote (restricted to residents of specific countries, see description)\";\n  }\n  return text ? text.slice(0, MAX_TEXT) : undefined;\n}\n\n/** Returns the body for `POST /postings`, or null when the job has no usable title or public URL. */\nfunction mapJob(job) {\n  const attributes = job && job.attributes;\n  const url = job && job.links && job.links.public_url;\n  if (!attributes || typeof attributes.title !== \"string\" || !attributes.title.trim() || typeof url !== \"string\") {\n    return null;\n  }\n  const company = attributes.company && attributes.company.data && attributes.company.data.attributes;\n  const companyName = company && typeof company.name === \"string\" ? company.name.trim() : \"\";\n\n  const posting = {\n    title: attributes.title.trim().slice(0, MAX_TEXT),\n    company: companyName.slice(0, MAX_TEXT) || \"Unknown company\",\n    url,\n    source: \"getonboard\",\n    remoteScope: remoteScope(attributes),\n    description: buildDescription(attributes),\n  };\n  const location = buildLocation(attributes);\n  if (location) posting.location = location;\n  if (Number.isFinite(attributes.published_at)) posting.publishedAt = new Date(attributes.published_at * 1000).toISOString();\n  return posting;\n}\n\n/** True when the job was published within the window (or has no date: the API dedupes by URL anyway). */\nfunction publishedWithin(job, hours, nowMs) {\n  const publishedAt = job && job.attributes && job.attributes.published_at;\n  if (!Number.isFinite(publishedAt)) return true;\n  return nowMs - publishedAt * 1000 <= hours * 3600 * 1000;\n}\n\nif (typeof module !== \"undefined\" && module.exports) {\n  module.exports = { htmlToText, remoteScope, mapJob, publishedWithin, MAX_DESCRIPTION };\n}\n\n\n// ---- n8n entry point: everything above is the tested mapper (n8n/code/map-job.js) ----\nconst WINDOW_HOURS = 48;\nconst nowMs = Date.now();\nconst seen = new Set();\nreturn $input\n  .all()\n  .flatMap((item) => (Array.isArray(item.json.data) ? item.json.data : []))\n  .filter((job) => publishedWithin(job, WINDOW_HOURS, nowMs))\n  .map(mapJob)\n  .filter((posting) => posting !== null && !seen.has(posting.url) && seen.add(posting.url))\n  .map((posting) => ({ json: posting }));\n"
+      },
+      "id": "20da66db-d3e9-50a5-9e7f-df466b0bcb9e",
+      "name": "Map jobs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.JOBRADAR_API_URL }}/postings",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 30000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "58163b99-f73f-5621-be07-4a5f186f500f",
+      "name": "Create posting",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        100
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Only postings created in this run (201) are scored; the cap bounds AI spend per run.\nconst MAX_SCORES_PER_RUN = 20;\nconst created = $input.all().filter((item) => item.json.statusCode === 201);\nreturn created\n  .slice(0, MAX_SCORES_PER_RUN)\n  .map((item) => ({ json: { postingId: item.json.body.id, title: item.json.body.title } }));\n"
+      },
+      "id": "a624c53f-1f9c-541b-ba52-af80bbc1d58d",
+      "name": "Pick new postings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "00d7f530-f5dd-5dd0-b862-5311995230c3",
+      "name": "Loop over new postings",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1440,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.JOBRADAR_API_URL }}/postings/{{ $json.postingId }}/score",
+        "options": {
+          "timeout": 180000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "d3b75920-c29f-5b97-925f-4d1a86cab0f4",
+      "name": "Score posting",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        200
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d26a1de5-248d-521e-abfb-f451b89a7d86",
+              "leftValue": "={{ String($json.statusCode) }}",
+              "rightValue": "429",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ddfab984-3eb8-5fc6-928d-fe74a828b11c",
+      "name": "Budget left?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Run report: read it in the execution view of n8n.\n// Inside a loop, $(node).all() only returns the LAST iteration: walk every run of the node.\nconst allRuns = (name) => {\n  const items = [];\n  for (let run = 0; run < 1000; run++) {\n    try {\n      items.push(...$(name).all(0, run));\n    } catch (error) {\n      break; // no such run: the node did not execute that many times\n    }\n  }\n  return items;\n};\nconst status = (item) => item.json.statusCode;\nconst fetched = allRuns(\"Fetch Get on Board page\");\nconst creates = allRuns(\"Create posting\");\nconst scores = allRuns(\"Score posting\");\nconst created = creates.filter((i) => status(i) === 201).length;\nconst scored = scores.filter((i) => status(i) === 201).length;\nreturn [\n  {\n    json: {\n      pagesFetched: fetched.filter((i) => Array.isArray(i.json.data)).length,\n      postingsCreated: created,\n      alreadyKnown: creates.filter((i) => status(i) === 409).length,\n      rejectedOrFailed: creates.filter((i) => status(i) !== 201 && status(i) !== 409).length,\n      scored,\n      scoreFailed: scores.filter((i) => status(i) !== 201 && status(i) !== 429).length,\n      stoppedByBudget: scores.some((i) => status(i) === 429),\n      createdButNotScored: created - scored,\n    },\n  },\n];\n"
+      },
+      "id": "d7255055-bbf9-59c2-b960-381616ec1c86",
+      "name": "Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Every 6 hours": {
+      "main": [
+        [
+          {
+            "node": "Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run manually": {
+      "main": [
+        [
+          {
+            "node": "Pages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pages": {
+      "main": [
+        [
+          {
+            "node": "Fetch Get on Board page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Get on Board page": {
+      "main": [
+        [
+          {
+            "node": "Map jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map jobs": {
+      "main": [
+        [
+          {
+            "node": "Create posting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create posting": {
+      "main": [
+        [
+          {
+            "node": "Pick new postings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick new postings": {
+      "main": [
+        [
+          {
+            "node": "Loop over new postings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop over new postings": {
+      "main": [
+        [
+          {
+            "node": "Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Score posting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score posting": {
+      "main": [
+        [
+          {
+            "node": "Budget left?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Budget left?": {
+      "main": [
+        [
+          {
+            "node": "Loop over new postings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/La_Paz"
+  },
+  "pinData": {}
+}

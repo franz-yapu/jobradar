@@ -1,0 +1,129 @@
+import { readFileSync, readdirSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+
+interface Node {
+  name: string;
+  type: string;
+  parameters: Record<string, unknown> & { jsCode?: string; url?: string };
+}
+interface Workflow {
+  id: string;
+  name: string;
+  active: boolean;
+  nodes: Node[];
+  connections: Record<string, { main: { node: string }[][] }>;
+}
+
+const root = new URL("../../../n8n/", import.meta.url);
+const dir = new URL("workflows/", root);
+const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
+const raw = (file: string) => readFileSync(new URL(file, dir), "utf8");
+const load = (file: string) => JSON.parse(raw(file)) as Workflow;
+
+const ALLOWED_TYPES = new Set([
+  "n8n-nodes-base.scheduleTrigger",
+  "n8n-nodes-base.manualTrigger",
+  "n8n-nodes-base.code",
+  "n8n-nodes-base.httpRequest",
+  "n8n-nodes-base.splitInBatches",
+  "n8n-nodes-base.if",
+  "n8n-nodes-base.telegram",
+  "n8n-nodes-base.noOp",
+]);
+
+// Things that must never be committed in an exported workflow.
+const SECRET_PATTERNS: [string, RegExp][] = [
+  ["Telegram bot token", /\b\d{8,10}:[A-Za-z0-9_-]{30,}\b/],
+  ["Groq key", /\bgsk_[A-Za-z0-9]{20,}/],
+  ["Anthropic key", /\bsk-ant-[A-Za-z0-9_-]{10,}/],
+  ["bearer token", /Bearer\s+[A-Za-z0-9._-]{20,}/],
+];
+
+it("has at least the collect workflow", () => {
+  expect(files).toContain("01-collect-getonboard.json");
+});
+
+describe.each(files)("n8n workflow %s", (file) => {
+  const wf = load(file);
+
+  it("has an id and a name, and is exported inactive", () => {
+    expect(wf.id).toMatch(/^[A-Za-z0-9]{16}$/);
+    expect(wf.name).toMatch(/^JobRadar - /);
+    expect(wf.active).toBe(false);
+  });
+
+  it("uses unique node names and only allowed node types", () => {
+    const names = wf.nodes.map((n) => n.name);
+    expect(new Set(names).size).toBe(names.length);
+    for (const node of wf.nodes) expect(ALLOWED_TYPES.has(node.type), `${node.name}: ${node.type}`).toBe(true);
+  });
+
+  it("connects only existing nodes and leaves no node unreachable", () => {
+    const names = new Set(wf.nodes.map((n) => n.name));
+    const reachable = new Set(
+      wf.nodes.filter((n) => n.type.endsWith("Trigger")).map((n) => n.name),
+    );
+    for (const [source, { main }] of Object.entries(wf.connections)) {
+      expect(names.has(source), `source ${source}`).toBe(true);
+      for (const target of main.flat()) expect(names.has(target.node), `${source} -> ${target.node}`).toBe(true);
+    }
+    for (let changed = true; changed; ) {
+      changed = false;
+      for (const [source, { main }] of Object.entries(wf.connections)) {
+        if (!reachable.has(source)) continue;
+        for (const { node } of main.flat()) if (!reachable.has(node)) changed = reachable.add(node).has(node);
+      }
+    }
+    expect([...names].filter((n) => !reachable.has(n))).toEqual([]);
+  });
+
+  it("contains no secrets", () => {
+    for (const [label, pattern] of SECRET_PATTERNS) expect(raw(file), label).not.toMatch(pattern);
+  });
+
+  it("reaches the JobRadar API only through $env.JOBRADAR_API_URL", () => {
+    for (const node of wf.nodes) {
+      const url = node.parameters.url ?? "";
+      expect(url, node.name).not.toMatch(/localhost|127\.0\.0\.1|host\.docker\.internal/);
+      if (url.includes("/postings")) expect(url, node.name).toMatch(/^=\{\{ \$env\.JOBRADAR_API_URL \}\}\//);
+    }
+  });
+});
+
+describe("01-collect-getonboard.json", () => {
+  const wf = load("01-collect-getonboard.json");
+  const node = (name: string) => {
+    const found = wf.nodes.find((n) => n.name === name);
+    if (!found) throw new Error(`node ${name} not found`);
+    return found;
+  };
+
+  it("embeds the tested mapper verbatim at the top of the Map jobs node", () => {
+    const mapper = readFileSync(new URL("code/map-job.js", root), "utf8");
+    expect(node("Map jobs").parameters.jsCode?.startsWith(mapper)).toBe(true);
+  });
+
+  it("runs every 6 hours and can also be started manually", () => {
+    expect(JSON.stringify(node("Every 6 hours").parameters)).toContain('"hoursInterval":6');
+    expect(wf.connections["Run manually"]).toBeDefined();
+  });
+
+  it("scores at most 20 new postings per run and stops when the budget is spent", () => {
+    expect(node("Pick new postings").parameters.jsCode).toMatch(/MAX_SCORES_PER_RUN = 20;/);
+    const guard = JSON.stringify(node("Budget left?").parameters);
+    expect(guard).toContain("429");
+    expect(guard).toContain("notEquals");
+  });
+
+  it("does not fail the run on API statuses such as 409 or 429", () => {
+    for (const name of ["Create posting", "Score posting"]) {
+      expect(JSON.stringify(node(name).parameters), name).toContain('"neverError":true');
+    }
+  });
+
+  it("identifies itself to Get on Board and asks for the company data", () => {
+    const params = JSON.stringify(node("Fetch Get on Board page").parameters);
+    expect(params).toContain("jobradar-n8n");
+    expect(params).toContain("expand");
+  });
+});
