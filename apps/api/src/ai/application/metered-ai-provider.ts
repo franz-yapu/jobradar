@@ -1,0 +1,89 @@
+import { randomUUID } from "node:crypto";
+import { utcDayStart, type AiCall, type AiCallRepository, type AiCallStatus } from "../domain/ai-call.js";
+import {
+  AiError,
+  AiNotConfiguredError,
+  AiRefusalError,
+  BudgetExceededError,
+  ZERO_USAGE,
+  type AiProvider,
+  type AiResult,
+  type AiUsage,
+  type GenerateStructuredRequest,
+} from "../domain/ai-provider.js";
+
+export interface MeteredOptions {
+  dailyBudgetUsd: number;
+  now?: () => Date;
+}
+
+/**
+ * Decorates any AiProvider with the cross-cutting rules of the project:
+ * daily budget enforcement and a log row (tokens, latency, cost) for every attempt.
+ * Budget integrity wins over availability: if the log cannot be written the error propagates.
+ */
+export class MeteredAiProvider implements AiProvider {
+  private readonly now: () => Date;
+
+  constructor(
+    private readonly inner: AiProvider,
+    private readonly calls: AiCallRepository,
+    private readonly options: MeteredOptions,
+  ) {
+    this.now = options.now ?? (() => new Date());
+  }
+
+  get model(): string {
+    return this.inner.model;
+  }
+
+  async generateStructured<T>(request: GenerateStructuredRequest<T>): Promise<AiResult<T>> {
+    const startedAt = this.now();
+    const { spentUsd } = await this.calls.totalsSince(utcDayStart(startedAt));
+    if (spentUsd >= this.options.dailyBudgetUsd) {
+      await this.record(request, this.inner.model, "budget_blocked", ZERO_USAGE, startedAt, "daily budget spent");
+      throw new BudgetExceededError(spentUsd, this.options.dailyBudgetUsd);
+    }
+
+    let result: AiResult<T>;
+    try {
+      result = await this.inner.generateStructured(request);
+    } catch (error) {
+      // Nothing was sent when the provider is not configured, so there is nothing to log.
+      if (!(error instanceof AiNotConfiguredError)) {
+        const status = error instanceof AiRefusalError ? "refused" : "error";
+        const usage = error instanceof AiError && error.usage ? error.usage : ZERO_USAGE;
+        await this.record(request, this.inner.model, status, usage, startedAt, describe(error));
+      }
+      throw error;
+    }
+    await this.record(request, result.model, "ok", result.usage, startedAt, null);
+    return result;
+  }
+
+  private async record<T>(
+    request: GenerateStructuredRequest<T>,
+    model: string,
+    status: AiCallStatus,
+    usage: AiUsage,
+    startedAt: Date,
+    detail: string | null,
+  ): Promise<void> {
+    const finishedAt = this.now();
+    await this.calls.save({
+      id: randomUUID(),
+      purpose: request.purpose,
+      model,
+      status,
+      ...usage,
+      latencyMs: Math.max(0, finishedAt.getTime() - startedAt.getTime()),
+      detail,
+      createdAt: startedAt,
+    } satisfies AiCall);
+  }
+}
+
+function describe(error: unknown): string {
+  const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+  return message.slice(0, 500);
+}

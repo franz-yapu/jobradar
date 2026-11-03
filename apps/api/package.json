@@ -9,9 +9,11 @@
     "test": "vitest run --passWithNoTests",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev && prisma generate",
-    "db:deploy": "prisma migrate deploy"
+    "db:deploy": "prisma migrate deploy",
+    "test:live": "RUN_LIVE_AI=1 vitest run test/live"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.4.0",
     "@jobradar/shared": "workspace:^",
     "@nestjs/common": "12",
     "@nestjs/core": "12",
