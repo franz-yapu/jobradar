@@ -17,3 +17,9 @@
 
 ## 2026-11-02 – CI uses a throwaway `jobradar_test` database
 - The CI Postgres service is created with `POSTGRES_DB=jobradar_test` and both `DATABASE_URL` and `TEST_DATABASE_URL` point to it, so integration tests (which apply migrations and delete data) never run against a database named like a real one. Matches the local setup (`jobradar_test` from `infra/postgres/init`).
+
+## 2026-11-02 – SDD-002 design choices
+- **Model:** default `claude-sonnet-5-5`, configurable via `AI_MODEL`; evals decide whether `claude-haiku-5-5` is enough. Estimated ~0.008 USD per posting vs ~0.016 (Opus 5.5) and ~0.0004 (Haiku 5.5).
+- **Structured output instead of forced tool use:** Opus/Sonnet 5.5 reject forced `tool_choice` and cannot disable thinking, so scoring uses `output_config.format` with the shared Zod schema.
+- **Sync scoring first:** `POST /postings/:id/score`; the queue (SQS) goes behind a port in SDD-005.
+- **Profile in SDD-002:** PRD feature 2 had no SDD; it is T1 here. Answer drafting and RAG move to a later SDD that reuses `AiProvider`.
