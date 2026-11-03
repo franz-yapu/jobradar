@@ -25,7 +25,7 @@
 - **Profile in SDD-002:** PRD feature 2 had no SDD; it is T1 here. Answer drafting and RAG move to a later SDD that reuses `AiProvider`.
 
 ## 2026-11-03 – Groq adapter for trial runs (SDD-002 T4)
-- **Decision:** add `GroqAiProvider` behind the `AiProvider` port, selected with `AI_PROVIDER=groq` (+ `GROQ_API_KEY`, default model `llama-3.3-70b-versatile`). Anthropic stays the default and the production target.
+- **Decision:** add `GroqAiProvider` behind the `AiProvider` port, selected with `AI_PROVIDER=groq` (+ `GROQ_API_KEY`, default model `openai/gpt-oss-20b`). Anthropic stays the default and the production target.
 - **Why:** the only key available for testing the eval pipeline end to end was a Groq key. The port exists for this; no use case changed, metering and the daily budget apply unchanged.
 - **How:** OpenAI-compatible chat API over `fetch` (no new dependency), JSON mode with the JSON Schema in the system prompt, answer re-validated with Zod. JSON mode is used instead of `json_schema` because not every Groq model supports the latter.
 - **Caveat:** eval results from a Groq model do not validate `claude-sonnet-5-5`; thresholds must be re-checked on the production model before closing SDD-002. Groq prices in `pricing.ts` carry the same dated-table caveat.

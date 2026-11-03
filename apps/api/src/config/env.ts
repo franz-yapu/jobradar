@@ -21,7 +21,7 @@ const EnvSchema = z.object({
   AI_DAILY_BUDGET_USD: z.coerce.number().min(0).default(1),
 });
 
-const DEFAULT_MODELS = { anthropic: "claude-sonnet-5-5", groq: "llama-3.3-70b-versatile" } as const;
+const DEFAULT_MODELS = { anthropic: "claude-sonnet-5-5", groq: "openai/gpt-oss-20b" } as const;
 
 export type Env = Omit<z.infer<typeof EnvSchema>, "AI_MODEL"> & { AI_MODEL: string };
 
