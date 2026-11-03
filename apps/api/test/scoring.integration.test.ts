@@ -58,7 +58,7 @@ describe("POST /postings/:id/score", () => {
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({
       postingId: id, verdict: "maybe", reasons: ["Needs checking"], blockers: [],
-      profileVersion: 1, promptVersion: "score-v1", model: "fake-model",
+      profileVersion: 1, promptVersion: "score-v2", model: "fake-model",
     });
     const call = await prisma.aiCall.findFirstOrThrow();
     expect(res.body.aiCallId).toBe(call.id);
