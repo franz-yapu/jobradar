@@ -35,6 +35,8 @@ export interface AiResult<T> {
   usage: AiUsage;
   /** The model that actually produced the answer (may differ from the configured one after a fallback). */
   model: string;
+  /** Id of the `ai_calls` row that logged this call; set by the metering decorator. */
+  callId?: string;
 }
 
 export interface AiProvider {

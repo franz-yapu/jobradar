@@ -18,6 +18,10 @@ export class InMemoryPostingRepository implements PostingRepository {
     return this.store.get(url) ?? null;
   }
 
+  async findById(id: string): Promise<Posting | null> {
+    return [...this.store.values()].find((p) => p.id === id) ?? null;
+  }
+
   async list(filter: PostingFilter): Promise<PostingPage> {
     const q = filter.q?.toLowerCase();
     const matches = [...this.store.values()]

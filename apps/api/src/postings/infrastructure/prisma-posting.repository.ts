@@ -31,6 +31,11 @@ export class PrismaPostingRepository implements PostingRepository {
     return row ? toDomain(row) : null;
   }
 
+  async findById(id: string): Promise<Posting | null> {
+    const row = await this.prisma.posting.findUnique({ where: { id } });
+    return row ? toDomain(row) : null;
+  }
+
   async list(filter: PostingFilter): Promise<PostingPage> {
     const where: Prisma.PostingWhereInput = {
       ...(filter.source !== undefined && { source: filter.source }),

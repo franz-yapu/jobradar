@@ -9,6 +9,13 @@ export class DuplicatePostingError extends Error {
   }
 }
 
+export class PostingNotFoundError extends Error {
+  constructor(public readonly id: string) {
+    super(`Posting ${id} not found`);
+    this.name = "PostingNotFoundError";
+  }
+}
+
 export interface PostingFilter {
   source?: string | undefined;
   /** Case-insensitive match on title, company or description. */
@@ -26,6 +33,7 @@ export interface PostingRepository {
   /** Throws DuplicatePostingError if the URL is already stored. */
   save(posting: Posting): Promise<void>;
   findByUrl(url: string): Promise<Posting | null>;
+  findById(id: string): Promise<Posting | null>;
   /** Newest first (createdAt desc, id desc). */
   list(filter: PostingFilter): Promise<PostingPage>;
 }

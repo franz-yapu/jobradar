@@ -57,8 +57,8 @@ export class MeteredAiProvider implements AiProvider {
       }
       throw error;
     }
-    await this.record(request, result.model, "ok", result.usage, startedAt, null);
-    return result;
+    const callId = await this.record(request, result.model, "ok", result.usage, startedAt, null);
+    return { ...result, callId };
   }
 
   private async record<T>(
@@ -68,10 +68,11 @@ export class MeteredAiProvider implements AiProvider {
     usage: AiUsage,
     startedAt: Date,
     detail: string | null,
-  ): Promise<void> {
+  ): Promise<string> {
     const finishedAt = this.now();
+    const id = randomUUID();
     await this.calls.save({
-      id: randomUUID(),
+      id,
       purpose: request.purpose,
       model,
       status,
@@ -80,6 +81,7 @@ export class MeteredAiProvider implements AiProvider {
       detail,
       createdAt: startedAt,
     } satisfies AiCall);
+    return id;
   }
 }
 

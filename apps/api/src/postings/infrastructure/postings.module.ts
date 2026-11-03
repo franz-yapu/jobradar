@@ -13,5 +13,6 @@ import { PrismaPostingRepository } from "./prisma-posting.repository.js";
     { provide: CreatePosting, useFactory: (repo: PostingRepository) => new CreatePosting(repo), inject: [POSTING_REPOSITORY] },
     { provide: ListPostings, useFactory: (repo: PostingRepository) => new ListPostings(repo), inject: [POSTING_REPOSITORY] },
   ],
+  exports: [POSTING_REPOSITORY],
 })
 export class PostingsModule {}
