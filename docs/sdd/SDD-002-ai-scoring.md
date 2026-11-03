@@ -1,6 +1,6 @@
 # SDD-002 – Candidate profile, AI provider port and posting scoring
 
-**Status:** Draft · **Week:** 2 · **Depends on:** SDD-001
+**Status:** Approved (2026-11-02) · **Week:** 2 · **Depends on:** SDD-001
 
 ## Context
 Postings can be stored (SDD-001) but nothing judges them. PRD features 2 (profile & criteria) and 3 (AI scoring agent) plus the AI cost/latency/budget requirements are covered here. Answer drafting (feature 4) and RAG are out; they will reuse the port defined here (SDD-002b/006).
