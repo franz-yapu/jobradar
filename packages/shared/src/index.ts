@@ -1,2 +1,3 @@
 export * from "./health.js";
 export * from "./postings.js";
+export * from "./profile.js";
