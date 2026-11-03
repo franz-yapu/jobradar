@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   AiNotConfiguredError,
   AiProviderError,
+  ZERO_USAGE,
   type AiProvider,
   type AiResult,
   type AiUsage,
@@ -9,6 +10,7 @@ import {
 } from "../domain/ai-provider.js";
 import { costUsd, priceFor, PRICES_AS_OF } from "./pricing.js";
 
+const MAX_ATTEMPTS = 2;
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 
 export interface GroqAiOptions {
@@ -57,6 +59,34 @@ export class GroqAiProvider implements AiProvider {
     const schema = JSON.stringify(z.toJSONSchema(request.schema));
     const system = `${request.system}\n\nAnswer with a single JSON object that validates against this JSON Schema, and nothing else:\n${schema}`;
 
+    // JSON mode does not enforce the schema, so small models sometimes drop a key: retry once, billing both attempts.
+    const total: AiUsage = { ...ZERO_USAGE };
+    let failure = "";
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const body = await this.post(system, request.content);
+      const usage = usageOf(body, this.model);
+      addUsage(total, usage);
+
+      const choice = body.choices?.[0];
+      // A truncated answer would be truncated again: do not retry.
+      if (choice?.finish_reason === "length") throw new AiProviderError("The response was cut off (max_tokens)", total);
+
+      let json: unknown;
+      try {
+        json = JSON.parse(choice?.message?.content ?? "");
+      } catch {
+        failure = "The model did not return valid JSON";
+        continue;
+      }
+      const parsed = request.schema.safeParse(json);
+      if (parsed.success) return { data: parsed.data, usage: total, model: body.model ?? this.model };
+      failure = `The answer does not match the expected schema: ${parsed.error.message}`;
+    }
+    throw new AiProviderError(failure, total);
+  }
+
+  /** One HTTP call. Network and HTTP errors are not retried here. */
+  private async post(system: string, content: string): Promise<GroqResponse> {
     let response: Response;
     try {
       response = await this.fetchFn(this.url, {
@@ -69,7 +99,7 @@ export class GroqAiProvider implements AiProvider {
           response_format: { type: "json_object" },
           messages: [
             { role: "system", content: system },
-            { role: "user", content: request.content },
+            { role: "user", content },
           ],
         }),
         signal: AbortSignal.timeout(this.timeoutMs),
@@ -77,26 +107,18 @@ export class GroqAiProvider implements AiProvider {
     } catch (cause) {
       throw new AiProviderError("Could not reach Groq", undefined, { cause });
     }
-
     const body = (await response.json().catch(() => ({}))) as GroqResponse;
     if (!response.ok) throw mapHttpError(response.status, body);
-
-    const usage = usageOf(body, this.model);
-    const choice = body.choices?.[0];
-    if (choice?.finish_reason === "length") throw new AiProviderError("The response was cut off (max_tokens)", usage);
-
-    let json: unknown;
-    try {
-      json = JSON.parse(choice?.message?.content ?? "");
-    } catch (cause) {
-      throw new AiProviderError("The model did not return valid JSON", usage, { cause });
-    }
-    const parsed = request.schema.safeParse(json);
-    if (!parsed.success) {
-      throw new AiProviderError(`The answer does not match the expected schema: ${parsed.error.message}`, usage);
-    }
-    return { data: parsed.data, usage, model: body.model ?? this.model };
+    return body;
   }
+}
+
+function addUsage(total: AiUsage, usage: AiUsage): void {
+  total.inputTokens += usage.inputTokens;
+  total.outputTokens += usage.outputTokens;
+  total.cacheReadTokens += usage.cacheReadTokens;
+  total.cacheWriteTokens += usage.cacheWriteTokens;
+  total.costUsd = Math.round((total.costUsd + usage.costUsd) * 1e6) / 1e6;
 }
 
 function usageOf(body: GroqResponse, model: string): AiUsage {

@@ -64,17 +64,34 @@ describe("GroqAiProvider", () => {
     expect(usage).toMatchObject({ inputTokens: 400, cacheReadTokens: 600 });
   });
 
-  it("maps invalid JSON, schema mismatch and truncation to AiProviderError carrying usage", async () => {
-    for (const body of [
-      ok("not json"),
-      ok('{"verdict":"great"}'),
-      { ...ok('{"verdict":"fi'), choices: [{ finish_reason: "length", message: { content: '{"verdict":"fi' } }] },
-    ]) {
-      const { provider } = setup(() => ({ body }));
-      const error = await provider.generateStructured(request).catch((e: unknown) => e);
-      expect(error).toBeInstanceOf(AiProviderError);
-      expect((error as AiProviderError).usage?.inputTokens).toBe(1000);
+  it("retries once when the answer is invalid JSON or misses a key, billing both attempts", async () => {
+    for (const first of ["not json", '{"verdict":"great"}', "{}"]) {
+      const answers = [ok(first), ok('{"verdict":"fit"}')];
+      const { provider, sent } = setup(() => ({ body: answers.shift() }));
+      const result = await provider.generateStructured(request);
+      expect(result.data).toEqual({ verdict: "fit" });
+      expect(sent).toHaveLength(2);
+      expect(result.usage).toMatchObject({ inputTokens: 2000, outputTokens: 200 });
+      expect(result.usage.costUsd).toBeCloseTo(2 * (1000 * 0.59 + 100 * 0.79) / 1e6, 8);
     }
+  });
+
+  it("gives up after two bad answers with the usage of both attempts", async () => {
+    const { provider, sent } = setup(() => ({ body: ok("{}") }));
+    const error = await provider.generateStructured(request).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(AiProviderError);
+    expect((error as AiProviderError).message).toContain("expected schema");
+    expect((error as AiProviderError).usage).toMatchObject({ inputTokens: 2000, outputTokens: 200 });
+    expect(sent).toHaveLength(2);
+  });
+
+  it("does not retry a truncated answer", async () => {
+    const truncated = { ...ok('{"verdict":"fi'), choices: [{ finish_reason: "length", message: { content: '{"verdict":"fi' } }] };
+    const { provider, sent } = setup(() => ({ body: truncated }));
+    const error = await provider.generateStructured(request).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(AiProviderError);
+    expect((error as AiProviderError).usage?.inputTokens).toBe(1000);
+    expect(sent).toHaveLength(1);
   });
 
   it("maps HTTP and network failures to typed errors", async () => {
@@ -83,6 +100,9 @@ describe("GroqAiProvider", () => {
     expect(await run({ status: 429, body: {} })).toMatchObject({ name: "AiProviderError", message: expect.stringContaining("rate limit") });
     expect(await run({ status: 500, body: {} })).toBeInstanceOf(AiProviderError);
     expect(await run(new TypeError("fetch failed"))).toBeInstanceOf(AiProviderError);
+    const failing = setup(() => ({ status: 500, body: {} }));
+    await failing.provider.generateStructured(request).catch(() => undefined);
+    expect(failing.sent).toHaveLength(1);
   });
 
   it("refuses to start with a model that has no price", () => {
