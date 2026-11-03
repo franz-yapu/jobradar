@@ -16,16 +16,17 @@ enum RemoteScope {
 }
 
 model Posting {
-  id          String      @id @default(uuid()) @db.Uuid
+  id          String         @id @default(uuid()) @db.Uuid
   title       String
   company     String
-  url         String      @unique
+  url         String         @unique
   source      String
   location    String?
   remoteScope RemoteScope
   description String
   publishedAt DateTime?
-  createdAt   DateTime    @default(now())
+  createdAt   DateTime       @default(now())
+  scores      PostingScore[]
 
   @@index([source])
   @@index([createdAt])
@@ -79,7 +80,7 @@ enum AiCallStatus {
 
 /// One row per AI call attempt (including failures and budget blocks).
 model AiCall {
-  id               String       @id @default(uuid()) @db.Uuid
+  id               String         @id @default(uuid()) @db.Uuid
   purpose          String
   model            String
   status           AiCallStatus
@@ -88,10 +89,37 @@ model AiCall {
   cacheReadTokens  Int
   cacheWriteTokens Int
   latencyMs        Int
-  costUsd          Decimal      @db.Decimal(10, 6)
+  costUsd          Decimal        @db.Decimal(10, 6)
   detail           String?
-  createdAt        DateTime     @default(now())
+  createdAt        DateTime       @default(now())
+  scores           PostingScore[]
 
   @@index([createdAt])
   @@map("ai_calls")
+}
+
+enum Verdict {
+  fit
+  maybe
+  reject
+}
+
+/// History of AI scores; each scoring call adds a row.
+model PostingScore {
+  id             String   @id @default(uuid()) @db.Uuid
+  postingId      String   @db.Uuid
+  posting        Posting  @relation(fields: [postingId], references: [id], onDelete: Cascade)
+  verdict        Verdict
+  reasons        String[]
+  /// Array of { type, evidence }.
+  blockers       Json
+  profileVersion Int
+  promptVersion  String
+  model          String
+  aiCallId       String?  @db.Uuid
+  aiCall         AiCall?  @relation(fields: [aiCallId], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+
+  @@index([postingId, createdAt])
+  @@map("posting_scores")
 }
