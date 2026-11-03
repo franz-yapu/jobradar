@@ -9,12 +9,23 @@ const EnvSchema = z.object({
     .trim()
     .optional()
     .transform((value) => value || undefined),
-  AI_MODEL: z.string().trim().min(1).default("claude-sonnet-5-5"),
+  /** Optional, only used when AI_PROVIDER=groq (cheap trials). */
+  GROQ_API_KEY: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => value || undefined),
+  AI_PROVIDER: z.enum(["anthropic", "groq"]).default("anthropic"),
+  /** Defaults to the provider's recommended model. */
+  AI_MODEL: z.string().trim().optional(),
   AI_DAILY_BUDGET_USD: z.coerce.number().min(0).default(1),
 });
 
-export type Env = z.infer<typeof EnvSchema>;
+const DEFAULT_MODELS = { anthropic: "claude-sonnet-5-5", groq: "llama-3.3-70b-versatile" } as const;
+
+export type Env = Omit<z.infer<typeof EnvSchema>, "AI_MODEL"> & { AI_MODEL: string };
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  return EnvSchema.parse(source);
+  const env = EnvSchema.parse(source);
+  return { ...env, AI_MODEL: env.AI_MODEL || DEFAULT_MODELS[env.AI_PROVIDER] };
 }

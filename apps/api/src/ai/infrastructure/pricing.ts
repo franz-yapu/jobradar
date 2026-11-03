@@ -1,6 +1,6 @@
 import type { AiUsage } from "../domain/ai-provider.js";
 
-/** USD per million tokens. Source: Anthropic price list as of PRICES_AS_OF; revisit when it changes. */
+/** USD per million tokens. Source: Anthropic/Groq price lists as of PRICES_AS_OF; revisit when it changes. */
 export interface ModelPrice {
   input: number;
   output: number;
@@ -21,6 +21,10 @@ const PRICES: Readonly<Record<string, ModelPrice>> = {
   "claude-sonnet-5-5": { input: 2, output: 10, cacheRead: 0.2, cacheWrite: 2.5 },
   "claude-sonnet-5": { input: 2, output: 10, cacheRead: 0.2, cacheWrite: 2.5 },
   "claude-haiku-5-5": { input: 0.1, output: 0.5, cacheRead: 0.01, cacheWrite: 0.125 },
+  // Groq (trial provider). Their list prices, same date caveat; Groq has no cache-write charge.
+  "llama-3.3-70b-versatile": { input: 0.59, output: 0.79, cacheRead: 0.59, cacheWrite: 0 },
+  "openai/gpt-oss-120b": { input: 0.15, output: 0.6, cacheRead: 0.075, cacheWrite: 0 },
+  "openai/gpt-oss-20b": { input: 0.075, output: 0.3, cacheRead: 0.0375, cacheWrite: 0 },
 };
 
 export function priceFor(model: string): ModelPrice | undefined {
