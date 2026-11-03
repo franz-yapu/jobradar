@@ -46,7 +46,7 @@ pnpm dev                  # API on http://localhost:3000 (web dashboard arrives 
 | Method | Path | Description |
 |---|---|---|
 | `POST` | `/postings` | Create a posting. `201`, `400` invalid body, `409` URL already exists (tracking params and fragments are ignored) |
-| `GET` | `/postings?source=&q=&page=1&pageSize=20` | Paginated list, newest first. `q` matches title, company and description |
+| `GET` | `/postings?source=&q=&verdict=&createdSince=&page=1&pageSize=20` | Paginated list, newest first, each item with its `latestScore` (or `null`). `q` matches title, company and description; `verdict` (`fit`/`maybe`/`reject`/`unscored`) filters on the **latest** score; `createdSince` is an ISO 8601 instant. `400` on invalid values |
 | `GET` | `/health` | `200` with DB status, `503` if the database is down |
 | `GET` / `PUT` | `/profile` | The single candidate profile (`404` until saved; every `PUT` bumps `version`) |
 | `POST` | `/postings/:id/score` | Score a posting against the profile. `201` (history is kept), `400` bad id, `404` unknown posting, `422` `profile_not_configured` / `ai_refused`, `429` `ai_budget_exceeded`, `502` `ai_provider_error`, `503` `ai_not_configured` |
