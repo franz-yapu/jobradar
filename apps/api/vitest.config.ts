@@ -13,6 +13,8 @@ export default defineConfig({
   test: {
     env: { DATABASE_URL: databaseUrl },
     globalSetup: ["./test/global-setup.ts"],
+    // Integration tests share one database and wipe tables, so files must not run concurrently.
+    fileParallelism: false,
     include: ["src/**/*.test.ts", "test/**/*.test.ts"],
   },
 });
