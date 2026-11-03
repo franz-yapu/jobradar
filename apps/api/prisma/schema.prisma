@@ -69,3 +69,29 @@ model CandidateProfile {
 
   @@map("candidate_profiles")
 }
+
+enum AiCallStatus {
+  ok
+  error
+  refused
+  budget_blocked
+}
+
+/// One row per AI call attempt (including failures and budget blocks).
+model AiCall {
+  id               String       @id @default(uuid()) @db.Uuid
+  purpose          String
+  model            String
+  status           AiCallStatus
+  inputTokens      Int
+  outputTokens     Int
+  cacheReadTokens  Int
+  cacheWriteTokens Int
+  latencyMs        Int
+  costUsd          Decimal      @db.Decimal(10, 6)
+  detail           String?
+  createdAt        DateTime     @default(now())
+
+  @@index([createdAt])
+  @@map("ai_calls")
+}
