@@ -4,3 +4,4 @@ dist
 coverage
 .turbo
 apps/api/src/generated
+apps/api/evals/results
