@@ -1,0 +1,394 @@
+{
+  "data": [
+    {
+      "id": "founding-gtm-engineer-hostop-remote",
+      "type": "job",
+      "attributes": {
+        "title": "Founding GTM Engineer",
+        "projects": "<p>HostOp is the AI operating system for short-term rental operators with 10 to 500 listings. One platform replaces the pile of disconnected tools they run on: guest check-in, ID verification, damage waivers, upsells, payments and financials, with AI guest messaging next.</p><p>We’re founder-led and bootstrapped. Our founder scaled his own rental arbitrage business to 400+ units in four years with his own money, then",
+        "functions_headline": "Job functions",
+        "functions": "<p>Full-time, all-day role. There’s always another list to build, message to test, automation to ship or lead to book. <strong>You own one number: qualified demos booked and held for the founder every week.</strong></p><p><strong>What you’ll do</strong></p><ul><li>Define and sharpen our ideal customer: short-term rental operators with 10 to 500 listings. Build, enrich and score target lists.</li><li>Run founder-led L",
+        "description_headline": "Qualifications and requirements",
+        "description": "<ul><li>5+ years in outbound, SDR/BDR, growth or GTM roles at early-stage B2B SaaS (seed to Series B), with booked-meeting results you can show in numbers.</li><li>You’ve built outbound from zero at least once: lists, sending infrastructure, copy, sequences and reporting.</li><li>Hands-on with modern outbound tools such as Clay, Apollo, Instantly, Smartlead or HeyReach, plus LinkedIn Sales Navigator.</li><li>You buil",
+        "desirable_headline": "Desirable skills",
+        "desirable": "<ul><li>Experience selling to short-term rental, vacation rental, hospitality or proptech companies</li><li>Familiarity with property management systems such as Guesty, Hostaway, Hospitable or OwnerRez</li><li>Ghostwriting founder content on LinkedIn that grew an audience</li><li>Video or Loom-based outreach</li><li>Spanish or Portuguese</li><li>Experience hiring or managing SDRs</li></ul>",
+        "benefits_headline": "Conditions",
+        "benefits": "<ul><li>Full-time, 100% remote from Latin America</li><li><strong>$4,500–$6,000 USD per month base</strong>, plus uncapped bonuses for every qualified demo held and every demo that becomes a paying customer</li><li>Report directly to the Founder &amp; CEO, with real ownership from day one</li><li>Start as soon as possible</li></ul>",
+        "remote": true,
+        "remote_modality": "fully_remote",
+        "remote_zone": null,
+        "countries": [
+          "Remote"
+        ],
+        "published_at": 1793299067,
+        "company": {
+          "data": {
+            "id": "hostop",
+            "type": "company",
+            "attributes": {
+              "name": "Hostop"
+            }
+          }
+        }
+      },
+      "links": {
+        "public_url": "https://www.getonbrd.com/jobs/founding-gtm-engineer-hostop-remote"
+      }
+    },
+    {
+      "id": "desarrollador-a-full-stack-financia-capital-santiago",
+      "type": "job",
+      "attributes": {
+        "title": "Desarrollador/a Full-Stack",
+        "projects": "<p>Somos una empresa financiera que busca democratizar el acceso a financiamiento para pequeñas y medianas empresas. En Financia Capital estamos digitalizando nuestros procesos para que nuestros clientes gestionen sus operaciones financieras de forma simple, rápida y segura.</p><p>Te integrarás al equipo de TI y trabajarás en todo nuestro ecosistema: el backoffice interno, el portal de clientes, las APIs que conectan",
+        "functions_headline": "Funciones del cargo",
+        "functions": "<p>Dentro de tus principales funciones estarán:</p><ul><li>Desarrollar nuevos módulos y funcionalidades en nuestras plataformas Laravel + Vue, de punta a punta: modelo de datos, API, interfaz y despliegue.</li><li>Desarrollar y mantener servicios de datos en Python (FastAPI) desplegados en API Gateway AWS Lambda, que alimentan nuestras plataformas con información de clientes y evaluaciones.</li><li>Mantener y mejorar",
+        "description_headline": "Requerimientos del cargo",
+        "description": "<ul><li>Al menos 3 años de experiencia profesional con PHP y Laravel.</li><li>Experiencia desarrollando frontends con Vue.js.</li><li>Buen manejo de SQL y modelamiento de bases de datos relacionales (MySQL o SQL Server).</li><li>Experiencia construyendo y consumiendo APIs REST.</li><li>Manejo de Git y trabajo con ramas y pull requests.</li><li>Buena comunicación y capacidad de trabajar en equipo.</li><li>Autonomía, p",
+        "desirable_headline": "Opcionales",
+        "desirable": "<p>Suma puntos si tienes:</p><ul><li>Experiencia con Python (FastAPI, pandas o SQLAlchemy) y despliegues serverless en AWS Lambda.</li><li>Experiencia con Inertia.js o Vue 3.</li><li>Experiencia con Node.js / TypeScript, idealmente AdonisJS.</li><li>Experiencia con otros servicios de AWS (S3, RDS, SNS).</li><li>Experiencia escribiendo tests (PHPUnit / Pest) y usando herramientas de calidad de código.</li><li>Experien",
+        "benefits_headline": "",
+        "benefits": "",
+        "remote": false,
+        "remote_modality": "no_remote",
+        "remote_zone": null,
+        "countries": [
+          "Chile"
+        ],
+        "published_at": 1793133968,
+        "company": {
+          "data": {
+            "id": "financia-capital-cl",
+            "type": "company",
+            "attributes": {
+              "name": "Financia Capital"
+            }
+          }
+        }
+      },
+      "links": {
+        "public_url": "https://www.getonbrd.com/jobs/desarrollador-a-full-stack-financia-capital-santiago"
+      }
+    },
+    {
+      "id": "go-engineer-microservices-improving-remote",
+      "type": "job",
+      "attributes": {
+        "title": "Senior Go Engineer",
+        "projects": "<p>The Go Engineer is responsible for leading the design, development, and operation of scalable, resilient microservices that power customer-facing and internal technology products. This role drives backend architecture and distributed systems strategy while also contributing to modern, responsive front-end applications.</p><p>You will serve as a technical anchor for our service-oriented architecture, leading the de",
+        "functions_headline": "Key Responsibilities",
+        "functions": "<ul><li>Lead the design and development of scalable, resilient microservices using Go, setting patterns and standards for the broader engineering team</li><li>Define and maintain clear API contracts (REST and/or event-driven interfaces) between services</li><li>Architect distributed systems with a focus on reliability, scalability, and fault tolerance</li><li>Implement inter-service communication patterns (synchronou",
+        "description_headline": "Requirements",
+        "description": "<p>Bachelor’s Degree in Computer Science or related field (preferred)</p><ul><li>5-7+ years of professional software engineering experience</li><li>3+ years of experience building and operating production backend services in Go</li><li>Strong experience designing and implementing microservice architectures</li><li>Experience building RESTful APIs and/or event-driven services</li><li>Deep understanding of distributed ",
+        "desirable_headline": "Nice-to-Haves",
+        "desirable": "<ul><li>Experience with event streaming platforms (Kafka, Pub/Sub, NATS)</li><li>Experience with API gateways and service meshes</li><li>Experience implementing authentication and authorization (OAuth2, JWT, SSO)</li><li>Familiarity with domain-driven design (DDD) principles</li><li>Experience working in Agile/Scrum development environments</li></ul>",
+        "benefits_headline": "Benefits ",
+        "benefits": "<ul><li>Contrato a largo plazo.</li><li>100% Remoto.</li><li>Vacaciones y PTOs</li><li>Posibilidad de recibir 2 bonos al año.</li><li>2 revisiones salariales al año.</li><li>Clases de inglés.</li><li>Equipamiento Apple.</li><li>Plataforma de cursos en linea</li><li>Budget para compra de libros.</li><li>Budget para compra de materiales de trabajo</li><li>mucho mas..</li></ul>",
+        "remote": true,
+        "remote_modality": "remote_local",
+        "remote_zone": null,
+        "countries": [
+          "Remote"
+        ],
+        "published_at": 1793124939,
+        "company": {
+          "data": {
+            "id": "improving",
+            "type": "company",
+            "attributes": {
+              "name": "Improving"
+            }
+          }
+        }
+      },
+      "links": {
+        "public_url": "https://www.getonbrd.com/jobs/go-engineer-microservices-improving-remote"
+      }
+    },
+    {
+      "id": "senior-software-engineer-vetclaims-ai-remote",
+      "type": "job",
+      "attributes": {
+        "title": "Senior Software Engineer",
+        "projects": "<p><strong>The role</strong></p><p>We're hiring a Senior Software Engineer who works like a tech lead for a team of AI agents. You own problems end to end: you sit with the people who have them, decide what to build, direct agents to do much of the implementation, and stay accountable for what ships. Code is cheap now. Judgment isn't. We care less about how many lines you write and more about whether you can tell goo",
+        "functions_headline": "What you'll do",
+        "functions": "<ul><li>Work directly with PMs and the company's departments to understand their problems, then turn them into scoped, shippable solutions.</li><li>Build features across the stack: Next.js (App Router, Server Components, Server Actions), Prisma and Postgres.</li><li>Orchestrate several AI coding agents in parallel. Break work down, write the specs and context they need, review their output critically and own the resu",
+        "description_headline": "What we're looking for",
+        "description": "<ul><li>5+ years building production web applications, with real ownership of systems on both frontend and backend.</li><li>Strong TypeScript, Next.js, Prisma and Postgres. You understand the server/client boundary, caching, and how schema and query design affect the product.</li><li>You work with AI agents as a lead, not a typist. You run several agents on real work, know where they fail, and catch what they get wro",
+        "desirable_headline": "Nice to have",
+        "desirable": "<ul><li>Infrastructure experience isn't required, but it helps.</li><li>Google Cloud (Cloud Run, Cloud SQL, IAM, Secret Manager) or comparable AWS experience.</li><li>Experience in regulated or privacy-sensitive domains: health, legal, insurance or government benefits.</li></ul>",
+        "benefits_headline": "Benefits and how we communicate",
+        "benefits": "<p>15 PTO days + your country holidays + Sick days </p><p>Good communication is non-negotiable for us. We love communication, and we dislike meetings that could have been a Slack message.</p><ul><li><strong>Async first.</strong> Most of our work happens in writing. When async isn't enough, we jump on a quick huddle instead of letting a thread drag on.</li><li><strong>Share progress often.</strong> Post updates, block",
+        "remote": true,
+        "remote_modality": "fully_remote",
+        "remote_zone": null,
+        "countries": [
+          "Remote"
+        ],
+        "published_at": 1792872188,
+        "company": {
+          "data": {
+            "id": "vetclaims-ai",
+            "type": "company",
+            "attributes": {
+              "name": "Vetclaims.ai"
+            }
+          }
+        }
+      },
+      "links": {
+        "public_url": "https://www.getonbrd.com/jobs/senior-software-engineer-vetclaims-ai-remote"
+      }
+    },
+    {
+      "id": "technical-lead-senior-bci-santiago-3e19",
+      "type": "job",
+      "attributes": {
+        "title": "Technical Lead Senior",
+        "projects": "<p>Responsable de liderar la planificación y dimensionamiento técnico de proyectos en colaboración con el equipo de desarrollo, incluyendo a desarrolladores, QA, Integration Lead y Process Lead. Garantiza la máxima calidad técnica y funcional en los desarrollos, así como la alineación de las definiciones de la arquitectura empresarial definida, promoviendo prácticas de ingeniería de seoftware de excelencia.</p>",
+        "functions_headline": "Funciones del cargo",
+        "functions": "<ul><li>Responsable de la calidad técnica: Analizar y gestionar los indicadores de calidad del producto para que cumplan con la calidad esperada</li><li>Garantizar entregas de calidad: Asegurar estándares de calidad técnica en cada release.</li><li>Mentoría en calidad de desarrollo: Alinear a los desarrolladores para mejorar la calidad y escalabilidad de sus trabajos, fomentando la idea de mínimas entregas viables.</",
+        "description_headline": "Requerimientos del cargo",
+        "description": "<ul><li>Titulado de Ingeniería Informática, Ingeniero Civil Informático o afines.</li><li>Experiencia previa en desarrollo/mantención de software, conocimiento de marco de trabajo en células ágiles.</li><li>Desde 5 años de experiencia desarrollo de experiencia en desarrollo de software, ya sea en:</li><li>Desarrollo Back End, utilizando lenguajes como JAVA con framework Springboot, o JavaScript/TypeScript con framewo",
+        "desirable_headline": "Opcionales",
+        "desirable": "",
+        "benefits_headline": "Condiciones",
+        "benefits": "",
+        "remote": false,
+        "remote_modality": "hybrid",
+        "remote_zone": null,
+        "countries": [
+          "Chile"
+        ],
+        "published_at": 1792605757,
+        "company": {
+          "data": {
+            "id": "bci",
+            "type": "company",
+            "attributes": {
+              "name": "Bci"
+            }
+          }
+        }
+      },
+      "links": {
+        "public_url": "https://www.getonbrd.com/jobs/technical-lead-senior-bci-santiago-3e19"
+      }
+    },
+    {
+      "id": "especialista-integracion-pleno-bci-santiago-f68d",
+      "type": "job",
+      "attributes": {
+        "title": "Especialista Integración Pleno",
+        "projects": "<p>Diseñar e implementar los microservicios y APIs que permiten habilitar la plataforma de Integración del banco, con el fin de dar soporte al proceso de transformación digital en Bci, permitiendo que la corporación pueda contar con una plataforma basada en componentes independientes, autónomos y escalables, entregados de forma rápida y oportuna, con foco en la excelencia y utilización óptima de recursos.</p><p>Diseñ",
+        "functions_headline": "En este rol tendrás la oportunidad de:",
+        "functions": "<ul><li>Implementar APIs y microservicios en los distintos proyectos/programas de Transformación Digital, basados en un modelo de referencia para servicios financieros y en estándares de la industria, que posteriormente pasarán a formar parte del catálogo de microservicios del banco.Permitir que nuevos productos y servicios puedan ser entregados de forma ágil, poniendo énfasis en la reutilización de componentes.</li>",
+        "description_headline": "Para tener éxito en esta posición necesitas:",
+        "description": "<ul><li>Experiencia en Java, mínimo 4 años, con conocimiento de Java 8 o superior.</li><li>Experiencia mínima 2 años en desarrollo y diseño de Microservicios.</li><li>Experiencia integrando Web Services SOAP.</li><li>Conocimientos de diseño de Apis / Restful.</li><li>Experiencia en Spring Boot, y conocimiento sólido en el framework Spring.</li><li>Conocimientos básicos de tecnologías en la nube.</li></ul>",
+        "desirable_headline": "Es aún mejor si tienes:",
+        "desirable": "<ul><li>Certificación Java OCP Oracle Certified Professional (altamente deseable).</li><li>Haber trabajado con metodologías ágiles.</li><li>Kubernetes Básico.</li></ul>",
+        "benefits_headline": "Beneficios:",
+        "benefits": "",
+        "remote": false,
+        "remote_modality": "hybrid",
+        "remote_zone": null,
+        "countries": [
+          "Chile"
+        ],
+        "published_at": 1792605728,
+        "company": {
+          "data": {
+            "id": "bci",
+            "type": "company",
+            "attributes": {
+              "name": "Bci"
+            }
+          }
+        }
+      },
+      "links": {
+        "public_url": "https://www.getonbrd.com/jobs/especialista-integracion-pleno-bci-santiago-f68d"
+      }
+    },
+    {
+      "id": "desarrollador-a-backend-hands-on-factor-it-remote",
+      "type": "job",
+      "attributes": {
+        "title": "Back-end Senior Java25/Spring Boot 3",
+        "projects": "<p>Te sumarás a un proyecto en una importante institución financiera de Chile, como desarrollador/a backend hands-on. Serás responsable de construir, desplegar e integrar microservicios en Java 25 con Spring Boot 3 y de implementar la capa de API Management en Google Apigee.</p><p>Diseñarás API Proxies para tráfico interno y externo, integrarás los microservicios con Google Cloud Storage y otros servicios de GCP, y t",
+        "functions_headline": "Responsabilidades",
+        "functions": "<ul><li><p><strong>Microservicios:</strong> construir e integrar microservicios escalables con Java 25 y Spring Boot 3, con buenas prácticas de diseño, seguridad e idempotencia.</p></li><li><p><strong>Apigee:</strong> configurar y mantener API Proxies para tráfico interno y externo, gestionando políticas de seguridad (autenticación y permisos), control de tráfico y transformación de datos.</p></li><li><p><strong>GCP:",
+        "description_headline": "Experiencia que buscamos",
+        "description": "<p>Mínimo 5 años de experiencia comprobable en desarrollo backend con Java y Spring Boot en arquitecturas de microservicios. Experiencia práctica diseñando, configurando y desplegando API Proxies en Google Apigee (Apigee X o Hybrid) para integración interna y exposición externa. Experiencia sólida integrando microservicios con Google Cloud Storage para carga, descarga, streaming y gestión segura de archivos. Experien",
+        "desirable_headline": "Opcionales",
+        "desirable": "<p><strong>Valoramos positivamente</strong></p><ul><li><p>Desarrollo asistido por IA: uso habitual y crítico de asistentes de código e IDEs con IA para codificar, refactorizar, generar pruebas y documentar.</p></li><li><p>Mentalidad de entrega incremental: criterio para diseñar arquitecturas evolutivas, con despliegues continuos de incrementos estables y probados.</p></li><li><p>Experiencia en el sector financiero.</",
+        "benefits_headline": "",
+        "benefits": "<p>Trabajo remoto en Colombia y Perú</p>",
+        "remote": true,
+        "remote_modality": "remote_local",
+        "remote_zone": null,
+        "countries": [
+          "Remote"
+        ],
+        "published_at": 1793718576,
+        "company": {
+          "data": {
+            "id": "factor-it-y-compania-sac",
+            "type": "company",
+            "attributes": {
+              "name": "Factor IT"
+            }
+          }
+        }
+      },
+      "links": {
+        "public_url": "https://www.getonbrd.com/jobs/desarrollador-a-backend-hands-on-factor-it-remote"
+      }
+    },
+    {
+      "id": "especialista-desarrollador-frontend-3it-remote",
+      "type": "job",
+      "attributes": {
+        "title": "Especialista Desarrollador Front-end",
+        "projects": "<p>El principal desafío será contribuir a la continuidad operacional de los servicios de TI mediante el análisis de requerimientos y el desarrollo de soluciones de software. Participarás en el levantamiento funcional y técnico, la creación y modificación de componentes y la ejecución de pruebas unitarias e integrales, procurando entregar soluciones mantenibles y de calidad para las áreas usuarias.</p>",
+        "functions_headline": " ¿Dónde y cómo trabajarás?",
+        "functions": "<ul><li>Cliente: Banco Estado.</li><li>Tiempo de proyecto: 2 meses inicialmente.</li><li>Modalidad: Remota.</li><li>Acompañamiento 3IT: contarás con un Service Manager que te apoyará durante tu integración y experiencia en cliente.</li></ul>",
+        "description_headline": "Lo que necesitamos para este rol",
+        "description": "<ul><li>Conocimientos de desarrollo móvil y web.</li><li>Manejo de Power BI, Datalake y procesos ETL.</li><li>Uso de frameworks JavaScript MVC, como AngularJS, Backbone u otros.</li><li>De 3 a 5 años de experiencia reciente con las tecnologías solicitadas en el sector bancario o financiero.</li><li>Formación en Ingeniería Civil Informática, Ingeniería en Ejecución Informática, Analista Programador o carreras afines.<",
+        "desirable_headline": "Beneficios tritianos",
+        "desirable": "<p>🏥 Cuidamos tu salud: seguro de vida y complementario de salud MetLife, con cobertura ampliada y dental para ti y tus cargas legales.</p><p>📚 Sigue aprendiendo: acceso a Udemy Business, formación continua y oportunidades para fortalecer tus competencias técnicas y profesionales.</p><p>🎂 Tiempo para ti: hasta 2 días administrativos al año, medio día libre por tu cumpleaños y beneficios adicionales asociados a parent",
+        "benefits_headline": "¿Por qué trabajar con nosotros?",
+        "benefits": "<p>En 3IT te integras a proyectos tecnológicos de distintas industrias con el respaldo de un equipo que acompaña tu experiencia y desarrollo. Podrás aportar desde tu especialidad, seguir fortaleciendo tus capacidades y ser parte de una cultura donde la colaboración, la confianza y el aprendizaje continuo forman parte de cómo trabajamos.</p><p>Esta vacante está acogida a la Ley 21.015, como parte de nuestro compromiso",
+        "remote": true,
+        "remote_modality": "remote_local",
+        "remote_zone": null,
+        "countries": [
+          "Remote"
+        ],
+        "published_at": 1793717646,
+        "company": {
+          "data": {
+            "id": "3it-cl",
+            "type": "company",
+            "attributes": {
+              "name": "3IT"
+            }
+          }
+        }
+      },
+      "links": {
+        "public_url": "https://www.getonbrd.com/jobs/especialista-desarrollador-frontend-3it-remote"
+      }
+    },
+    {
+      "id": "full-stack-engineer-typescript-react-dynamic-devs-santiago-d476",
+      "type": "job",
+      "attributes": {
+        "title": "Full-Stack Engineer (TypeScript/React)",
+        "projects": "<p>Somos una empresa de tecnología que desarrolla proyectos de alto impacto haciendo de la innovación y transformación digital. Somos partidarios de la excelencia técnica, DevOps, Entrega Continua e Integración Continua, conformando equipos de alto desempeño en proyectos desafiantes, orientados al crecimiento e implementación de nuevas tecnologías. Más importante aún, ofrecemos un entorno colaborativo y multicultural",
+        "functions_headline": "Funciones del cargo",
+        "functions": "<div> - Diseñar, desarrollar y mantener componentes backend utilizando Node.js y NestJS.<br>- Desarrollar aplicaciones full stack con React, Next.js y TypeScript.<br>- Garantizar el rendimiento óptimo de las bases de datos (SQL y NoSQL) y su integración con los servicios backend.<br>- Implementar y mantener API REST y GraphQL.<br>- Asegurar la implementación de buenas prácticas en seguridad, protección de datos y alm",
+        "description_headline": "Requerimientos del cargo",
+        "description": "<div>- +5 años de experiencia como desarrollador Full Stack con JavaScript/TypeScript.<br>- +4 años de experiencia con Node.js y NestJS.<br>- +4 años de experiencia en desarrollo front-end utilizando React y Next.js.<br>- Experiencia con bases de datos SQL y NoSQL.<br>- Conocimiento avanzado en Typescript, arquitectura de software y patrones de diseño.<br>- Creación y diseño de APIs REST y GraphQL.<br>- Experiencia c",
+        "desirable_headline": "Opcionales",
+        "desirable": "<div>- Deseable experiencia en Python.<br>- Certificaciones en la nube (AWS, Google Cloud, Azure) es un plus.</div>",
+        "benefits_headline": "Condiciones",
+        "benefits": "<p>🚀 Haz un impacto. Trabaja en proyectos desafiantes<br>📚 IT Training: acceso a más de 500 cursos actualizados cada semana 📖<br>🎤 Dev Talks: conferencias exclusivas con expertos del sector<br>🎉 Día especial: 🎂 ¡Día libre por cumpleaños!<br>👥 Trabaja en un equipo talentoso y multicultural usando tecnología increíble<br>🎙️ Escucha nuestro podcast aquí: 🔗 Escuchar Podcast<br>🌐 Visítanos en nuestra web: 🔗 Dynamic Devs</",
+        "remote": false,
+        "remote_modality": "no_remote",
+        "remote_zone": null,
+        "countries": [
+          "Chile"
+        ],
+        "published_at": 1793715953,
+        "company": {
+          "data": {
+            "id": "dynamic-devs",
+            "type": "company",
+            "attributes": {
+              "name": "Dynamic Devs"
+            }
+          }
+        }
+      },
+      "links": {
+        "public_url": "https://www.getonbrd.com/jobs/full-stack-engineer-typescript-react-dynamic-devs-santiago-d476"
+      }
+    },
+    {
+      "id": "desarrollador-a-salesforce-intermedio-ryc-tech-group-santiago",
+      "type": "job",
+      "attributes": {
+        "title": "Desarrollador/a Salesforce Intermedio",
+        "projects": "En RyC Tech Group construimos soluciones de negocio basadas en tecnología, transformando ideas en realidades mediante la combinación de negocio, capital humano e innovación tecnológica. En esta oportunidad, buscamos un/a Desarrollador/a Salesforce Intermedio para integrarse a un equipo que trabaja sobre el ecosistema completo de Salesforce. El foco del proyecto es avanzar de punta a punta en soluciones: desarrollo, c",
+        "functions_headline": "Principales responsabilidades",
+        "functions": "<p>Entre las principales responsabilidades se incluyen:</p><ul><li>Desarrollar soluciones en Salesforce utilizando Apex (Triggers, Batch, Queueables, Futures, Schedulables y REST API).</li><li>Construir interfaces utilizando LWC, Aura y Visualforce Pages.</li><li>Configurar y administrar la plataforma: Flows, Permission Sets, objetos y modelos de datos, jerarquía de roles y reglas de validación.</li><li>Implementar i",
+        "description_headline": "Requisitos Excluyentes",
+        "description": "<p>Buscamos un/a profesional con experiencia comprobable en el ecosistema Salesforce, capaz de combinar desarrollo, configuración e integración en un mismo rol.</p><ul><li>Experiencia en desarrollo con Apex (Triggers, Batch, Queueables, REST API).</li><li>Experiencia con Lightning Web Components (LWC) y/o Aura.</li><li>Manejo de Visualforce Pages.</li><li>Experiencia en configuración de Salesforce: Flows, Permission ",
+        "desirable_headline": "Perfil que buscamos",
+        "desirable": "<p>Buscamos un perfil técnico completo dentro del ecosistema Salesforce, con capacidad de adaptarse tanto a desarrollo como a configuración e integración. Se valorará la autonomía, la calidad técnica y la capacidad de analizar soluciones antes de implementarlas.</p><p>Como parte del equipo, esperamos que puedas:</p><ul><li>Tomar ownership de tareas técnicas y proponer enfoques, considerando mantenibilidad y escalabil",
+        "benefits_headline": "Beneficios y condiciones",
+        "benefits": "<p>En RyC Tech Group te ofrecemos beneficios orientados al bienestar y la conciliación:</p><ul><li>Aguinaldos en marzo, septiembre y diciembre.</li><li>Seguro de salud complementario que incluye Plan de Salud, Plan Dental Familiar, Seguro Catastrófico y Seguro de Vida.</li><li>Contrato Indefinido </li></ul><p>Además, el trabajo se realiza en modalidad <strong>híbrida 3x2</strong>, con ubicación en <strong>Las Condes ",
+        "remote": false,
+        "remote_modality": "hybrid",
+        "remote_zone": null,
+        "countries": [
+          "Chile"
+        ],
+        "published_at": 1793715519,
+        "company": {
+          "data": {
+            "id": "ryc-consultores",
+            "type": "company",
+            "attributes": {
+              "name": "RyC Tech Group"
+            }
+          }
+        }
+      },
+      "links": {
+        "public_url": "https://www.getonbrd.com/jobs/desarrollador-a-salesforce-intermedio-ryc-tech-group-santiago"
+      }
+    },
+    {
+      "id": "solutions-architect-interfell-remote",
+      "type": "job",
+      "attributes": {
+        "title": "Solutions Architect",
+        "projects": "<p>Workflow Magic is a dynamic and rapidly growing company specializing in monday.com implementation services. We help businesses streamline their workflows, boost productivity, and maximize their monday.com investments. Our team is passionate about driving success for our clients, and we're looking for a dedicated monday.com Solutions Architect to join us in this mission.</p>",
+        "functions_headline": "Funciones del cargo",
+        "functions": "<ul><li class=\"lexxy-nested-listitem\">Workflow Design and Building:<ul><li>Collaborate with Implementation Managers to help manage and build 10+<br>monday.com clients per week.</li><li>Identify and eliminate isolation, inefficiencies, redundancies, and work silos within<br>client processes.</li><li>Act as the primary point of contact and build strong client relationships.</li><li>Excellent note-taking of each call, a",
+        "description_headline": "Requerimientos del cargo",
+        "description": "<ul><li>Minimum of 3 years of hands-on experience as a Project Manager / Solutions Architect or in a similar role.</li><li>At least 2 years of experience working in a startup environment, developing processes, and procedures, and building out teams.</li><li><strong>Minimum of 1 year of hands-on experience with monday.com.</strong></li><li>Proven problem-solving skills, with the ability to manage multiple projects sim",
+        "desirable_headline": "Opcionales",
+        "desirable": "",
+        "benefits_headline": "Condiciones",
+        "benefits": "<p> Oportunidad de crecimiento con un equipo multinivel</p><p>Vacaciones y feriados</p><p>Flexibilidad y autonomía</p><p>Pago USD</p><p><strong>Trabajo remoto </strong></p>",
+        "remote": true,
+        "remote_modality": "fully_remote",
+        "remote_zone": null,
+        "countries": [
+          "Remote"
+        ],
+        "published_at": 1793635153,
+        "company": {
+          "data": {
+            "id": "interfell-corp",
+            "type": "company",
+            "attributes": {
+              "name": "Interfell"
+            }
+          }
+        }
+      },
+      "links": {
+        "public_url": "https://www.getonbrd.com/jobs/solutions-architect-interfell-remote"
+      }
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "per_page": 100,
+    "total_pages": 4
+  }
+}
