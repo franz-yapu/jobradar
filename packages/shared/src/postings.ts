@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { VERDICTS, VerdictSchema } from "./scoring.js";
 
 export const REMOTE_SCOPES = ["worldwide", "latam", "country", "onsite", "unknown"] as const;
 export const RemoteScopeSchema = z.enum(REMOTE_SCOPES);
@@ -39,16 +40,34 @@ const optionalText = z
   .optional()
   .transform((value) => (value ? value : undefined));
 
+/** `unscored` matches postings that have no score yet; the others match the LATEST score. */
+export const VERDICT_FILTERS = [...VERDICTS, "unscored"] as const;
+
 export const ListPostingsQuerySchema = z.object({
   source: optionalText,
   q: optionalText,
+  verdict: z.enum(VERDICT_FILTERS).optional(),
+  /** Only postings stored at or after this instant. */
+  createdSince: z.iso.datetime({ offset: true }).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 export type ListPostingsQuery = z.output<typeof ListPostingsQuerySchema>;
 
+/** Read-only view of the newest score of a posting. */
+export const LatestScoreSchema = z.object({
+  verdict: VerdictSchema,
+  reasons: z.array(z.string()),
+  blockers: z.array(z.object({ type: z.string(), evidence: z.string() })),
+  scoredAt: z.iso.datetime({ offset: true }),
+});
+export type LatestScoreResponse = z.infer<typeof LatestScoreSchema>;
+
+export const PostingListItemSchema = PostingSchema.extend({ latestScore: LatestScoreSchema.nullable() });
+export type PostingListItemResponse = z.infer<typeof PostingListItemSchema>;
+
 export const PaginatedPostingsSchema = z.object({
-  items: z.array(PostingSchema),
+  items: z.array(PostingListItemSchema),
   page: z.number().int(),
   pageSize: z.number().int(),
   total: z.number().int(),

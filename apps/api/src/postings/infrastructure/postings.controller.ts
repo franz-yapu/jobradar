@@ -23,7 +23,7 @@ import { toSwaggerSchema } from "../../shared/infrastructure/swagger-schema.js";
 import { CreatePosting } from "../application/create-posting.use-case.js";
 import { ListPostings } from "../application/list-postings.use-case.js";
 import { DuplicatePostingError } from "../domain/posting.repository.js";
-import { toPostingResponse } from "./postings.presenter.js";
+import { toPostingListItemResponse, toPostingResponse } from "./postings.presenter.js";
 
 @ApiTags("postings")
 @Controller("postings")
@@ -57,14 +57,25 @@ export class PostingsController {
   @Get()
   @ApiQuery({ name: "source", required: false })
   @ApiQuery({ name: "q", required: false, description: "Matches title, company or description" })
+  @ApiQuery({
+    name: "verdict",
+    required: false,
+    enum: ["fit", "maybe", "reject", "unscored"],
+    description: "Matches the LATEST score of each posting; `unscored` = never scored",
+  })
+  @ApiQuery({ name: "createdSince", required: false, description: "ISO 8601 instant; only postings stored at or after it" })
   @ApiQuery({ name: "page", required: false, schema: { type: "integer", minimum: 1, default: 1 } })
   @ApiQuery({ name: "pageSize", required: false, schema: { type: "integer", minimum: 1, maximum: 100, default: 20 } })
   @ApiOkResponse({ schema: toSwaggerSchema(PaginatedPostingsSchema) })
-  @ApiBadRequestResponse({ description: "Invalid query" })
+  @ApiBadRequestResponse({ description: "Invalid query (e.g. unknown verdict, createdSince not ISO 8601)" })
   async list(
     @Query(new ZodValidationPipe(ListPostingsQuerySchema)) query: ListPostingsQuery,
   ): Promise<PaginatedPostingsResponse> {
-    const result = await this.listPostings.execute(query);
-    return { ...result, items: result.items.map(toPostingResponse) };
+    const { createdSince, ...rest } = query;
+    const result = await this.listPostings.execute({
+      ...rest,
+      createdSince: createdSince ? new Date(createdSince) : undefined,
+    });
+    return { ...result, items: result.items.map(toPostingListItemResponse) };
   }
 }

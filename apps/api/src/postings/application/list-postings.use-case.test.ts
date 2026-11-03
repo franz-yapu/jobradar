@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import type { LatestScore } from "../domain/posting.repository.js";
 import { InMemoryPostingRepository } from "../infrastructure/in-memory-posting.repository.js";
 import { CreatePosting } from "./create-posting.use-case.js";
 import { ListPostings } from "./list-postings.use-case.js";
@@ -53,5 +54,52 @@ describe("ListPostings", () => {
     expect((await list.execute({ q: "nestjs", page: 1, pageSize: 20 })).total).toBe(2);
     expect((await list.execute({ q: "ACME", page: 1, pageSize: 20 })).total).toBe(3);
     expect((await list.execute({ q: "cobol", page: 1, pageSize: 20 })).total).toBe(0);
+  });
+});
+
+describe("ListPostings with scores", () => {
+  const score = (verdict: LatestScore["verdict"], minute: number): LatestScore => ({
+    verdict, reasons: [`r-${verdict}`], blockers: [], scoredAt: new Date(Date.UTC(2026, 0, 2, 0, minute)),
+  });
+  const titles = async (filter: Parameters<ListPostings["execute"]>[0]) =>
+    (await list.execute(filter)).items.map((p) => p.title);
+
+  async function seedScored(): Promise<void> {
+    await seed(4); // Job 1..4, created in that order
+    const all = (await list.execute({ page: 1, pageSize: 10 })).items;
+    const id = (title: string) => all.find((p) => p.title === title)?.id ?? "";
+    repo.attachScore(id("Job 1"), score("fit", 1));
+    repo.attachScore(id("Job 2"), score("reject", 1));
+    repo.attachScore(id("Job 3"), score("fit", 1));
+    repo.attachScore(id("Job 3"), score("reject", 5)); // newest wins: Job 3 is a reject now
+  }
+
+  it("returns latestScore (or null) with every item", async () => {
+    await seedScored();
+    const items = (await list.execute({ page: 1, pageSize: 10 })).items;
+    expect(items.find((p) => p.title === "Job 1")?.latestScore).toMatchObject({ verdict: "fit", reasons: ["r-fit"] });
+    expect(items.find((p) => p.title === "Job 4")?.latestScore).toBeNull();
+  });
+
+  it("filters on the LATEST score only", async () => {
+    await seedScored();
+    expect(await titles({ verdict: "fit", page: 1, pageSize: 10 })).toEqual(["Job 1"]);
+    expect(await titles({ verdict: "reject", page: 1, pageSize: 10 })).toEqual(["Job 3", "Job 2"]);
+    expect(await titles({ verdict: "maybe", page: 1, pageSize: 10 })).toEqual([]);
+  });
+
+  it("filters unscored postings", async () => {
+    await seedScored();
+    expect(await titles({ verdict: "unscored", page: 1, pageSize: 10 })).toEqual(["Job 4"]);
+  });
+
+  it("filters by createdSince (inclusive) and combines with other filters and paging", async () => {
+    await seedScored();
+    const since = new Date(Date.UTC(2026, 0, 1, 0, 0, 2)); // Job 3 and Job 4
+    expect(await titles({ createdSince: since, page: 1, pageSize: 10 })).toEqual(["Job 4", "Job 3"]);
+    expect(await titles({ createdSince: since, verdict: "reject", page: 1, pageSize: 10 })).toEqual(["Job 3"]);
+    const paged = await list.execute({ createdSince: since, page: 2, pageSize: 1 });
+    expect(paged.items.map((p) => p.title)).toEqual(["Job 3"]);
+    expect(paged.total).toBe(2);
   });
 });

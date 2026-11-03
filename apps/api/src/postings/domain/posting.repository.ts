@@ -16,8 +16,25 @@ export class PostingNotFoundError extends Error {
   }
 }
 
+export type VerdictFilter = "fit" | "maybe" | "reject" | "unscored";
+
+/** Read-only view of the newest score of a posting (owned by the scoring module). */
+export interface LatestScore {
+  readonly verdict: "fit" | "maybe" | "reject";
+  readonly reasons: readonly string[];
+  readonly blockers: readonly { readonly type: string; readonly evidence: string }[];
+  readonly scoredAt: Date;
+}
+
+/** A posting plus its newest score; `null` when it has not been scored. */
+export type PostingListItem = Posting & { readonly latestScore: LatestScore | null };
+
 export interface PostingFilter {
   source?: string | undefined;
+  /** Matches the LATEST score of each posting; `unscored` matches postings without any score. */
+  verdict?: VerdictFilter | undefined;
+  /** Only postings with createdAt >= this instant. */
+  createdSince?: Date | undefined;
   /** Case-insensitive match on title, company or description. */
   q?: string | undefined;
   page: number;
@@ -25,7 +42,7 @@ export interface PostingFilter {
 }
 
 export interface PostingPage {
-  items: Posting[];
+  items: PostingListItem[];
   total: number;
 }
 

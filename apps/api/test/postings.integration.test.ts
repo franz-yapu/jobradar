@@ -110,3 +110,63 @@ describe("GET /postings", () => {
     await http().get("/postings?pageSize=101").expect(400);
   });
 });
+
+describe("GET /postings with verdicts", () => {
+  async function createPosting(n: number, createdAt: Date): Promise<string> {
+    const res = await http().post("/postings").send({ ...body, url: `https://acme.com/jobs/v${n}`, title: `Job ${n}` });
+    await prisma.posting.update({ where: { id: res.body.id as string }, data: { createdAt } });
+    return res.body.id as string;
+  }
+  const addScore = (postingId: string, verdict: "fit" | "maybe" | "reject", createdAt: Date, blockers: object[] = []) =>
+    prisma.postingScore.create({
+      data: { postingId, verdict, reasons: [`why ${verdict}`], blockers, profileVersion: 1, promptVersion: "t", model: "m", createdAt },
+    });
+  const t = (hour: number) => new Date(Date.UTC(2026, 10, 3, hour));
+  const titles = async (query: string) => ((await http().get(`/postings?${query}`)).body.items as { title: string }[]).map((p) => p.title);
+
+  beforeEach(async () => {
+    const a = await createPosting(1, t(1));
+    const b = await createPosting(2, t(2));
+    const c = await createPosting(3, t(3));
+    await createPosting(4, t(4)); // never scored
+    await addScore(a, "fit", t(5));
+    await addScore(b, "reject", t(5), [{ type: "location", evidence: "US only" }]);
+    await addScore(c, "fit", t(5));
+    await addScore(c, "reject", t(6)); // newer score supersedes the fit
+  });
+
+  it("includes latestScore (newest score) or null in every item", async () => {
+    const res = await http().get("/postings?pageSize=10");
+    const byTitle = Object.fromEntries((res.body.items as { title: string; latestScore: unknown }[]).map((p) => [p.title, p.latestScore]));
+    expect(byTitle["Job 2"]).toEqual({
+      verdict: "reject", reasons: ["why reject"], blockers: [{ type: "location", evidence: "US only" }],
+      scoredAt: t(5).toISOString(),
+    });
+    expect(byTitle["Job 3"]).toMatchObject({ verdict: "reject", scoredAt: t(6).toISOString() });
+    expect(byTitle["Job 4"]).toBeNull();
+  });
+
+  it("filters on the latest verdict", async () => {
+    expect(await titles("verdict=fit")).toEqual(["Job 1"]);
+    expect(await titles("verdict=reject")).toEqual(["Job 3", "Job 2"]);
+    expect(await titles("verdict=maybe")).toEqual([]);
+  });
+
+  it("filters unscored postings", async () => {
+    expect(await titles("verdict=unscored")).toEqual(["Job 4"]);
+  });
+
+  it("filters by createdSince and combines it with verdict, paging and total", async () => {
+    const since = encodeURIComponent(t(2).toISOString());
+    expect(await titles(`createdSince=${since}`)).toEqual(["Job 4", "Job 3", "Job 2"]);
+    expect(await titles(`createdSince=${since}&verdict=reject`)).toEqual(["Job 3", "Job 2"]);
+    const page = await http().get(`/postings?createdSince=${since}&verdict=reject&page=2&pageSize=1`);
+    expect(page.body).toMatchObject({ page: 2, pageSize: 1, total: 2 });
+    expect(page.body.items).toHaveLength(1);
+  });
+
+  it("returns 400 for an unknown verdict or a non-ISO createdSince", async () => {
+    expect((await http().get("/postings?verdict=great")).status).toBe(400);
+    expect((await http().get("/postings?createdSince=yesterday")).status).toBe(400);
+  });
+});

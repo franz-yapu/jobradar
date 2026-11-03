@@ -1,8 +1,7 @@
-import type { Posting } from "../domain/posting.js";
-import type { PostingFilter, PostingRepository } from "../domain/posting.repository.js";
+import type { PostingFilter, PostingListItem, PostingRepository } from "../domain/posting.repository.js";
 
 export interface ListPostingsResult {
-  items: Posting[];
+  items: PostingListItem[];
   page: number;
   pageSize: number;
   total: number;
