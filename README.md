@@ -48,6 +48,31 @@ pnpm dev                  # API on http://localhost:3000 (web dashboard arrives 
 | `POST` | `/postings` | Create a posting. `201`, `400` invalid body, `409` URL already exists (tracking params and fragments are ignored) |
 | `GET` | `/postings?source=&q=&page=1&pageSize=20` | Paginated list, newest first. `q` matches title, company and description |
 | `GET` | `/health` | `200` with DB status, `503` if the database is down |
+| `GET` / `PUT` | `/profile` | The single candidate profile (`404` until saved; every `PUT` bumps `version`) |
+| `POST` | `/postings/:id/score` | Score a posting against the profile. `201` (history is kept), `400` bad id, `404` unknown posting, `422` `profile_not_configured` / `ai_refused`, `429` `ai_budget_exceeded`, `502` `ai_provider_error`, `503` `ai_not_configured` |
+| `GET` | `/postings/:id/score` | Latest score (`verdict`, `reasons`, `blockers`, profile/prompt version, model). `404` if never scored |
+| `GET` | `/ai/usage` | Today's (UTC) AI spend vs. the daily budget, calls and tokens |
+
+### AI configuration
+| Variable | Meaning |
+|---|---|
+| `AI_PROVIDER` | `anthropic` (default, production target) or `groq` (cheap trials) |
+| `ANTHROPIC_API_KEY` / `GROQ_API_KEY` | Key of the selected provider. The API boots without it; scoring answers `503` |
+| `AI_MODEL` | Optional; defaults to `claude-sonnet-5-5` / `openai/gpt-oss-20b`. Needs a price in `ai/infrastructure/pricing.ts` |
+| `AI_DAILY_BUDGET_USD` | Daily spend cap (UTC day). Over it, scoring answers `429` and no provider call is made |
+
+Every AI call (including failures and budget blocks) is logged in `ai_calls` with tokens, latency and cost.
+A verdict can never contradict its blockers: any blocker forces `reject` in the domain, not in the prompt.
+
+### Prompt evals
+`apps/api/evals` holds 32 labelled postings (ES/EN, synthetic, incl. prompt-injection attempts; add your own anonymized real
+ones to `dataset/real.yaml`) and a [promptfoo](https://promptfoo.dev) config that runs the **real** scoring pipeline.
+```bash
+pnpm --filter @jobradar/api eval         # CALLS THE PAID API (~0.006 USD with a small model): 32 postings
+pnpm --filter @jobradar/api eval:check   # re-print metrics from evals/results/latest.json
+```
+Thresholds (exit code 1 if missed): verdict accuracy ≥ 85%, hard-blocker recall ≥ 90%, **0** `fit` on postings labelled `reject`.
+Cost and latency are reported. Evals are not part of `pnpm quality` or CI. Results are stored in `docs/decisions/LOG.md`.
 
 ### Quality
 ```bash
@@ -72,7 +97,7 @@ architecture decisions live in `docs/adr/`, and Claude Code follows the rules an
 
 ## Roadmap
 - [x] Week 1 – API skeleton, hexagonal structure, Postgres, Docker, CI
-- [ ] Week 2 – AI scoring agent + tests + prompt evals
+- [ ] Week 2 – AI scoring agent + tests + prompt evals (scoring and eval harness done; thresholds pending on Claude, see `docs/decisions/LOG.md`)
 - [ ] Week 3 – n8n workflows (collect postings, notify)
 - [ ] Week 4 – Dashboard, AWS deploy with Terraform, Grafana, live demo
 

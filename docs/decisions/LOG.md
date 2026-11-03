@@ -29,3 +29,18 @@
 - **Why:** the only key available for testing the eval pipeline end to end was a Groq key. The port exists for this; no use case changed, metering and the daily budget apply unchanged.
 - **How:** OpenAI-compatible chat API over `fetch` (no new dependency), JSON mode with the JSON Schema in the system prompt, answer re-validated with Zod. JSON mode is used instead of `json_schema` because not every Groq model supports the latter.
 - **Caveat:** eval results from a Groq model do not validate `claude-sonnet-5-5`; thresholds must be re-checked on the production model before closing SDD-002. Groq prices in `pricing.ts` carry the same dated-table caveat.
+
+## 2026-11-03 – First eval runs (SDD-002 T4): thresholds NOT yet met
+- **Setup:** 32 synthetic postings (7 fit / 6 maybe / 19 reject; ES+EN; 2 prompt-injection cases), model `openai/gpt-oss-20b` on Groq, `temperature: 0`. Model is a trial stand-in: **these numbers do not validate `claude-sonnet-5-5`**.
+- **Results** (accuracy / blocker recall / unsafe fits / cost per run):
+
+  | Prompt | Accuracy | Recall | Unsafe fits | Cost |
+  |---|---|---|---|---|
+  | score-v1 | 71.9% | 84.2% | 3 | 0.0063 USD |
+  | score-v2 | 84.4% | 100% | 0 | 0.0058 USD |
+  | score-v3 | 84.4% | 100% | 0 | 0.0062 USD |
+
+  Thresholds: accuracy >= 85%, recall >= 90%, unsafe fits = 0. Recall and safety pass since v2; accuracy is one case short (27/32).
+- **What the evals found:** v1 never defined `allowedLocations`, so `worldwide` was read as "can work anywhere" and US-only / on-site Madrid / EU-only postings got `fit` (fixed in v2). v2 blocked a role for a missing secondary tool (Docker; fixed in v3). The small model sometimes omits the `blockers` key (1 error per run, different case each time).
+- **Open:** (1) 3 `maybe` cases (`mid-senior-range`, `heavy-devops`, `exceptional-remote`) are debatable labels; the owner should confirm them, labels are not tuned to the model. (2) Re-run on the production model (needs `ANTHROPIC_API_KEY`) before closing SDD-002; consider `gpt-oss-120b` meanwhile. (3) Decide whether to retry once on a schema mismatch. (4) Add ~10 real anonymized postings.
+- **Run notes:** a full run takes ~6.5 min because of Groq rate limits; one call took 62 s.
