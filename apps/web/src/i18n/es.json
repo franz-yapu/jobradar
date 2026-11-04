@@ -27,7 +27,9 @@
     "noMatches": "Ninguna oferta coincide con estos filtros.",
     "page": "Página {{page}} de {{pages}}",
     "previous": "Anterior",
-    "next": "Siguiente"
+    "next": "Siguiente",
+    "paste": "Pegar una oferta",
+    "pagination": "Paginación"
   },
   "errors": {
     "network_error": "No se puede conectar con la API. ¿Está en marcha?",
@@ -124,7 +126,28 @@
     "saved": "Perfil guardado (versión {{version}}).",
     "invalid": "Revisa el perfil: {{message}}",
     "invalidLocation": "Usa un código de país como BO, o latam / worldwide.",
-    "seniorities": { "junior": "Junior", "mid": "Mid", "senior": "Senior", "lead": "Lead" },
-    "contractTypes": { "temporary": "Temporal", "freelance": "Freelance", "internship": "Prácticas", "part_time": "Medio tiempo" }
+    "seniorities": {
+      "junior": "Junior",
+      "mid": "Mid",
+      "senior": "Senior",
+      "lead": "Lead"
+    },
+    "contractTypes": {
+      "temporary": "Temporal",
+      "freelance": "Freelance",
+      "internship": "Prácticas",
+      "part_time": "Medio tiempo"
+    },
+    "sectionSearch": "Criterios de búsqueda"
+  },
+  "layout": {
+    "skip": "Saltar al contenido",
+    "sidebar": "Barra lateral",
+    "main": "Principal",
+    "breadcrumb": "Ruta de navegación",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "collapse": "Contraer barra lateral",
+    "expand": "Expandir barra lateral"
   }
 }

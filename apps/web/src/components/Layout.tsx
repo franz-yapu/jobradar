@@ -1,41 +1,164 @@
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { ChevronsLeftIcon, CloseIcon, ListIcon, MenuIcon, PlusIcon, RadarIcon, UserIcon } from "./icons";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
+const COLLAPSED_KEY = "jobradar.sidebar.collapsed";
+
 const LINKS = [
-  { to: "/", key: "nav.postings", end: true },
-  { to: "/postings/new", key: "nav.add", end: false },
-  { to: "/profile", key: "nav.profile", end: false },
+  { to: "/", key: "nav.postings", end: true, Icon: ListIcon },
+  { to: "/postings/new", key: "nav.add", end: false, Icon: PlusIcon },
+  { to: "/profile", key: "nav.profile", end: false, Icon: UserIcon },
 ] as const;
 
+/** Title of the current page for the breadcrumb. */
+function titleKey(pathname: string): string {
+  return LINKS.find((link) => link.to === pathname)?.key ?? "nav.postings";
+}
+
+function readCollapsed(): boolean {
+  try {
+    return window.localStorage.getItem(COLLAPSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeCollapsed(value: boolean): void {
+  try {
+    window.localStorage.setItem(COLLAPSED_KEY, value ? "1" : "0");
+  } catch {
+    // blocked storage: the choice just lasts for this session
+  }
+}
+
+/**
+ * Admin-style shell: fixed left sidebar on large screens (collapsible to icons), a drawer on phones,
+ * a top bar with the breadcrumb and the language switch, and the page content on a light grey canvas.
+ */
 export function Layout() {
   const { t } = useTranslation();
+  const { pathname } = useLocation();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(readCollapsed);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDrawerOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [drawerOpen]);
+
+  function toggleCollapsed() {
+    setCollapsed((current) => {
+      writeCollapsed(!current);
+      return !current;
+    });
+  }
+
+  const labelClass = collapsed ? "lg:sr-only" : "";
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <div>
-            <h1 className="text-lg font-semibold">{t("app.name")}</h1>
-            <p className="text-xs text-slate-500">{t("app.tagline")}</p>
+    <div className="min-h-screen bg-page text-ink">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-card focus:px-3 focus:py-2 focus:shadow-pop"
+      >
+        {t("layout.skip")}
+      </a>
+
+      {drawerOpen ? (
+        <div className="fixed inset-0 z-30 bg-black/40 lg:hidden" aria-hidden="true" onClick={() => setDrawerOpen(false)} />
+      ) : null}
+
+      <aside
+        id="sidebar"
+        aria-label={t("layout.sidebar")}
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-line bg-sidebar transition-[transform,width] duration-200 lg:visible lg:translate-x-0 ${
+          collapsed ? "lg:w-[76px]" : "lg:w-64"
+        } ${drawerOpen ? "visible translate-x-0 shadow-pop" : "invisible -translate-x-full"}`}
+      >
+        <div className="flex h-16 items-center justify-between gap-2 border-b border-line px-5">
+          <div className="flex items-center gap-3">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-on-primary">
+              <RadarIcon />
+            </span>
+            <span className={`text-lg font-semibold ${labelClass}`}>{t("app.name")}</span>
           </div>
-          <nav className="flex gap-4 text-sm" aria-label="Main">
-            {LINKS.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                end={link.end}
-                className={({ isActive }) => (isActive ? "font-semibold text-slate-900" : "text-slate-600 hover:text-slate-900")}
-              >
-                {t(link.key)}
-              </NavLink>
-            ))}
+          <button
+            type="button"
+            className="rounded-lg p-1.5 text-muted hover:bg-primary-soft hover:text-primary lg:hidden"
+            aria-label={t("layout.closeMenu")}
+            onClick={() => setDrawerOpen(false)}
+          >
+            <CloseIcon />
+          </button>
+        </div>
+
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label={t("layout.main")}>
+          {LINKS.map(({ to, key, end, Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              title={collapsed ? t(key) : undefined}
+              onClick={() => setDrawerOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                  collapsed ? "lg:justify-center" : ""
+                } ${isActive ? "bg-primary-soft text-primary" : "text-muted hover:bg-primary-soft hover:text-primary"}`
+              }
+            >
+              <Icon className="shrink-0" />
+              <span className={labelClass}>{t(key)}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="hidden border-t border-line p-3 lg:block">
+          <button
+            type="button"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted hover:bg-primary-soft hover:text-primary lg:justify-start"
+            aria-pressed={collapsed}
+            aria-label={collapsed ? t("layout.expand") : t("layout.collapse")}
+            onClick={toggleCollapsed}
+          >
+            <ChevronsLeftIcon className={`shrink-0 transition-transform ${collapsed ? "rotate-180" : ""}`} />
+            <span className={labelClass}>{t("layout.collapse")}</span>
+          </button>
+        </div>
+      </aside>
+
+      <div className={`transition-[padding] duration-200 ${collapsed ? "lg:pl-[76px]" : "lg:pl-64"}`}>
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-card/90 px-4 backdrop-blur sm:px-6">
+          <button
+            type="button"
+            className="rounded-lg p-2 text-muted hover:bg-primary-soft hover:text-primary lg:hidden"
+            aria-label={t("layout.openMenu")}
+            aria-controls="sidebar"
+            aria-expanded={drawerOpen}
+            onClick={() => setDrawerOpen(true)}
+          >
+            <MenuIcon />
+          </button>
+          <nav aria-label={t("layout.breadcrumb")} className="min-w-0 flex-1 truncate text-sm text-muted">
+            <span>{t("app.name")}</span>
+            <span className="mx-2" aria-hidden="true">
+              /
+            </span>
+            <span className="font-medium text-ink" aria-current="page">
+              {t(titleKey(pathname))}
+            </span>
           </nav>
           <LanguageSwitcher />
-        </div>
-      </header>
-      <main className="mx-auto max-w-5xl px-4 py-6">
-        <Outlet />
-      </main>
+        </header>
+        <main id="main" className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }

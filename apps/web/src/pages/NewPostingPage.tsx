@@ -2,14 +2,15 @@ import { CreatePostingSchema, REMOTE_SCOPES } from "@jobradar/shared";
 import type { RemoteScope } from "@jobradar/shared";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import type { FormEvent } from "react";
+import type { SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { api, ApiError } from "../api/client";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { Alert, Button, Card, FIELD, FieldLabel } from "../components/ui";
 import { toCreatePosting } from "../lib/manual-posting";
 
-const FIELD = "w-full rounded border border-slate-300 bg-white px-2 py-1 text-sm";
+class FormProblem extends Error {}
 
 export function NewPostingPage() {
   const { t } = useTranslation();
@@ -34,7 +35,7 @@ export function NewPostingPage() {
     },
   });
 
-  function submit(event: FormEvent) {
+  function submit(event: SyntheticEvent) {
     event.preventDefault();
     setProblem(null);
     if (!form.text.trim()) {
@@ -48,74 +49,69 @@ export function NewPostingPage() {
   const duplicate = save.error instanceof ApiError && save.error.status === 409;
 
   return (
-    <section>
-      <h2 className="mb-1 text-xl font-semibold">{t("add.title")}</h2>
-      <p className="mb-4 text-sm text-slate-600">{t("add.intro")}</p>
-      <form className="space-y-3" onSubmit={submit}>
-        <label className="block text-sm">
-          {t("add.text")}
-          <textarea
-            className={`${FIELD} mt-1 h-56`}
-            value={form.text}
-            placeholder={t("add.textPlaceholder")}
-            onChange={(event) => set("text")(event.target.value)}
-          />
-        </label>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {(
-            [
-              ["title", "add.title_field"],
-              ["company", "add.company"],
-              ["url", "add.url"],
-              ["location", "add.location"],
-            ] as const
-          ).map(([key, label]) => (
-            <label key={key} className="block text-sm">
-              {t(label)} <span className="text-xs text-slate-500">({t("add.optional")})</span>
-              <input className={`${FIELD} mt-1`} value={form[key]} onChange={(event) => set(key)(event.target.value)} />
-            </label>
-          ))}
-          <label className="block text-sm">
-            {t("add.scope")} <span className="text-xs text-slate-500">({t("add.optional")})</span>
-            <select className={`${FIELD} mt-1`} value={form.remoteScope} onChange={(event) => set("remoteScope")(event.target.value)}>
-              {REMOTE_SCOPES.map((scope) => (
-                <option key={scope} value={scope}>
-                  {t(`scope.${scope}`)}
-                </option>
-              ))}
-            </select>
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-2xl font-semibold">{t("add.title")}</h2>
+        <p className="mt-1 text-sm text-muted">{t("add.intro")}</p>
+      </div>
+      <form className="space-y-5" onSubmit={submit}>
+        <Card>
+          <label className="block">
+            <FieldLabel>{t("add.text")}</FieldLabel>
+            <textarea
+              className={`${FIELD} h-56`}
+              value={form.text}
+              placeholder={t("add.textPlaceholder")}
+              onChange={(event) => set("text")(event.target.value)}
+            />
           </label>
-        </div>
+        </Card>
+        <Card>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {(
+              [
+                ["title", "add.title_field"],
+                ["company", "add.company"],
+                ["url", "add.url"],
+                ["location", "add.location"],
+              ] as const
+            ).map(([key, label]) => (
+              <label key={key} className="block">
+                <FieldLabel hint={t("add.optional")}>{t(label)}</FieldLabel>
+                <input className={FIELD} value={form[key]} onChange={(event) => set(key)(event.target.value)} />
+              </label>
+            ))}
+            <label className="block">
+              <FieldLabel hint={t("add.optional")}>{t("add.scope")}</FieldLabel>
+              <select className={FIELD} value={form.remoteScope} onChange={(event) => set("remoteScope")(event.target.value)}>
+                {REMOTE_SCOPES.map((scope) => (
+                  <option key={scope} value={scope}>
+                    {t(`scope.${scope}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </Card>
         <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={scoreNow} onChange={(event) => setScoreNow(event.target.checked)} />
+          <input type="checkbox" className="size-4 accent-primary" checked={scoreNow} onChange={(event) => setScoreNow(event.target.checked)} />
           {t("add.scoreNow")}
         </label>
-        {problem ? (
-          <p role="alert" className="text-sm text-red-700">
-            {problem}
-          </p>
-        ) : null}
+        {problem ? <Alert tone="danger">{problem}</Alert> : null}
         {duplicate ? (
-          <p role="alert" className="text-sm text-amber-800">
-            {t("add.duplicate")} <Link className="underline" to="/">{t("add.viewList")}</Link>
-          </p>
+          <Alert tone="warning">
+            {t("add.duplicate")}{" "}
+            <Link className="font-medium underline" to="/">
+              {t("add.viewList")}
+            </Link>
+          </Alert>
         ) : null}
-        {save.error instanceof FormProblem ? (
-          <p role="alert" className="text-sm text-red-700">
-            {t("add.invalid", { message: save.error.message })}
-          </p>
-        ) : null}
+        {save.error instanceof FormProblem ? <Alert tone="danger">{t("add.invalid", { message: save.error.message })}</Alert> : null}
         {save.isError && !duplicate && !(save.error instanceof FormProblem) ? <ErrorMessage error={save.error} /> : null}
-        <button
-          type="submit"
-          className="rounded bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-          disabled={save.isPending}
-        >
+        <Button type="submit" disabled={save.isPending}>
           {save.isPending ? t("add.saving") : t("add.submit")}
-        </button>
+        </Button>
       </form>
-    </section>
+    </div>
   );
 }
-
-class FormProblem extends Error {}

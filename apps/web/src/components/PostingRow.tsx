@@ -1,9 +1,11 @@
 import type { PostingListItemResponse } from "@jobradar/shared";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ErrorMessage } from "./ErrorMessage";
-import { VerdictBadge } from "./VerdictBadge";
 import { isWebUrl } from "../lib/manual-posting";
+import { ChevronDownIcon } from "./icons";
+import { ErrorMessage } from "./ErrorMessage";
+import { Button } from "./ui";
+import { VerdictBadge } from "./VerdictBadge";
 
 interface Props {
   posting: PostingListItemResponse;
@@ -18,65 +20,64 @@ export function PostingRow({ posting, scoring, scoreError, onScore }: Props) {
   const score = posting.latestScore;
   const dateFormat = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: "medium" });
   const detailsId = `details-${posting.id}`;
+  const web = isWebUrl(posting.url);
 
   return (
-    <li className="px-3 py-3" data-testid="posting-row">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <li className="px-5 py-4 transition-colors hover:bg-page" data-testid="posting-row">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 flex-1">
-          <p className="font-medium">
-            {isWebUrl(posting.url) ? (
-              <a href={posting.url} target="_blank" rel="noreferrer noopener" className="text-blue-700 hover:underline">
+          <p className="font-semibold text-ink">
+            {web ? (
+              <a href={posting.url} target="_blank" rel="noreferrer noopener" className="text-ink hover:text-primary hover:underline">
                 {posting.title}
               </a>
             ) : (
               posting.title
             )}
           </p>
-          <p className="text-sm text-slate-600">
+          <p className="mt-0.5 text-sm text-muted">
             {posting.company}
             {posting.location ? ` · ${posting.location}` : ""} · {t(`scope.${posting.remoteScope}`)}
-            {isWebUrl(posting.url) ? "" : ` · ${t("row.manualEntry")}`}
+            {web ? "" : ` · ${t("row.manualEntry")}`}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="mt-0.5 text-xs text-muted">
             {posting.publishedAt
               ? t("row.published", { date: dateFormat.format(new Date(posting.publishedAt)) })
               : t("row.stored", { date: dateFormat.format(new Date(posting.createdAt)) })}
           </p>
-          {score?.reasons[0] ? <p className="mt-1 text-sm text-slate-700">{score.reasons[0]}</p> : null}
+          {score?.reasons[0] ? <p className="mt-2 text-sm text-ink">{score.reasons[0]}</p> : null}
         </div>
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex flex-row-reverse items-center justify-between gap-2 sm:flex-col sm:items-end">
           <VerdictBadge verdict={score?.verdict ?? null} />
-          <button
-            type="button"
-            className="rounded border border-slate-300 bg-white px-2 py-1 text-xs hover:bg-slate-100 disabled:opacity-50"
-            disabled={scoring}
-            onClick={() => onScore(posting.id)}
-          >
-            {scoring ? t("score.scoring") : score ? t("score.again") : t("score.now")}
-          </button>
-          <button
-            type="button"
-            className="text-xs text-slate-600 underline"
-            aria-expanded={open}
-            aria-controls={detailsId}
-            onClick={() => setOpen(!open)}
-          >
-            {open ? t("row.hideDetails") : t("row.details")}
-          </button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled={scoring} onClick={() => onScore(posting.id)}>
+              {scoring ? t("score.scoring") : score ? t("score.again") : t("score.now")}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-expanded={open}
+              aria-controls={detailsId}
+              onClick={() => setOpen(!open)}
+            >
+              {open ? t("row.hideDetails") : t("row.details")}
+              <ChevronDownIcon width={14} height={14} className={open ? "rotate-180" : ""} />
+            </Button>
+          </div>
         </div>
       </div>
       {scoreError ? (
-        <div className="mt-2">
+        <div className="mt-3">
           <ErrorMessage error={scoreError} />
         </div>
       ) : null}
       {open ? (
-        <div id={detailsId} className="mt-3 space-y-3 rounded bg-slate-50 p-3 text-sm">
+        <div id={detailsId} className="mt-4 space-y-4 rounded-lg bg-page p-4 text-sm">
           {score ? (
             <>
               <div>
-                <h4 className="font-semibold">{t("row.reasons")}</h4>
-                <ul className="list-inside list-disc">
+                <h4 className="mb-1 font-semibold">{t("row.reasons")}</h4>
+                <ul className="list-inside list-disc space-y-0.5 text-ink">
                   {score.reasons.map((reason) => (
                     <li key={reason}>{reason}</li>
                   ))}
@@ -84,8 +85,8 @@ export function PostingRow({ posting, scoring, scoreError, onScore }: Props) {
               </div>
               {score.blockers.length > 0 ? (
                 <div>
-                  <h4 className="font-semibold">{t("row.blockers")}</h4>
-                  <ul className="list-inside list-disc">
+                  <h4 className="mb-1 font-semibold">{t("row.blockers")}</h4>
+                  <ul className="list-inside list-disc space-y-0.5 text-ink">
                     {score.blockers.map((blocker) => (
                       <li key={`${blocker.type}-${blocker.evidence}`}>
                         <strong>{t(`blocker.${blocker.type}`)}:</strong> {blocker.evidence}
@@ -96,10 +97,10 @@ export function PostingRow({ posting, scoring, scoreError, onScore }: Props) {
               ) : null}
             </>
           ) : (
-            <p className="text-slate-500">{t("row.noReasons")}</p>
+            <p className="text-muted">{t("row.noReasons")}</p>
           )}
-          {isWebUrl(posting.url) ? (
-            <a href={posting.url} target="_blank" rel="noreferrer noopener" className="text-blue-700 underline">
+          {web ? (
+            <a href={posting.url} target="_blank" rel="noreferrer noopener" className="inline-block font-medium text-primary hover:underline">
               {t("row.open")}
             </a>
           ) : null}

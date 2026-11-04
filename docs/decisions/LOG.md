@@ -98,3 +98,11 @@
 - **Storage:** `candidate_profiles` gets `education`, `experience`, `languages` (Json, default `[]`) and `certifications` (text[]); the existing dev profile migrated untouched. The Prisma adapter validates the JSON with the shared Zod schemas when reading.
 - **Web safety net:** the profile screen carries the imported background along when saving, so editing the criteria never wipes it (its own editor arrives in T3).
 - **Tests:** PDFs are generated in the tests (`test/helpers/make-pdf.ts`); no real AI call.
+
+## 2026-11-04 – SDD-005 T2: admin-style interface
+- **Look and feel only:** sidebar, top bar with breadcrumb, white cards on a light grey page, soft shadows, rounded controls and a single blue accent, in the style of admin templates such as Metronic. No code, icons or images from that (licensed) template: the components are ours (`components/ui.tsx`, `icons.tsx`).
+- **Tokens:** colours, shadows and the font stack are CSS variables in `styles.css`, exposed to Tailwind through `@theme inline` (`bg-card`, `text-muted`, `border-line`, `bg-primary`...). Dark mode follows the system and only swaps the variables.
+- **Shell:** fixed sidebar on large screens, collapsible to icons (choice remembered in `localStorage`, labels stay for screen readers), drawer on phones (closes with Escape, on backdrop press or after choosing a link). Skip-to-content link, `aria-current` on the active page, visible keyboard focus.
+- **Pages:** postings are one card with a divided list (stacked on phones), filters in their own card, profile split into "Search criteria" and "Summary" cards. Behaviour, accessible names and test ids are unchanged, so the E2E needed no edits.
+- **No nested interactive elements:** the "Paste a posting" call to action is a link styled as a button (`buttonClass`), not a button inside a link, and its text differs from the sidebar's "Add posting" so both stay unambiguous for assistive tech and tests.
+- **Checked by screenshot** (desktop, collapsed, phone, drawer, dark): it caught a cramped row layout on phones, fixed before committing.

@@ -27,7 +27,9 @@
     "noMatches": "No postings match these filters.",
     "page": "Page {{page}} of {{pages}}",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "paste": "Paste a posting",
+    "pagination": "Pagination"
   },
   "errors": {
     "network_error": "The API is unreachable. Is it running?",
@@ -124,7 +126,28 @@
     "saved": "Profile saved (version {{version}}).",
     "invalid": "Check the profile: {{message}}",
     "invalidLocation": "Use a country code like BO, or latam / worldwide.",
-    "seniorities": { "junior": "Junior", "mid": "Mid", "senior": "Senior", "lead": "Lead" },
-    "contractTypes": { "temporary": "Temporary", "freelance": "Freelance", "internship": "Internship", "part_time": "Part time" }
+    "seniorities": {
+      "junior": "Junior",
+      "mid": "Mid",
+      "senior": "Senior",
+      "lead": "Lead"
+    },
+    "contractTypes": {
+      "temporary": "Temporary",
+      "freelance": "Freelance",
+      "internship": "Internship",
+      "part_time": "Part time"
+    },
+    "sectionSearch": "Search criteria"
+  },
+  "layout": {
+    "skip": "Skip to content",
+    "sidebar": "Sidebar",
+    "main": "Main",
+    "breadcrumb": "Breadcrumb",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
   }
 }

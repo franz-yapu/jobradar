@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { PlusIcon } from "../components/icons";
 import { PostingFiltersBar } from "../components/PostingFiltersBar";
 import { PostingRow } from "../components/PostingRow";
+import { Button, buttonClass, Card } from "../components/ui";
 import { PAGE_SIZE, parseFilters, serializeFilters, sinceToCreatedSince } from "../lib/filters";
 import type { PostingFilters } from "../lib/filters";
 
@@ -13,6 +15,7 @@ export function PostingsPage() {
   const queryClient = useQueryClient();
   const [params, setParams] = useSearchParams();
   const filters = parseFilters(params);
+  const filtered = Boolean(filters.verdict || filters.q || filters.source || filters.since !== "all");
 
   const query = useQuery({
     queryKey: ["postings", filters],
@@ -37,50 +40,56 @@ export function PostingsPage() {
   const pages = query.data ? Math.max(1, Math.ceil(query.data.total / query.data.pageSize)) : 1;
 
   return (
-    <section>
-      <h2 className="mb-4 text-xl font-semibold">{t("postings.title")}</h2>
-      <PostingFiltersBar key={filters.q} filters={filters} onChange={change} />
-      {query.isPending ? <p>{t("postings.loading")}</p> : null}
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-semibold">{t("postings.title")}</h2>
+          <p className="mt-1 text-sm text-muted">{query.data ? t("postings.total", { count: query.data.total }) : t("app.tagline")}</p>
+        </div>
+        <Link to="/postings/new" className={buttonClass()}>
+          <PlusIcon width={16} height={16} />
+          {t("postings.paste")}
+        </Link>
+      </div>
+
+      <Card>
+        <PostingFiltersBar key={filters.q} filters={filters} onChange={change} />
+      </Card>
+
+      {query.isPending ? <p className="text-muted">{t("postings.loading")}</p> : null}
       {query.isError ? <ErrorMessage error={query.error} onRetry={() => void query.refetch()} /> : null}
       {query.data ? (
         query.data.items.length === 0 ? (
-          <p>{filters.verdict || filters.q || filters.source || filters.since !== "all" ? t("postings.noMatches") : t("postings.empty")}</p>
+          <Card>
+            <p className="text-center text-muted">{filtered ? t("postings.noMatches") : t("postings.empty")}</p>
+          </Card>
         ) : (
           <>
-            <p className="mb-2 text-sm text-slate-500">{t("postings.total", { count: query.data.total })}</p>
-            <ul className="divide-y divide-slate-200 rounded border border-slate-200 bg-white">
-              {query.data.items.map((posting) => (
-                <PostingRow
-                  key={posting.id}
-                  posting={posting}
-                  scoring={score.isPending && score.variables === posting.id}
-                  scoreError={score.isError && score.variables === posting.id ? score.error : null}
-                  onScore={(postingId) => score.mutate(postingId)}
-                />
-              ))}
-            </ul>
-            <nav className="mt-4 flex items-center justify-between text-sm" aria-label="Pagination">
-              <button
-                type="button"
-                className="rounded border border-slate-300 bg-white px-3 py-1 disabled:opacity-40"
-                disabled={filters.page <= 1}
-                onClick={() => change({ ...filters, page: filters.page - 1 })}
-              >
+            <Card className="overflow-hidden [&>div]:p-0">
+              <ul className="divide-y divide-line">
+                {query.data.items.map((posting) => (
+                  <PostingRow
+                    key={posting.id}
+                    posting={posting}
+                    scoring={score.isPending && score.variables === posting.id}
+                    scoreError={score.isError && score.variables === posting.id ? score.error : null}
+                    onScore={(postingId) => score.mutate(postingId)}
+                  />
+                ))}
+              </ul>
+            </Card>
+            <nav className="flex items-center justify-between text-sm" aria-label={t("postings.pagination")}>
+              <Button variant="outline" disabled={filters.page <= 1} onClick={() => change({ ...filters, page: filters.page - 1 })}>
                 {t("postings.previous")}
-              </button>
-              <span>{t("postings.page", { page: filters.page, pages })}</span>
-              <button
-                type="button"
-                className="rounded border border-slate-300 bg-white px-3 py-1 disabled:opacity-40"
-                disabled={filters.page >= pages}
-                onClick={() => change({ ...filters, page: filters.page + 1 })}
-              >
+              </Button>
+              <span className="text-muted">{t("postings.page", { page: filters.page, pages })}</span>
+              <Button variant="outline" disabled={filters.page >= pages} onClick={() => change({ ...filters, page: filters.page + 1 })}>
                 {t("postings.next")}
-              </button>
+              </Button>
             </nav>
           </>
         )
       ) : null}
-    </section>
+    </div>
   );
 }

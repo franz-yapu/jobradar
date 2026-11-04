@@ -1,6 +1,8 @@
 import { useId, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { CloseIcon } from "./icons";
+import { FIELD, FieldLabel } from "./ui";
 
 interface Props {
   label: string;
@@ -41,28 +43,30 @@ export function ChipInput({ label, hint, values, onChange, normalize, invalidMes
   }
 
   return (
-    <div className="text-sm">
-      <label htmlFor={id} className="block">
-        {label}
+    <div>
+      <label htmlFor={id}>
+        <FieldLabel>{label}</FieldLabel>
       </label>
-      <ul className="my-1 flex flex-wrap gap-1" aria-label={label}>
-        {values.map((value) => (
-          <li key={value} className="inline-flex items-center gap-1 rounded-full bg-slate-200 px-2 py-0.5">
-            {value}
-            <button
-              type="button"
-              className="text-slate-600 hover:text-slate-900"
-              aria-label={t("profile.remove", { item: value })}
-              onClick={() => onChange(values.filter((item) => item !== value))}
-            >
-              ×
-            </button>
-          </li>
-        ))}
-      </ul>
+      {values.length > 0 ? (
+        <ul className="mb-2 flex flex-wrap gap-1.5" aria-label={label}>
+          {values.map((value) => (
+            <li key={value} className="inline-flex items-center gap-1 rounded-md bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary">
+              {value}
+              <button
+                type="button"
+                className="rounded p-0.5 hover:bg-primary hover:text-on-primary"
+                aria-label={t("profile.remove", { item: value })}
+                onClick={() => onChange(values.filter((item) => item !== value))}
+              >
+                <CloseIcon width={12} height={12} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <input
         id={id}
-        className="w-full rounded border border-slate-300 bg-white px-2 py-1"
+        className={FIELD}
         value={draft}
         placeholder={hint}
         onChange={(event) => setDraft(event.target.value)}
@@ -70,7 +74,7 @@ export function ChipInput({ label, hint, values, onChange, normalize, invalidMes
         onBlur={commit}
         aria-invalid={invalid}
       />
-      {invalid && invalidMessage ? <p className="mt-1 text-xs text-red-700">{invalidMessage}</p> : null}
+      {invalid && invalidMessage ? <p className="mt-1 text-xs text-danger-ink">{invalidMessage}</p> : null}
     </div>
   );
 }

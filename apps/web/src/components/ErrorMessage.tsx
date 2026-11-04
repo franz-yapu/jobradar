@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { ApiError, ContractError } from "../api/client";
+import { Alert, Button } from "./ui";
 
 const KNOWN_CODES = new Set(["ai_budget_exceeded", "ai_not_configured", "profile_not_configured", "ai_refused", "ai_provider_error"]);
 
@@ -17,13 +18,13 @@ export function errorKey(error: unknown): string {
 export function ErrorMessage({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const { t } = useTranslation();
   return (
-    <div role="alert" className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+    <Alert tone="danger">
       <p>{t(errorKey(error))}</p>
       {onRetry ? (
-        <button type="button" className="mt-2 underline" onClick={onRetry}>
+        <Button variant="outline" size="sm" className="mt-2" onClick={onRetry}>
           {t("errors.retry")}
-        </button>
+        </Button>
       ) : null}
-    </div>
+    </Alert>
   );
 }

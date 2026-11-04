@@ -1,1 +1,104 @@
 @import "tailwindcss";
+
+/*
+ * Design tokens (SDD-005 T2). Admin-dashboard look: light grey page, white cards, soft shadows, rounded
+ * controls, one blue accent. Values are CSS variables so dark mode only swaps them; Tailwind utilities
+ * (bg-card, text-muted, border-line, bg-primary...) are generated from the @theme block below.
+ */
+:root {
+  --page: #f9f9f9;
+  --card: #ffffff;
+  --sidebar: #ffffff;
+  --line: #f1f1f4;
+  --line-strong: #dbdfe9;
+  --ink: #071437;
+  --muted: #78829d;
+  --primary: #1b84ff;
+  --primary-hover: #056ee9;
+  --primary-soft: #eff6ff;
+  --on-primary: #ffffff;
+  --success: #17c653;
+  --success-soft: #dfffea;
+  --success-ink: #0b7a30;
+  --warning: #f6b100;
+  --warning-soft: #fff8dd;
+  --warning-ink: #8a6100;
+  --danger: #f8285a;
+  --danger-soft: #ffeef3;
+  --danger-ink: #c01445;
+  --shadow-card: 0 3px 4px 0 rgb(0 0 0 / 3%);
+  --shadow-pop: 0 4px 24px 0 rgb(0 0 0 / 12%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0b0c10;
+    --card: #15171c;
+    --sidebar: #111318;
+    --line: #22252d;
+    --line-strong: #2f333d;
+    --ink: #eceef5;
+    --muted: #8c93a8;
+    --primary: #3b97ff;
+    --primary-hover: #66adff;
+    --primary-soft: #11233f;
+    --success-soft: #0f2a1b;
+    --success-ink: #4ade80;
+    --warning-soft: #2a2208;
+    --warning-ink: #fbbf24;
+    --danger-soft: #2f1019;
+    --danger-ink: #fb7185;
+    --shadow-card: none;
+    --shadow-pop: 0 4px 24px 0 rgb(0 0 0 / 50%);
+  }
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-card: var(--card);
+  --color-sidebar: var(--sidebar);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-on-primary: var(--on-primary);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-ink: var(--success-ink);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-ink: var(--warning-ink);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-ink: var(--danger-ink);
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Visible keyboard focus on every interactive element. */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
