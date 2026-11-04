@@ -29,7 +29,6 @@
     "previous": "Anterior",
     "next": "Siguiente"
   },
-  "comingSoon": "Esta pantalla llega a continuación.",
   "errors": {
     "network_error": "No se puede conectar con la API. ¿Está en marcha?",
     "contract": "La API respondió con un formato inesperado.",
@@ -106,5 +105,26 @@
     "textRequired": "Primero pega el texto de la oferta.",
     "invalid": "Revisa los campos: {{message}}",
     "viewList": "Ir a la lista"
+  },
+  "profile": {
+    "title": "Tu perfil",
+    "intro": "Las ofertas se evalúan contra este perfil.",
+    "empty": "Todavía no hay perfil. Complétalo y guárdalo para empezar a evaluar.",
+    "stack": "Stack",
+    "stackHint": "Escribe una tecnología y pulsa Enter",
+    "locations": "Ubicaciones permitidas",
+    "locationsHint": "Código de país ISO (BO), latam o worldwide; pulsa Enter",
+    "seniority": "Seniority",
+    "english": "Nivel máximo de inglés exigido que aceptas",
+    "contracts": "Contratos a excluir",
+    "summary": "Resumen",
+    "remove": "Quitar {{item}}",
+    "save": "Guardar perfil",
+    "saving": "Guardando…",
+    "saved": "Perfil guardado (versión {{version}}).",
+    "invalid": "Revisa el perfil: {{message}}",
+    "invalidLocation": "Usa un código de país como BO, o latam / worldwide.",
+    "seniorities": { "junior": "Junior", "mid": "Mid", "senior": "Senior", "lead": "Lead" },
+    "contractTypes": { "temporary": "Temporal", "freelance": "Freelance", "internship": "Prácticas", "part_time": "Medio tiempo" }
   }
 }

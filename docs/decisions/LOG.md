@@ -82,3 +82,10 @@
 - **Manual paste:** only the text is required. Without a link the identity is `manual:<sha-256 of the text, whitespace-collapsed and lowercased>`; the API accepts that form (shared `ManualUrlSchema`, `normalizeUrl` keeps it as is), so pasting the same text twice gives `409`. Title defaults to the first line, company to `—`. Such postings show no external link and are labelled "pasted by hand".
 - **Scoring errors** are translated by machine code (`ai_budget_exceeded`, `ai_not_configured`, `profile_not_configured`, `ai_refused`, `ai_provider_error`).
 - **Not done yet (T3):** profile screen and the Playwright E2E.
+
+## 2026-11-04 – SDD-004 T3: profile screen and E2E
+- **Profile screen:** edits every field of the current profile (stack and locations as chips, locations normalized to `BO` / `latam` / `worldwide`, validated with the shared `SaveProfileSchema` before sending). CV import will extend it in SDD-005.
+- **E2E (Playwright, one ordered scenario):** save profile, paste two postings, score one on paste and one from the list, duplicate paste, verdict filter in the URL, live switch to Spanish that survives a reload. It runs the real API and database with a `DeterministicAiProvider` (a posting mentioning `C2` is rejected, anything else is a fit), on ports 3100 / 5174.
+- **Safety:** the E2E API empties its database, so `apps/api/e2e/server.ts` refuses to start unless the database name ends in `_test` or `_e2e`.
+- **CI:** a separate `e2e` job (Postgres service, Chromium installed) so `pnpm quality` needs no browser download.
+- **Stable test hook:** the verdict badge has `data-testid="verdict"` because its text is mixed with an icon and exact-text locators did not match.

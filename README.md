@@ -37,6 +37,7 @@ docker compose up -d      # postgres, n8n, grafana
 pnpm install
 pnpm db:deploy            # apply Prisma migrations to the dev database
 pnpm dev                  # API on http://localhost:3000 and web dashboard on http://localhost:5173
+pnpm e2e                  # Playwright end-to-end test of the dashboard (disposable DB, fake AI)
 ```
 - Swagger UI: <http://localhost:3000/docs> · Health: <http://localhost:3000/health>
 - If a host port is already taken, change `POSTGRES_PORT`, `N8N_PORT` or `GRAFANA_PORT` in `.env`
@@ -103,7 +104,8 @@ architecture decisions live in `docs/adr/`, and Claude Code follows the rules an
 - [x] Week 1 – API skeleton, hexagonal structure, Postgres, Docker, CI
 - [ ] Week 2 – AI scoring agent + tests + prompt evals (scoring and eval harness done; thresholds pending on Claude, see `docs/decisions/LOG.md`)
 - [x] Week 3 – n8n workflows: collect + score Get on Board postings, daily Telegram summary (`n8n/workflows/README.md`; Telegram delivery verified live)
-- [ ] Week 4 – Dashboard, AWS deploy with Terraform, Grafana, live demo
+- [x] Week 4a – Web dashboard (list, filters, scoring, manual paste, profile, EN/ES, Playwright E2E)
+- [ ] Week 4b – CV import (SDD-005), accounts / SaaS (SDD-006), AWS deploy with Terraform, Grafana (SDD-007), live demo
 
 ## Author
 Franz Yapu – Full Stack Developer · [Portfolio](https://franz-yapu.github.io) · [LinkedIn](https://linkedin.com/in/franz-jhonny-yapu-mamani-bab89018a)

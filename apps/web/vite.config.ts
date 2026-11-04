@@ -15,5 +15,7 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     css: false,
+    // Playwright specs (e2e/) run with `pnpm e2e`, not with Vitest.
+    include: ["src/**/*.test.{ts,tsx}"],
   },
 });

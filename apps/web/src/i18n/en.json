@@ -29,7 +29,6 @@
     "previous": "Previous",
     "next": "Next"
   },
-  "comingSoon": "This screen is coming next.",
   "errors": {
     "network_error": "The API is unreachable. Is it running?",
     "contract": "The API answered with an unexpected format.",
@@ -106,5 +105,26 @@
     "textRequired": "Paste the posting text first.",
     "invalid": "Check the fields: {{message}}",
     "viewList": "Go to the list"
+  },
+  "profile": {
+    "title": "Your profile",
+    "intro": "Postings are scored against this profile.",
+    "empty": "No profile yet. Fill it in and save to start scoring.",
+    "stack": "Stack",
+    "stackHint": "Type a technology and press Enter",
+    "locations": "Allowed locations",
+    "locationsHint": "ISO country code (BO), latam or worldwide; press Enter",
+    "seniority": "Seniority",
+    "english": "Highest English level required that you accept",
+    "contracts": "Contracts to exclude",
+    "summary": "Summary",
+    "remove": "Remove {{item}}",
+    "save": "Save profile",
+    "saving": "Saving…",
+    "saved": "Profile saved (version {{version}}).",
+    "invalid": "Check the profile: {{message}}",
+    "invalidLocation": "Use a country code like BO, or latam / worldwide.",
+    "seniorities": { "junior": "Junior", "mid": "Mid", "senior": "Senior", "lead": "Lead" },
+    "contractTypes": { "temporary": "Temporary", "freelance": "Freelance", "internship": "Internship", "part_time": "Part time" }
   }
 }

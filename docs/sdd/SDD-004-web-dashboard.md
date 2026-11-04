@@ -1,6 +1,6 @@
 # SDD-004 – Web dashboard (React + Vite)
 
-**Status:** Approved (2026-11-04) · **Week:** 4 · **Depends on:** SDD-001, SDD-002, SDD-003
+**Status:** Implemented (2026-11-04) · Approved (2026-11-04) · **Week:** 4 · **Depends on:** SDD-001, SDD-002, SDD-003
 
 ## Context
 Everything is operated with `curl` or n8n. PRD feature 5 asks for a dashboard (list, filters, verdicts, links). The owner confirmed the brief with these additions: a profile screen, manual paste as versatile as possible, a UI switchable live between English and Spanish, and a future login for a SaaS deployment. The owner also wants to **upload a CV (PDF)** and have the profile (including academic data) extracted from it: that needs a new AI use case and a wider profile model, so it is split out (see Scope).

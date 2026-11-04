@@ -7,7 +7,7 @@ import { createI18n } from "../i18n";
 
 function LocationProbe() {
   const location = useLocation();
-  return <output data-testid="location">{location.pathname + location.search}</output>;
+  return <span data-testid="location">{location.pathname + location.search}</span>;
 }
 
 /** Renders the whole app on `route`; `data-testid="location"` exposes the current URL. */
