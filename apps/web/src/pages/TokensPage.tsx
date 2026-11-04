@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { KeyIcon } from "../components/icons";
+import { TokenGuide } from "../components/TokenGuide";
 import { Alert, Button, Card, FIELD, FieldLabel, PageHeader } from "../components/ui";
 
 const TOKENS_KEY = ["api-tokens"] as const;
@@ -83,9 +84,6 @@ function NewSecret({ created, onDone }: { created: CreatedApiTokenResponse; onDo
           {copied ? t("tokens.copied") : t("tokens.copy")}
         </Button>
       </div>
-      <p className="mt-3">
-        {t("tokens.useIt")} <code>JOBRADAR_API_TOKEN={"<token>"}</code>
-      </p>
       <Button variant="outline" size="sm" className="mt-3" onClick={onDone}>
         {t("tokens.saved")}
       </Button>
@@ -140,6 +138,8 @@ export function TokensPage() {
       </Card>
 
       {created ? <NewSecret created={created} onDone={() => setCreated(null)} /> : null}
+
+      <TokenGuide secret={created?.token ?? null} />
 
       {list.isPending ? <p className="text-muted">{t("postings.loading")}</p> : null}
       {list.isError ? <ErrorMessage error={list.error} onRetry={() => void list.refetch()} /> : null}

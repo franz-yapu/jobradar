@@ -276,7 +276,6 @@
     "secretWarning": "Cópialo ahora: solo se muestra esta vez y no se puede recuperar. Si lo pierdes, revócalo y crea otro.",
     "copy": "Copiar",
     "copied": "Copiado",
-    "useIt": "Para n8n, ponlo en tu .env como",
     "saved": "Ya lo guardé",
     "empty": "Todavía no hay tokens.",
     "created": "creado el {{date}}",
@@ -287,7 +286,32 @@
     "revoke": "Revocar",
     "revokeNamed": "Revocar {{name}}",
     "confirmRevoke": "Sí, revocar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "guide": {
+      "title": "Conecta n8n en 4 pasos",
+      "intro": "n8n recoge las ofertas y envía tu resumen diario. Necesita un token para actuar en tu cuenta.",
+      "s1": {
+        "title": "Crea un token",
+        "text": "Ponle un nombre como «n8n» y pulsa Crear token arriba. El secreto aparece una sola vez."
+      },
+      "s2": {
+        "title": "Pon el token en tu .env",
+        "text": "Abre el archivo .env junto a docker-compose.yml y añade esta línea (reemplaza JOBRADAR_API_TOKEN= si ya está vacía). No lo compartas ni lo subas a git.",
+        "copy": "Copiar la línea del .env"
+      },
+      "s3": {
+        "title": "Reinicia n8n",
+        "text": "En una terminal, en la carpeta del proyecto, ejecuta:",
+        "copy": "Copiar el comando"
+      },
+      "s4": {
+        "title": "Importa y activa los workflows",
+        "a": "Abre n8n en http://localhost:5678 y entra en Workflows.",
+        "b": "Elige Import from file y selecciona los dos archivos de n8n/workflows/ (01-collect-getonboard y 02-daily-summary-telegram).",
+        "c": "Abre cada uno y activa el interruptor Active.",
+        "check": "Comprueba que funcionó: en Executions las ejecuciones salen en verde y esta página muestra «último uso». Un error 401 significa que el token es incorrecto o fue revocado: crea otro y repite desde el paso 2."
+      }
+    }
   },
   "theme": {
     "label": "Tema",
