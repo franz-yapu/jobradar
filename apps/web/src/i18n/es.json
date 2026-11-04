@@ -7,7 +7,8 @@
     "postings": "Ofertas",
     "add": "Añadir oferta",
     "profile": "Perfil",
-    "tokens": "Tokens de API"
+    "tokens": "Tokens de API",
+    "account": "Cuenta"
   },
   "language": {
     "label": "Idioma",
@@ -54,7 +55,9 @@
     "signup_disabled": "El registro está cerrado en este servidor.",
     "bad_origin": "Esta petición vino de una dirección en la que el servidor no confía.",
     "too_many_tokens": "Ya tienes 10 tokens activos. Revoca uno primero.",
-    "unauthenticated": "Tu sesión terminó. Inicia sesión de nuevo."
+    "unauthenticated": "Tu sesión terminó. Inicia sesión de nuevo.",
+    "password_required": "Añade primero una contraseña, o Google sería tu única forma de entrar.",
+    "password_exists": "Esta cuenta ya tiene una contraseña."
   },
   "filters": {
     "search": "Buscar",
@@ -263,6 +266,17 @@
       "f2": "Puntuadas según tu propio perfil",
       "f3": "Un resumen en Telegram cada mañana",
       "footer": "Privado por defecto: cada cuenta ve solo sus propios datos."
+    },
+    "google": {
+      "continue": "Continuar con Google",
+      "or": "o",
+      "errors": {
+        "google_failed": "No se pudo completar el acceso con Google. Inténtalo de nuevo.",
+        "google_link_required": "Ya existe una cuenta con ese correo. Entra con tu contraseña y conecta Google desde Cuenta.",
+        "google_taken": "Esa cuenta de Google ya está conectada a otra cuenta de JobRadar.",
+        "signup_disabled": "El registro está cerrado. Pide acceso al propietario.",
+        "too_many_attempts": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo."
+      }
     }
   },
   "tokens": {
@@ -318,5 +332,32 @@
     "light": "Claro",
     "dark": "Oscuro",
     "system": "Sistema"
+  },
+  "account": {
+    "title": "Cuenta",
+    "intro": "Cómo entras a JobRadar.",
+    "methods": "Formas de entrar",
+    "dismiss": "Cerrar",
+    "verified": "Verificado",
+    "unverified": "Sin verificar",
+    "password": {
+      "set": "Definida",
+      "notSet": "Sin definir",
+      "hasOne": "Puedes entrar con tu correo y tu contraseña.",
+      "intro": "Esta cuenta entra con Google. Añade una contraseña para entrar también con tu correo, o para poder desconectar Google.",
+      "save": "Guardar contraseña",
+      "saving": "Guardando…"
+    },
+    "google": {
+      "connected": "Conectado",
+      "notConnected": "Sin conectar",
+      "connect": "Conectar Google",
+      "connectText": "Conecta Google para entrar con un clic. Tu correo sigue siendo el mismo.",
+      "connectedText": "Puedes entrar con Google o con tu contraseña.",
+      "needPassword": "Google es tu única forma de entrar. Añade una contraseña para poder desconectarlo.",
+      "disconnect": "Desconectar Google",
+      "confirmDisconnect": "Sí, desconectar",
+      "linked": "Google quedó conectado a tu cuenta."
+    }
   }
 }

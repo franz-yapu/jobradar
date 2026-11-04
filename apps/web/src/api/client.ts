@@ -6,6 +6,7 @@ import {
   PostingScoreSchema,
   PostingSchema,
   ProfileSchema,
+  ProvidersSchema,
   UserSchema,
 } from "@jobradar/shared";
 import type {
@@ -18,6 +19,7 @@ import type {
   PostingResponse,
   PostingScoreResponse,
   ProfileResponse,
+  ProvidersResponse,
   SaveProfileInput,
   UserResponse,
 } from "@jobradar/shared";
@@ -71,6 +73,16 @@ export interface ApiClient {
   /** The secret is in the answer once; it cannot be read again. */
   createApiToken(name: string): Promise<CreatedApiTokenResponse>;
   revokeApiToken(id: string): Promise<void>;
+
+  /** Which sign-in methods the server offers. */
+  providers(): Promise<ProvidersResponse>;
+  /** Disconnects Google; the server refuses (`password_required`) when it is the only way in. */
+  disconnectGoogle(): Promise<void>;
+  /** For an account created with Google: its first password. */
+  setPassword(password: string): Promise<void>;
+  /** Pages the browser navigates to (not fetch calls): the Google round trip starts on the server. */
+  googleSignInUrl(returnTo?: string): string;
+  googleLinkUrl(returnTo?: string): string;
 }
 
 interface ClientOptions {
@@ -171,6 +183,11 @@ export function createApiClient({ baseUrl, fetchFn, onUnauthorized }: ClientOpti
     listApiTokens: () => request("/auth/tokens", z.array(ApiTokenSchema)),
     createApiToken: (name) => request("/auth/tokens", CreatedApiTokenSchema, { method: "POST", body: JSON.stringify({ name }) }),
     revokeApiToken: (id) => request(`/auth/tokens/${encodeURIComponent(id)}`, z.undefined(), { method: "DELETE" }),
+    providers: () => request("/auth/providers", ProvidersSchema),
+    disconnectGoogle: () => request("/auth/google", z.undefined(), { method: "DELETE" }),
+    setPassword: (password) => request("/auth/password", z.undefined(), { method: "PUT", body: JSON.stringify({ password }) }),
+    googleSignInUrl: (returnTo) => `${base}/auth/google/start${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`,
+    googleLinkUrl: (returnTo) => `${base}/auth/google/link${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`,
   };
 }
 

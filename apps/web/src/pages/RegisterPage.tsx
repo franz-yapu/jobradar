@@ -7,6 +7,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/auth-context";
 import { AuthLayout } from "../components/AuthLayout";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { GoogleSignIn } from "../components/GoogleSignIn";
 import { Alert, Button, FIELD, FieldLabel } from "../components/ui";
 import { returnPath } from "./LoginPage";
 
@@ -43,6 +44,7 @@ export function RegisterPage() {
 
   return (
     <AuthLayout title={t("auth.register.title")} subtitle={t("auth.register.subtitle")}>
+      <GoogleSignIn returnTo={returnPath(state)} />
       <form className="space-y-4" onSubmit={onSubmit}>
         <label className="block">
           <FieldLabel>{t("auth.email")}</FieldLabel>

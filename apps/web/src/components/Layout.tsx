@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/auth-context";
-import { ChevronsLeftIcon, CloseIcon, KeyIcon, ListIcon, LogoutIcon, MenuIcon, PlusIcon, RadarIcon, UserIcon } from "./icons";
+import { ChevronsLeftIcon, CloseIcon, KeyIcon, ListIcon, LogoutIcon, MenuIcon, PlusIcon, RadarIcon, ShieldIcon, UserIcon } from "./icons";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { ThemeSwitcher } from "./ThemeSwitcher";
 
@@ -12,6 +12,7 @@ const LINKS = [
   { to: "/", key: "nav.postings", end: true, Icon: ListIcon },
   { to: "/postings/new", key: "nav.add", end: false, Icon: PlusIcon },
   { to: "/profile", key: "nav.profile", end: false, Icon: UserIcon },
+  { to: "/settings/account", key: "nav.account", end: false, Icon: ShieldIcon },
   { to: "/settings/tokens", key: "nav.tokens", end: false, Icon: KeyIcon },
 ] as const;
 

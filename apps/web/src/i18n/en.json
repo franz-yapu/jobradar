@@ -7,7 +7,8 @@
     "postings": "Postings",
     "add": "Add posting",
     "profile": "Profile",
-    "tokens": "API tokens"
+    "tokens": "API tokens",
+    "account": "Account"
   },
   "language": {
     "label": "Language",
@@ -54,7 +55,9 @@
     "signup_disabled": "Registration is closed on this server.",
     "bad_origin": "This request came from an address the server does not trust.",
     "too_many_tokens": "You already have 10 active tokens. Revoke one first.",
-    "unauthenticated": "Your session ended. Please log in again."
+    "unauthenticated": "Your session ended. Please log in again.",
+    "password_required": "Add a password first, or Google would be your only way in.",
+    "password_exists": "This account already has a password."
   },
   "filters": {
     "search": "Search",
@@ -263,6 +266,17 @@
       "f2": "Scored against your own profile",
       "f3": "A summary in Telegram each morning",
       "footer": "Private by default: every account sees only its own data."
+    },
+    "google": {
+      "continue": "Continue with Google",
+      "or": "or",
+      "errors": {
+        "google_failed": "Google sign-in did not complete. Try again.",
+        "google_link_required": "An account with that email already exists. Log in with your password, then connect Google from Account.",
+        "google_taken": "That Google account is already connected to another JobRadar account.",
+        "signup_disabled": "Registration is closed. Ask the owner for access.",
+        "too_many_attempts": "Too many attempts. Wait a few minutes and try again."
+      }
     }
   },
   "tokens": {
@@ -318,5 +332,32 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "account": {
+    "title": "Account",
+    "intro": "How you sign in to JobRadar.",
+    "methods": "Sign-in methods",
+    "dismiss": "Dismiss",
+    "verified": "Verified",
+    "unverified": "Not verified",
+    "password": {
+      "set": "Set",
+      "notSet": "Not set",
+      "hasOne": "You can log in with your email and password.",
+      "intro": "This account signs in with Google. Add a password to also log in with your email, or to be able to disconnect Google.",
+      "save": "Save password",
+      "saving": "Saving…"
+    },
+    "google": {
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "connect": "Connect Google",
+      "connectText": "Connect Google to log in with one click. Your email stays the same.",
+      "connectedText": "You can log in with Google or with your password.",
+      "needPassword": "Google is your only way in. Add a password to be able to disconnect it.",
+      "disconnect": "Disconnect Google",
+      "confirmDisconnect": "Yes, disconnect",
+      "linked": "Google is now connected to your account."
+    }
   }
 }

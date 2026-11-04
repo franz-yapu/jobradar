@@ -40,6 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       retry: () => void me.refetch(),
       login: async (email, password) => setUser(await api.login(email, password)),
       register: async (email, password) => setUser(await api.register(email, password)),
+      refreshUser: async () => {
+        await me.refetch();
+      },
       logout: async () => {
         try {
           await api.logout();

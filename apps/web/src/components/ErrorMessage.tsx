@@ -3,7 +3,7 @@ import { ApiError, ContractError } from "../api/client";
 import { Alert, Button } from "./ui";
 
 const KNOWN_CODES = new Set(["ai_budget_exceeded", "ai_not_configured", "profile_not_configured", "ai_refused", "ai_provider_error", "cv_not_pdf", "cv_too_long", "cv_no_text",
-  "invalid_credentials", "too_many_attempts", "email_taken", "weak_password", "signup_disabled", "bad_origin", "too_many_tokens", "unauthenticated",
+  "invalid_credentials", "too_many_attempts", "email_taken", "weak_password", "signup_disabled", "bad_origin", "too_many_tokens", "unauthenticated", "password_required", "password_exists",
 ]);
 
 /** Maps any error to a translated, human message. */

@@ -6,6 +6,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/auth-context";
 import { AuthLayout } from "../components/AuthLayout";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { GoogleSignIn } from "../components/GoogleSignIn";
 import { Button, FIELD, FieldLabel } from "../components/ui";
 
 /** Where to go after logging in: the page that sent us here, if it was a local path. */
@@ -36,6 +37,7 @@ export function LoginPage() {
 
   return (
     <AuthLayout title={t("auth.login.title")} subtitle={t("auth.login.subtitle")}>
+      <GoogleSignIn returnTo={returnPath(state)} />
       <form className="space-y-4" onSubmit={onSubmit}>
         <label className="block">
           <FieldLabel>{t("auth.email")}</FieldLabel>

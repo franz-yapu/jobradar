@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { RequireAuth } from "./auth/RequireAuth";
 import { Layout } from "./components/Layout";
+import { AccountPage } from "./pages/AccountPage";
 import { LoginPage } from "./pages/LoginPage";
 import { NewPostingPage } from "./pages/NewPostingPage";
 import { PostingsPage } from "./pages/PostingsPage";
@@ -18,6 +19,7 @@ export function App() {
           <Route index element={<PostingsPage />} />
           <Route path="postings/new" element={<NewPostingPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="settings/account" element={<AccountPage />} />
           <Route path="settings/tokens" element={<TokensPage />} />
           <Route path="*" element={<PostingsPage />} />
         </Route>
