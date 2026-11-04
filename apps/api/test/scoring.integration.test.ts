@@ -58,7 +58,7 @@ describe("POST /postings/:id/score", () => {
     expect(res.status).toBe(201);
     expect(res.body).toMatchObject({
       postingId: id, verdict: "maybe", reasons: ["Needs checking"], blockers: [],
-      profileVersion: 1, promptVersion: "score-v3", model: "fake-model",
+      profileVersion: 1, promptVersion: "score-v4", model: "fake-model",
     });
     const call = await prisma.aiCall.findFirstOrThrow();
     expect(res.body.aiCallId).toBe(call.id);
@@ -150,5 +150,34 @@ describe("GET /postings/:id/score", () => {
 
   it("400 on a malformed id", async () => {
     expect((await http().get("/postings/nope/score")).status).toBe(400);
+  });
+});
+
+describe("scoring uses the profile background", () => {
+  it("sends the experience and education saved with the profile to the model", async () => {
+    await http().put("/profile").send({
+      ...profile,
+      education: [{ institution: "UMSA", degree: "BSc", field: "Informatics" }],
+      experience: [{ company: "Acme", role: "Backend Developer", startYear: 2020, current: true, highlights: ["Built the billing API"] }],
+    }).expect(200);
+    const id = await createPosting();
+    fake.willReturn({ verdict: "maybe", reasons: ["Needs checking"], blockers: [] });
+
+    await http().post(`/postings/${id}/score`).expect(201);
+
+    const system = fake.requests[0]?.system ?? "";
+    expect(system).toContain("Backend Developer");
+    expect(system).toContain("Acme");
+    expect(system).toContain("Built the billing API");
+    expect(system).toContain("BSc");
+  });
+
+  it("keeps the prompt without a background section for a profile without one", async () => {
+    await http().put("/profile").send(profile).expect(200);
+    const id = await createPosting();
+    fake.willReturn({ verdict: "maybe", reasons: ["Needs checking"], blockers: [] });
+
+    await http().post(`/postings/${id}/score`).expect(201);
+    expect(fake.requests[0]?.system).not.toContain("background");
   });
 });

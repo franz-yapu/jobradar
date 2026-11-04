@@ -106,7 +106,8 @@ architecture decisions live in `docs/adr/`, and Claude Code follows the rules an
 - [ ] Week 2 – AI scoring agent + tests + prompt evals (scoring and eval harness done; thresholds pending on Claude, see `docs/decisions/LOG.md`)
 - [x] Week 3 – n8n workflows: collect + score Get on Board postings, daily Telegram summary (`n8n/workflows/README.md`; Telegram delivery verified live)
 - [x] Week 4a – Web dashboard (list, filters, scoring, manual paste, profile, EN/ES, Playwright E2E)
-- [ ] Week 4b – CV import (SDD-005), accounts / SaaS (SDD-006), AWS deploy with Terraform, Grafana (SDD-007), live demo
+- [x] Week 4b – CV import from a PDF and admin-style interface (SDD-005)
+- [ ] Week 4c – Accounts / SaaS (SDD-006), AWS deploy with Terraform, Grafana (SDD-007), live demo
 
 ## Author
 Franz Yapu – Full Stack Developer · [Portfolio](https://franz-yapu.github.io) · [LinkedIn](https://linkedin.com/in/franz-jhonny-yapu-mamani-bab89018a)

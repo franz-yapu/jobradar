@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { makePdf } from "../../api/test/helpers/make-pdf";
 
 /**
  * Main flow of the dashboard against the real API and database, with a deterministic AI (see apps/api/e2e).
@@ -60,4 +61,50 @@ test("save profile, paste postings, score them, filter and switch language", asy
   await expect(page.getByTestId("verdict")).toHaveText(/Encaja/);
   await page.reload();
   await expect(page.getByRole("link", { name: "Perfil" })).toBeVisible();
+});
+
+/**
+ * Runs after the scenario above (same file, one worker): the profile already exists (version 1).
+ * The API reads the PDF for real; only the AI answer is the deterministic fake.
+ */
+test("import a CV, review the draft, complete it and save", async ({ page }) => {
+  await page.goto("/profile");
+  await expect(page.getByText("Profile saved")).toHaveCount(0);
+
+  // The privacy notice is shown before anything is uploaded.
+  await expect(page.getByRole("note")).toContainText("sent to the AI provider");
+
+  const cv = makePdf([["Backend developer", "TypeScript, NestJS, PostgreSQL", "BSc Informatics, UMSA"]]);
+  await page.getByLabel("CV file (PDF)").setInputFiles({ name: "cv.pdf", mimeType: "application/pdf", buffer: cv });
+  await page.getByRole("button", { name: "Read my CV" }).click();
+
+  // The draft replaces the form, but nothing is saved yet.
+  await expect(page.getByText(/Draft from your CV/)).toBeVisible();
+  await expect(page.getByText("No country was found")).toBeVisible();
+  await expect(page.getByText("Seniority was estimated")).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Company" })).toHaveValue("Acme");
+  await expect(page.getByRole("textbox", { name: "Institution" })).toHaveValue("UMSA");
+  await expect(page.getByText("AWS Cloud Practitioner")).toBeVisible();
+  await expect(page.getByLabel("Seniority")).toHaveValue("senior");
+
+  // The CV had no country, so saving is refused until the candidate adds one.
+  await page.getByRole("button", { name: "Save profile" }).click();
+  await expect(page.getByText("Check the profile")).toBeVisible();
+
+  await page.getByRole("textbox", { name: "Allowed locations" }).fill("bo");
+  await page.getByRole("textbox", { name: "Allowed locations" }).press("Enter");
+  await page.getByRole("button", { name: "Save profile" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Profile saved (version 2)" })).toBeVisible();
+  await expect(page.getByText(/Draft from your CV/)).toHaveCount(0);
+
+  // It is really stored: a reload shows the imported background.
+  await page.reload();
+  await expect(page.getByRole("textbox", { name: "Company" })).toHaveValue("Acme");
+  await expect(page.getByRole("textbox", { name: "Language" }).first()).toHaveValue("English");
+
+  // And the preview of an unsaved draft can be discarded.
+  await page.getByLabel("CV file (PDF)").setInputFiles({ name: "cv.pdf", mimeType: "application/pdf", buffer: cv });
+  await page.getByRole("button", { name: "Read my CV" }).click();
+  await page.getByRole("button", { name: "Discard draft" }).click();
+  await expect(page.getByText(/Draft from your CV/)).toHaveCount(0);
 });

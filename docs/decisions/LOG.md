@@ -115,3 +115,10 @@
 - **Client:** `importCv` sends `multipart/form-data`; the JSON content type is now set only for string bodies so the browser adds the multipart boundary.
 - **Checked by screenshot** with a mocked import (desktop and phone).
 - **Not run for real yet:** no real CV was sent to Groq; the owner is asked first (cents).
+
+## 2026-11-04 – SDD-005 T4: scoring uses the CV background (score-v4)
+- **Prompt:** profiles with a background (experience, education, languages, certifications) get an extra `background` section in the system prompt (jobs with company, role, years and at most 2 highlights of 200 characters each; studies; languages; certifications) and a short instruction: it is evidence of skills and seniority, never invented, never overrides `maxEnglishLevel` or the other criteria, and a missing degree is a reason to mention, not a blocker. CV text stays inside the JSON (escaped), so it cannot read as instructions.
+- **Same prompt for profiles without background:** the text is byte-for-byte the score-v3 prompt, so the earlier eval numbers still describe them (`franz.json` has no background). Only the stored `promptVersion` changes to `score-v4`.
+- **Evals not re-run:** with the evals' profile the prompt did not change, so a re-run would measure Groq's noise, not this change. A run with a CV-based profile is the meaningful one; it needs the owner's OK (about 0.006 USD) and a labelled dataset for that profile.
+- **E2E:** a second scenario imports a PDF generated in the test (the API reads it for real, the AI is the deterministic fake), checks the privacy notice, the draft banner and warnings, that saving is refused until a country is added, that the data is stored (survives a reload) and that a draft can be discarded. The fake AI answers CV extraction with a fixed result that has no country on purpose.
+- **Still pending from the owner:** try the import with the real CV (Groq, cents).

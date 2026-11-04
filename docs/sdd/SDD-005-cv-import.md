@@ -1,6 +1,6 @@
 # SDD-005 – CV import (PDF) and Metronic-style interface
 
-**Status:** Approved (2026-11-04) · **Week:** 4 · **Depends on:** SDD-002, SDD-004
+**Status:** Implemented (2026-11-04; real CV import and eval re-run pending the owner's OK) · Approved (2026-11-04) · **Week:** 4 · **Depends on:** SDD-002, SDD-004
 
 ## Context
 The profile is typed by hand and holds only six fields. The owner wants to upload a CV (PDF) and have the job-search profile, including academic data, extracted from it. The owner also asked for an interface built with Tailwind and "similar to Metronic" (a commercial admin template: left sidebar, top bar, white cards on a light grey page, soft shadows, rounded controls). Metronic's code and assets are licensed, so only the look and feel is reproduced, with our own components.
