@@ -48,6 +48,15 @@ describe("GroqAiProvider", () => {
     expect(system).toContain('"verdict"');
   });
 
+  it("asks gpt-oss models for low reasoning so a long answer is not eaten by thinking tokens", async () => {
+    const oss = setup(() => ({ body: ok('{"verdict":"fit"}') }), "openai/gpt-oss-20b");
+    await oss.provider.generateStructured(request);
+    expect(oss.sent[0]?.body).toMatchObject({ reasoning_effort: "low", max_tokens: 8000 });
+    const llama = setup(() => ({ body: ok('{"verdict":"fit"}') }));
+    await llama.provider.generateStructured(request);
+    expect(llama.sent[0]?.body).not.toHaveProperty("reasoning_effort");
+  });
+
   it("returns validated data with usage and cost", async () => {
     const { provider } = setup(() => ({ body: ok('{"verdict":"maybe"}') }));
     const result = await provider.generateStructured(request);

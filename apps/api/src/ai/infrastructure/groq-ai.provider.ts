@@ -97,6 +97,8 @@ export class GroqAiProvider implements AiProvider {
           max_tokens: this.maxTokens,
           temperature: 0,
           response_format: { type: "json_object" },
+          // gpt-oss spends output tokens thinking before it answers; a long structured answer (a whole CV) gets cut off.
+          ...(this.model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
           messages: [
             { role: "system", content: system },
             { role: "user", content },
