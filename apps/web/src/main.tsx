@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { I18nextProvider } from "react-i18next";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./App";
+import { AuthProvider } from "./auth/AuthProvider";
 import { createAppI18n } from "./i18n";
 import "./styles.css";
 
@@ -16,7 +17,9 @@ createRoot(root).render(
     <I18nextProvider i18n={createAppI18n()}>
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <App />
+          <AuthProvider>
+            <App />
+          </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>
     </I18nextProvider>

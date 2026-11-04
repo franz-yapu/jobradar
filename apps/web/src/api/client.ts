@@ -1,12 +1,17 @@
 import {
+  ApiTokenSchema,
+  CreatedApiTokenSchema,
   CvDraftSchema,
   PaginatedPostingsSchema,
   PostingScoreSchema,
   PostingSchema,
   ProfileSchema,
+  UserSchema,
 } from "@jobradar/shared";
 import type {
+  ApiTokenResponse,
   CreatePostingInput,
+  CreatedApiTokenResponse,
   CvDraft,
   ListPostingsQuery,
   PaginatedPostingsResponse,
@@ -14,12 +19,15 @@ import type {
   PostingScoreResponse,
   ProfileResponse,
   SaveProfileInput,
+  UserResponse,
 } from "@jobradar/shared";
+import { z } from "zod";
 import type { ZodType } from "zod";
 
 /**
  * The only module of the web app that talks to the API. Every response is validated with the shared Zod
- * schemas. When accounts arrive (SDD-006) the auth token is added here and nowhere else.
+ * schemas. The session lives in an httpOnly cookie the browser sends by itself (`credentials: "include"`),
+ * so no token ever passes through this code; a 401 on a protected call tells the app the session ended.
  */
 
 /** Error from the API: `status` is the HTTP status, `code` the machine code (or HTTP error name) of the body. */
@@ -53,12 +61,27 @@ export interface ApiClient {
   saveProfile(body: SaveProfileInput): Promise<ProfileResponse>;
   /** Reads a CV (PDF) and returns a profile draft to review; nothing is stored by the API. */
   importCv(file: File): Promise<CvDraft>;
+
+  register(email: string, password: string): Promise<UserResponse>;
+  login(email: string, password: string): Promise<UserResponse>;
+  logout(): Promise<void>;
+  /** `null` when nobody is logged in (401). */
+  me(): Promise<UserResponse | null>;
+  listApiTokens(): Promise<ApiTokenResponse[]>;
+  /** The secret is in the answer once; it cannot be read again. */
+  createApiToken(name: string): Promise<CreatedApiTokenResponse>;
+  revokeApiToken(id: string): Promise<void>;
 }
 
 interface ClientOptions {
   baseUrl: string;
   fetchFn?: typeof fetch;
+  /** Called when a protected endpoint answers 401: the session is gone. */
+  onUnauthorized?: () => void;
 }
+
+/** Endpoints where a 401 is an expected answer ("wrong password", "nobody logged in"), not a lost session. */
+const EXPECTS_401 = new Set(["/auth/login", "/auth/register", "/auth/me", "/auth/logout"]);
 
 async function readErrorBody(response: Response): Promise<{ code: string; message: string }> {
   const fallback = { code: response.statusText || "error", message: `HTTP ${response.status}` };
@@ -75,7 +98,7 @@ async function readErrorBody(response: Response): Promise<{ code: string; messag
   }
 }
 
-export function createApiClient({ baseUrl, fetchFn }: ClientOptions): ApiClient {
+export function createApiClient({ baseUrl, fetchFn, onUnauthorized }: ClientOptions): ApiClient {
   const base = baseUrl.replace(/\/+$/, "");
 
   async function request<T>(path: string, schema: ZodType<T>, init?: RequestInit): Promise<T> {
@@ -83,6 +106,7 @@ export function createApiClient({ baseUrl, fetchFn }: ClientOptions): ApiClient 
     let response: Response;
     try {
       response = await doFetch(`${base}${path}`, {
+        credentials: "include",
         ...init,
         // JSON bodies get their content type; a FormData body must not (the browser adds the multipart boundary).
         headers: {
@@ -96,9 +120,11 @@ export function createApiClient({ baseUrl, fetchFn }: ClientOptions): ApiClient 
     }
     if (!response.ok) {
       const { code, message } = await readErrorBody(response);
+      if (response.status === 401 && !EXPECTS_401.has(path)) onUnauthorized?.();
       throw new ApiError(response.status, code, message);
     }
-    const parsed = schema.safeParse(await response.json());
+    // 204 No Content has no body to parse (logout, revoke).
+    const parsed = schema.safeParse(response.status === 204 ? undefined : await response.json());
     if (!parsed.success) throw new ContractError(`Unexpected response from ${path}: ${parsed.error.message}`);
     return parsed.data;
   }
@@ -131,7 +157,30 @@ export function createApiClient({ baseUrl, fetchFn }: ClientOptions): ApiClient 
       form.append("file", file);
       return request("/profile/import-cv", CvDraftSchema, { method: "POST", body: form });
     },
+    register: (email, password) => request("/auth/register", UserSchema, { method: "POST", body: JSON.stringify({ email, password }) }),
+    login: (email, password) => request("/auth/login", UserSchema, { method: "POST", body: JSON.stringify({ email, password }) }),
+    logout: () => request("/auth/logout", z.undefined(), { method: "POST" }),
+    me: async () => {
+      try {
+        return await request("/auth/me", UserSchema);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) return null;
+        throw error;
+      }
+    },
+    listApiTokens: () => request("/auth/tokens", z.array(ApiTokenSchema)),
+    createApiToken: (name) => request("/auth/tokens", CreatedApiTokenSchema, { method: "POST", body: JSON.stringify({ name }) }),
+    revokeApiToken: (id) => request(`/auth/tokens/${encodeURIComponent(id)}`, z.undefined(), { method: "DELETE" }),
   };
 }
 
-export const api: ApiClient = createApiClient({ baseUrl: import.meta.env.VITE_API_BASE ?? "/api" });
+/** Set by the app shell: what to do when the session ends in the middle of using the app. */
+let unauthorizedHandler: (() => void) | null = null;
+export function setUnauthorizedHandler(handler: (() => void) | null): void {
+  unauthorizedHandler = handler;
+}
+
+export const api: ApiClient = createApiClient({
+  baseUrl: import.meta.env.VITE_API_BASE ?? "/api",
+  onUnauthorized: () => unauthorizedHandler?.(),
+});

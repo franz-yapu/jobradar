@@ -17,10 +17,10 @@ describe("Layout", () => {
     getProfile.mockReset().mockResolvedValue(null);
   });
 
-  it("offers the three screens in the sidebar and marks the current one", async () => {
+  it("offers the screens in the sidebar and marks the current one", async () => {
     renderApp({ route: "/profile" });
     const nav = within(screen.getByRole("navigation", { name: "Main" }));
-    expect(nav.getAllByRole("link").map((link) => link.textContent)).toEqual(["Postings", "Add posting", "Profile"]);
+    expect(nav.getAllByRole("link").map((link) => link.textContent)).toEqual(["Postings", "Add posting", "Profile", "API tokens"]);
     expect(nav.getByRole("link", { name: "Profile" })).toHaveAttribute("aria-current", "page");
     expect(nav.getByRole("link", { name: "Postings" })).not.toHaveAttribute("aria-current");
   });

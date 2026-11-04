@@ -122,4 +122,93 @@ describe("api client", () => {
     const file = new File(["x"], "cv.pdf");
     await expect(clientWith(fetchFn).importCv(file)).rejects.toMatchObject({ status: 422, code: "cv_no_text" });
   });
+
+  describe("accounts", () => {
+    const USER = { id: "0b0b6b8e-0000-4000-8000-000000000001", email: "jane@example.com" };
+    const TOKEN = {
+      id: "0b0b6b8e-0000-4000-8000-000000000002",
+      name: "n8n",
+      prefix: "jr_abcde",
+      createdAt: "2026-11-04T10:00:00.000Z",
+      lastUsedAt: null,
+      revokedAt: null,
+    };
+    const empty = (status = 204) => new Response(null, { status });
+
+    it("sends the session cookie with every call, so the app never handles a token itself", async () => {
+      const fetchFn = vi.fn<typeof fetch>().mockResolvedValue(json({ items: [], page: 1, pageSize: 25, total: 0 }));
+      await clientWith(fetchFn).listPostings();
+      expect(fetchFn.mock.calls[0]?.[1]?.credentials).toBe("include");
+    });
+
+    it("registers and logs in with a JSON body", async () => {
+      const fetchFn = vi.fn<typeof fetch>().mockResolvedValue(json(USER, 201));
+      const client = clientWith(fetchFn);
+      await expect(client.register("jane@example.com", "a-long-password")).resolves.toEqual(USER);
+      fetchFn.mockResolvedValue(json(USER));
+      await expect(client.login("jane@example.com", "a-long-password")).resolves.toEqual(USER);
+
+      const [registerCall, loginCall] = fetchFn.mock.calls;
+      expect(registerCall?.[0]).toBe("/api/auth/register");
+      expect(JSON.parse(String(registerCall?.[1]?.body))).toEqual({ email: "jane@example.com", password: "a-long-password" });
+      expect(loginCall?.[0]).toBe("/api/auth/login");
+      expect(loginCall?.[1]?.method).toBe("POST");
+    });
+
+    it("maps login failures to their machine code without treating them as a lost session", async () => {
+      const lost = vi.fn();
+      const fetchFn = vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(json({ statusCode: 401, error: "invalid_credentials", message: "Invalid email or password" }, 401));
+      const client = createApiClient({ baseUrl: "/api", fetchFn, onUnauthorized: lost });
+      await expect(client.login("a@b.co", "wrong")).rejects.toMatchObject({ status: 401, code: "invalid_credentials" });
+      expect(lost).not.toHaveBeenCalled();
+    });
+
+    it("me() is null when nobody is logged in, and that is not a lost session either", async () => {
+      const lost = vi.fn();
+      const fetchFn = vi.fn<typeof fetch>().mockResolvedValue(json({ statusCode: 401, error: "unauthenticated", message: "x" }, 401));
+      const client = createApiClient({ baseUrl: "/api", fetchFn, onUnauthorized: lost });
+      await expect(client.me()).resolves.toBeNull();
+      expect(lost).not.toHaveBeenCalled();
+
+      fetchFn.mockResolvedValue(json(USER));
+      await expect(client.me()).resolves.toEqual(USER);
+    });
+
+    it("tells the app when a protected call finds the session gone", async () => {
+      const lost = vi.fn();
+      const fetchFn = vi.fn<typeof fetch>().mockResolvedValue(json({ statusCode: 401, error: "unauthenticated", message: "x" }, 401));
+      const client = createApiClient({ baseUrl: "/api", fetchFn, onUnauthorized: lost });
+      await expect(client.listPostings()).rejects.toMatchObject({ status: 401 });
+      expect(lost).toHaveBeenCalledTimes(1);
+    });
+
+    it("logs out and revokes tokens through 204 answers", async () => {
+      const fetchFn = vi.fn<typeof fetch>().mockImplementation(async () => empty());
+      const client = clientWith(fetchFn);
+      await expect(client.logout()).resolves.toBeUndefined();
+      await expect(client.revokeApiToken(TOKEN.id)).resolves.toBeUndefined();
+      expect(fetchFn.mock.calls[0]?.[1]?.method).toBe("POST");
+      expect(fetchFn.mock.calls[1]).toMatchObject([`/api/auth/tokens/${TOKEN.id}`, { method: "DELETE" }]);
+    });
+
+    it("lists tokens (no secret) and receives the secret only when creating one", async () => {
+      const fetchFn = vi.fn<typeof fetch>().mockResolvedValue(json([TOKEN]));
+      const client = clientWith(fetchFn);
+      const listed = await client.listApiTokens();
+      expect(listed).toEqual([TOKEN]);
+      expect(listed[0]).not.toHaveProperty("token");
+
+      fetchFn.mockResolvedValue(json({ ...TOKEN, token: "jr_secret-value" }, 201));
+      const created = await client.createApiToken("n8n");
+      expect(created.token).toBe("jr_secret-value");
+      expect(JSON.parse(String(fetchFn.mock.calls[1]?.[1]?.body))).toEqual({ name: "n8n" });
+    });
+
+    it("refuses a token list that carries something unexpected", async () => {
+      const fetchFn = vi.fn<typeof fetch>().mockResolvedValue(json([{ id: "not-a-uuid" }]));
+      await expect(clientWith(fetchFn).listApiTokens()).rejects.toBeInstanceOf(ContractError);
+    });
+  });
 });

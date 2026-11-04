@@ -6,7 +6,8 @@
   "nav": {
     "postings": "Ofertas",
     "add": "Añadir oferta",
-    "profile": "Perfil"
+    "profile": "Perfil",
+    "tokens": "Tokens de API"
   },
   "language": {
     "label": "Idioma",
@@ -45,7 +46,15 @@
     "cv_not_pdf": "Ese archivo no es un PDF.",
     "cv_too_long": "El CV tiene demasiadas páginas (15 como máximo).",
     "cv_no_text": "El PDF no tiene texto legible. Los CV escaneados no se admiten; exporta un PDF con texto.",
-    "cv_too_large": "El archivo es demasiado grande (5 MB como máximo)."
+    "cv_too_large": "El archivo es demasiado grande (5 MB como máximo).",
+    "invalid_credentials": "Correo o contraseña incorrectos.",
+    "too_many_attempts": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+    "email_taken": "Ya existe una cuenta con ese correo.",
+    "weak_password": "Esa contraseña no es aceptable. Usa al menos 10 caracteres y que no sea tu correo.",
+    "signup_disabled": "El registro está cerrado en este servidor.",
+    "bad_origin": "Esta petición vino de una dirección en la que el servidor no confía.",
+    "too_many_tokens": "Ya tienes 10 tokens activos. Revoca uno primero.",
+    "unauthenticated": "Tu sesión terminó. Inicia sesión de nuevo."
   },
   "filters": {
     "search": "Buscar",
@@ -207,5 +216,54 @@
     "closeMenu": "Cerrar menú",
     "collapse": "Contraer barra lateral",
     "expand": "Expandir barra lateral"
+  },
+  "auth": {
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "logout": "Cerrar sesión",
+    "login": {
+      "title": "Iniciar sesión",
+      "subtitle": "Bienvenido de nuevo. Escribe tu correo y tu contraseña.",
+      "submit": "Entrar",
+      "submitting": "Entrando…",
+      "noAccount": "¿Aún no tienes cuenta?",
+      "register": "Crea una"
+    },
+    "register": {
+      "title": "Crea tu cuenta",
+      "subtitle": "Tus ofertas, tu perfil y tu presupuesto de IA son privados de tu cuenta.",
+      "submit": "Crear cuenta",
+      "submitting": "Creando…",
+      "passwordHint": "mínimo {{count}} caracteres",
+      "confirm": "Repite la contraseña",
+      "mismatch": "Las contraseñas no coinciden.",
+      "tooShort": "La contraseña necesita al menos {{count}} caracteres.",
+      "haveAccount": "¿Ya tienes cuenta?",
+      "login": "Inicia sesión"
+    }
+  },
+  "tokens": {
+    "title": "Tokens de API",
+    "intro": "Los tokens permiten que n8n y los scripts actúen en tu cuenta sin tu contraseña. Cada token muestra su secreto una sola vez.",
+    "createTitle": "Crear un token",
+    "name": "Nombre",
+    "create": "Crear token",
+    "creating": "Creando…",
+    "secretTitle": "Token «{{name}}» creado",
+    "secretWarning": "Cópialo ahora: solo se muestra esta vez y no se puede recuperar. Si lo pierdes, revócalo y crea otro.",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "useIt": "Para n8n, ponlo en tu .env como",
+    "saved": "Ya lo guardé",
+    "empty": "Todavía no hay tokens.",
+    "created": "creado el {{date}}",
+    "lastUsed": "último uso {{date}}",
+    "neverUsed": "nunca usado",
+    "active": "Activo",
+    "revoked": "Revocado",
+    "revoke": "Revocar",
+    "revokeNamed": "Revocar {{name}}",
+    "confirmRevoke": "Sí, revocar",
+    "cancel": "Cancelar"
   }
 }

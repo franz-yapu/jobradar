@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { ChevronsLeftIcon, CloseIcon, ListIcon, MenuIcon, PlusIcon, RadarIcon, UserIcon } from "./icons";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/auth-context";
+import { ChevronsLeftIcon, CloseIcon, KeyIcon, ListIcon, LogoutIcon, MenuIcon, PlusIcon, RadarIcon, UserIcon } from "./icons";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
 const COLLAPSED_KEY = "jobradar.sidebar.collapsed";
@@ -10,6 +11,7 @@ const LINKS = [
   { to: "/", key: "nav.postings", end: true, Icon: ListIcon },
   { to: "/postings/new", key: "nav.add", end: false, Icon: PlusIcon },
   { to: "/profile", key: "nav.profile", end: false, Icon: UserIcon },
+  { to: "/settings/tokens", key: "nav.tokens", end: false, Icon: KeyIcon },
 ] as const;
 
 /** Title of the current page for the breadcrumb. */
@@ -40,6 +42,8 @@ function writeCollapsed(value: boolean): void {
 export function Layout() {
   const { t } = useTranslation();
   const { pathname } = useLocation();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(readCollapsed);
 
@@ -154,6 +158,19 @@ export function Layout() {
             </span>
           </nav>
           <LanguageSwitcher />
+          <div className="flex items-center gap-2 border-l border-line pl-3">
+            <span className="hidden max-w-48 truncate text-sm text-muted sm:inline" title={user?.email}>
+              {user?.email}
+            </span>
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-muted hover:bg-primary-soft hover:text-primary"
+              onClick={() => void logout().then(() => navigate("/login", { replace: true }))}
+            >
+              <LogoutIcon width={16} height={16} />
+              {t("auth.logout")}
+            </button>
+          </div>
         </header>
         <main id="main" className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
           <Outlet />

@@ -6,7 +6,8 @@
   "nav": {
     "postings": "Postings",
     "add": "Add posting",
-    "profile": "Profile"
+    "profile": "Profile",
+    "tokens": "API tokens"
   },
   "language": {
     "label": "Language",
@@ -45,7 +46,15 @@
     "cv_not_pdf": "That file is not a PDF.",
     "cv_too_long": "The CV has too many pages (15 at most).",
     "cv_no_text": "The PDF has no readable text. Scanned CVs are not supported; export a text PDF instead.",
-    "cv_too_large": "The file is too large (5 MB at most)."
+    "cv_too_large": "The file is too large (5 MB at most).",
+    "invalid_credentials": "Wrong email or password.",
+    "too_many_attempts": "Too many attempts. Wait a few minutes and try again.",
+    "email_taken": "There is already an account with that email.",
+    "weak_password": "That password is not acceptable. Use at least 10 characters and not your email.",
+    "signup_disabled": "Registration is closed on this server.",
+    "bad_origin": "This request came from an address the server does not trust.",
+    "too_many_tokens": "You already have 10 active tokens. Revoke one first.",
+    "unauthenticated": "Your session ended. Please log in again."
   },
   "filters": {
     "search": "Search",
@@ -207,5 +216,54 @@
     "closeMenu": "Close menu",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "logout": "Log out",
+    "login": {
+      "title": "Log in",
+      "subtitle": "Welcome back. Enter your email and password.",
+      "submit": "Log in",
+      "submitting": "Logging in…",
+      "noAccount": "No account yet?",
+      "register": "Create one"
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "Your postings, profile and AI budget are private to your account.",
+      "submit": "Create account",
+      "submitting": "Creating…",
+      "passwordHint": "at least {{count}} characters",
+      "confirm": "Repeat the password",
+      "mismatch": "The passwords do not match.",
+      "tooShort": "The password needs at least {{count}} characters.",
+      "haveAccount": "Already have an account?",
+      "login": "Log in"
+    }
+  },
+  "tokens": {
+    "title": "API tokens",
+    "intro": "Tokens let n8n and scripts act on your account without your password. Each token shows its secret only once.",
+    "createTitle": "Create a token",
+    "name": "Name",
+    "create": "Create token",
+    "creating": "Creating…",
+    "secretTitle": "Token “{{name}}” created",
+    "secretWarning": "Copy it now: it is shown only this once and cannot be recovered. If you lose it, revoke it and create another.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "useIt": "For n8n, put it in your .env as",
+    "saved": "I have saved it",
+    "empty": "No tokens yet.",
+    "created": "created {{date}}",
+    "lastUsed": "last used {{date}}",
+    "neverUsed": "never used",
+    "active": "Active",
+    "revoked": "Revoked",
+    "revoke": "Revoke",
+    "revokeNamed": "Revoke {{name}}",
+    "confirmRevoke": "Yes, revoke",
+    "cancel": "Cancel"
   }
 }

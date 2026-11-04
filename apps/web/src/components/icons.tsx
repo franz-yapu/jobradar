@@ -78,3 +78,14 @@ export const SearchIcon = (props: IconProps) => (
     <path d="m20 20-3.5-3.5" />
   </Icon>
 );
+export const KeyIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="8" cy="15" r="4" />
+    <path d="m11 12 9-9M16 7l3 3M14 9l2 2" />
+  </Icon>
+);
+export const LogoutIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M9 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h4M16 8l4 4-4 4M20 12H9" />
+  </Icon>
+);
