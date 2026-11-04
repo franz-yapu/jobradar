@@ -41,7 +41,11 @@
     "profile_not_configured": "Guarda tu perfil antes de evaluar.",
     "ai_refused": "La IA se negó a evaluar esta oferta.",
     "ai_provider_error": "Falló el proveedor de IA. Inténtalo de nuevo en un momento.",
-    "not_found": "Esa oferta ya no existe."
+    "not_found": "Esa oferta ya no existe.",
+    "cv_not_pdf": "Ese archivo no es un PDF.",
+    "cv_too_long": "El CV tiene demasiadas páginas (15 como máximo).",
+    "cv_no_text": "El PDF no tiene texto legible. Los CV escaneados no se admiten; exporta un PDF con texto.",
+    "cv_too_large": "El archivo es demasiado grande (5 MB como máximo)."
   },
   "filters": {
     "search": "Buscar",
@@ -138,7 +142,61 @@
       "internship": "Prácticas",
       "part_time": "Medio tiempo"
     },
-    "sectionSearch": "Criterios de búsqueda"
+    "sectionSearch": "Criterios de búsqueda",
+    "cv": {
+      "title": "Importar desde tu CV",
+      "intro": "Sube tu CV en PDF y el perfil de abajo se rellena solo. No se guarda nada hasta que lo revises y pulses Guardar.",
+      "privacy": "El texto de tu CV se envía al proveedor de IA configurado en esta app para extraer tus datos. Nunca se piden ni se guardan tu nombre, correo ni teléfono.",
+      "choose": "Archivo del CV (PDF)",
+      "analyze": "Leer mi CV",
+      "analyzing": "Leyendo…",
+      "wait": "Leyendo tu CV, puede tardar unos segundos.",
+      "banner": "Borrador de tu CV. Revisa cada sección y pulsa Guardar para conservarlo.",
+      "discard": "Descartar borrador",
+      "warningsTitle": "Por favor revisa:",
+      "warnings": {
+        "no_stack": "No se encontraron tecnologías: añade tu stack.",
+        "location_missing": "No se encontró el país: añade desde dónde puedes trabajar.",
+        "seniority_estimated": "El seniority se estimó con tus años de experiencia.",
+        "seniority_missing": "No se pudieron calcular tus años de experiencia: elige tu seniority.",
+        "english_level_missing": "No se encontró el nivel de inglés: se asumió B1, indica el correcto.",
+        "no_experience": "No se encontró experiencia laboral.",
+        "no_education": "No se encontraron estudios.",
+        "text_truncated": "El CV era muy largo: solo se leyó la primera parte."
+      }
+    },
+    "education": {
+      "title": "Formación académica",
+      "add": "Añadir estudios",
+      "empty": "No hay estudios añadidos.",
+      "institution": "Institución",
+      "degree": "Título",
+      "field": "Área de estudio"
+    },
+    "experience": {
+      "title": "Experiencia",
+      "add": "Añadir empleo",
+      "empty": "No hay empleos añadidos.",
+      "company": "Empresa",
+      "role": "Puesto",
+      "current": "Empleo actual",
+      "highlights": "Logros",
+      "highlightsHint": "uno por línea, hasta 5"
+    },
+    "languages": {
+      "title": "Idiomas",
+      "add": "Añadir idioma",
+      "empty": "No hay idiomas añadidos.",
+      "language": "Idioma",
+      "level": "Nivel"
+    },
+    "certifications": {
+      "title": "Certificaciones",
+      "hint": "Escribe una certificación y pulsa Enter"
+    },
+    "start": "Año de inicio",
+    "end": "Año de fin",
+    "removeItem": "Quitar {{item}}"
   },
   "layout": {
     "skip": "Saltar al contenido",

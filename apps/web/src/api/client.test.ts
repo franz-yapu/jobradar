@@ -87,4 +87,39 @@ describe("api client", () => {
     expect(JSON.parse(String(init?.body))).toMatchObject({ stack: ["TypeScript"] });
     expect(new Headers(init?.headers).get("Content-Type")).toBe("application/json");
   });
+
+  it("uploads the CV as multipart without forcing a JSON content type, and parses the draft", async () => {
+    const draft = {
+      stack: ["TypeScript"],
+      seniority: "senior",
+      allowedLocations: [],
+      maxEnglishLevel: "B1",
+      excludedContractTypes: [],
+      summary: "",
+      education: [],
+      experience: [],
+      languages: [],
+      certifications: [],
+      warnings: ["location_missing"],
+    };
+    const fetchFn = vi.fn<typeof fetch>().mockResolvedValue(json(draft));
+    const file = new File(["%PDF-1.4"], "cv.pdf", { type: "application/pdf" });
+    const result = await clientWith(fetchFn).importCv(file);
+
+    expect(result.warnings).toEqual(["location_missing"]);
+    const [url, init] = fetchFn.mock.calls[0] ?? [];
+    expect(url).toBe("/api/profile/import-cv");
+    expect(init?.method).toBe("POST");
+    expect(init?.body).toBeInstanceOf(FormData);
+    expect((init?.body as FormData).get("file")).toBeInstanceOf(File);
+    expect(new Headers(init?.headers).get("Content-Type")).toBeNull();
+  });
+
+  it("maps CV import errors by status and machine code", async () => {
+    const fetchFn = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(json({ statusCode: 422, error: "cv_no_text", message: "no readable text" }, 422));
+    const file = new File(["x"], "cv.pdf");
+    await expect(clientWith(fetchFn).importCv(file)).rejects.toMatchObject({ status: 422, code: "cv_no_text" });
+  });
 });

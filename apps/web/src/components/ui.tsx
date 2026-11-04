@@ -54,7 +54,7 @@ export function FieldLabel({ children, hint }: { children: ReactNode; hint?: Rea
   );
 }
 
-export function Alert({ tone, children, role = "alert" }: { tone: "danger" | "warning" | "success" | "info"; children: ReactNode; role?: "alert" | "status" }) {
+export function Alert({ tone, children, role = "alert" }: { tone: "danger" | "warning" | "success" | "info"; children: ReactNode; role?: "alert" | "status" | "note" }) {
   const tones = {
     danger: "bg-danger-soft text-danger-ink",
     warning: "bg-warning-soft text-warning-ink",

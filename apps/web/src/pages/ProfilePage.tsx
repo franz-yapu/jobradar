@@ -1,69 +1,36 @@
 import { CONTRACT_TYPES, ENGLISH_LEVELS, SaveProfileSchema, SENIORITIES } from "@jobradar/shared";
-import type { ContractType, EnglishLevel, ProfileResponse, SaveProfileInput, Seniority } from "@jobradar/shared";
-
-type Background = Pick<ProfileResponse, "education" | "experience" | "languages" | "certifications">;
+import type { ContractType, CvDraft, CvWarning, EnglishLevel, Seniority } from "@jobradar/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
+import { EducationEditor, ExperienceEditor, LanguagesEditor } from "../components/BackgroundEditors";
 import { ChipInput } from "../components/ChipInput";
+import { CvImportCard } from "../components/CvImportCard";
 import { ErrorMessage } from "../components/ErrorMessage";
 import { Alert, Button, Card, FIELD, FieldLabel } from "../components/ui";
 import { normalizeLocation } from "../lib/locations";
-
-interface FormState {
-  stack: string[];
-  seniority: Seniority;
-  allowedLocations: string[];
-  maxEnglishLevel: EnglishLevel;
-  excludedContractTypes: ContractType[];
-  summary: string;
-  /** Not editable on this screen yet (the CV import fills it); carried along so saving never wipes it. */
-  background: Background;
-}
-
-const EMPTY: FormState = {
-  stack: [],
-  seniority: "mid",
-  allowedLocations: [],
-  maxEnglishLevel: "B2",
-  excludedContractTypes: [],
-  summary: "",
-  background: { education: [], experience: [], languages: [], certifications: [] },
-};
-
-function fromProfile(profile: ProfileResponse): FormState {
-  return {
-    stack: profile.stack,
-    seniority: profile.seniority,
-    allowedLocations: profile.allowedLocations,
-    maxEnglishLevel: profile.maxEnglishLevel,
-    excludedContractTypes: profile.excludedContractTypes,
-    summary: profile.summary,
-    background: {
-      education: profile.education,
-      experience: profile.experience,
-      languages: profile.languages,
-      certifications: profile.certifications,
-    },
-  };
-}
+import { EMPTY_FORM, formFromProfile, toSaveBody } from "../lib/profile-form";
+import type { ProfileForm } from "../lib/profile-form";
 
 export function ProfilePage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: ["profile"], queryFn: () => api.getProfile() });
-  const [form, setForm] = useState<FormState>(EMPTY);
+  const [form, setForm] = useState<ProfileForm>(EMPTY_FORM);
+  /** Set while the form holds an unsaved CV draft; the warnings are what the import could not find. */
+  const [draftWarnings, setDraftWarnings] = useState<CvWarning[] | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
   useEffect(() => {
-    if (query.data) setForm(fromProfile(query.data));
+    if (query.data) setForm(formFromProfile(query.data));
   }, [query.data]);
 
   const save = useMutation({
-    mutationFn: (body: SaveProfileInput) => api.saveProfile(body),
+    mutationFn: (body: ReturnType<typeof toSaveBody>) => api.saveProfile(body),
     onSuccess: (saved) => {
+      setDraftWarnings(null);
       queryClient.setQueryData(["profile"], saved);
     },
   });
@@ -71,8 +38,7 @@ export function ProfilePage() {
   function submit(event: SyntheticEvent) {
     event.preventDefault();
     setProblem(null);
-    const { background, ...editable } = form;
-    const body: SaveProfileInput = { ...editable, ...background };
+    const body = toSaveBody(form);
     const checked = SaveProfileSchema.safeParse(body);
     if (!checked.success) {
       setProblem(checked.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "));
@@ -81,7 +47,19 @@ export function ProfilePage() {
     save.mutate(body);
   }
 
-  if (query.isPending) return <p>{t("postings.loading")}</p>;
+  function loadDraft(draft: CvDraft) {
+    save.reset();
+    setProblem(null);
+    setForm(formFromProfile(draft));
+    setDraftWarnings(draft.warnings);
+  }
+
+  function discardDraft() {
+    setForm(query.data ? formFromProfile(query.data) : EMPTY_FORM);
+    setDraftWarnings(null);
+  }
+
+  if (query.isPending) return <p className="text-muted">{t("postings.loading")}</p>;
   if (query.isError) return <ErrorMessage error={query.error} onRetry={() => void query.refetch()} />;
 
   const toggleContract = (type: ContractType) =>
@@ -98,6 +76,28 @@ export function ProfilePage() {
         <h2 className="text-2xl font-semibold">{t("profile.title")}</h2>
         <p className="mt-1 text-sm text-muted">{query.data ? t("profile.intro") : t("profile.empty")}</p>
       </div>
+
+      <CvImportCard onDraft={loadDraft} />
+
+      {draftWarnings ? (
+        <Alert tone="warning" role="status">
+          <p className="font-medium">{t("profile.cv.banner")}</p>
+          {draftWarnings.length > 0 ? (
+            <>
+              <p className="mt-2">{t("profile.cv.warningsTitle")}</p>
+              <ul className="list-inside list-disc">
+                {draftWarnings.map((warning) => (
+                  <li key={warning}>{t(`profile.cv.warnings.${warning}`)}</li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+          <Button variant="outline" size="sm" className="mt-3" onClick={discardDraft}>
+            {t("profile.cv.discard")}
+          </Button>
+        </Alert>
+      ) : null}
+
       <form className="space-y-5" onSubmit={submit}>
         <Card title={t("profile.sectionSearch")}>
           <div className="space-y-5">
@@ -156,6 +156,7 @@ export function ProfilePage() {
             </fieldset>
           </div>
         </Card>
+
         <Card title={t("profile.summary")}>
           <label className="block">
             <span className="sr-only">{t("profile.summary")}</span>
@@ -167,9 +168,26 @@ export function ProfilePage() {
             />
           </label>
         </Card>
+
+        <ExperienceEditor items={form.experience} onChange={(experience) => setForm({ ...form, experience })} />
+        <EducationEditor items={form.education} onChange={(education) => setForm({ ...form, education })} />
+        <LanguagesEditor items={form.languages} onChange={(languages) => setForm({ ...form, languages })} />
+        <Card title={t("profile.certifications.title")}>
+          <ChipInput
+            label={t("profile.certifications.title")}
+            hint={t("profile.certifications.hint")}
+            values={form.certifications}
+            onChange={(certifications) => setForm({ ...form, certifications })}
+          />
+        </Card>
+
         {problem ? <Alert tone="danger">{t("profile.invalid", { message: problem })}</Alert> : null}
         {save.isError ? <ErrorMessage error={save.error} /> : null}
-        {save.isSuccess ? <Alert tone="success" role="status">{t("profile.saved", { version: save.data.version })}</Alert> : null}
+        {save.isSuccess ? (
+          <Alert tone="success" role="status">
+            {t("profile.saved", { version: save.data.version })}
+          </Alert>
+        ) : null}
         <Button type="submit" disabled={save.isPending}>
           {save.isPending ? t("profile.saving") : t("profile.save")}
         </Button>

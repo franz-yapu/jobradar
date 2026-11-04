@@ -106,3 +106,12 @@
 - **Pages:** postings are one card with a divided list (stacked on phones), filters in their own card, profile split into "Search criteria" and "Summary" cards. Behaviour, accessible names and test ids are unchanged, so the E2E needed no edits.
 - **No nested interactive elements:** the "Paste a posting" call to action is a link styled as a button (`buttonClass`), not a button inside a link, and its text differs from the sidebar's "Add posting" so both stay unambiguous for assistive tech and tests.
 - **Checked by screenshot** (desktop, collapsed, phone, drawer, dark): it caught a cramped row layout on phones, fixed before committing.
+
+## 2026-11-04 – SDD-005 T3: CV upload and background editors in the dashboard
+- **Flow:** the profile screen has an "Import from your CV" card (PDF picker, "Read my CV"). The draft fills the whole form, a banner says it is unsaved and lists the import's warnings (each code translated in EN/ES), and "Discard draft" restores the saved profile. Saving goes through the normal `PUT /profile`; a draft with no location is refused client-side like any incomplete profile.
+- **Privacy notice before upload:** the card states that the CV text goes to the configured AI provider and that name, email and phone are never requested or stored.
+- **Cheap checks before uploading** (type and 5 MB), the API still checks by content; failures show translated messages (not a PDF, too large, no text, too many pages, AI errors).
+- **Editors:** experience (with "current job" disabling the end year and up to 5 highlights, one per line), education, languages and certifications (chips), all editable by hand too. Blank rows are dropped when saving (`toSaveBody`), a current job never sends an end year.
+- **Client:** `importCv` sends `multipart/form-data`; the JSON content type is now set only for string bodies so the browser adds the multipart boundary.
+- **Checked by screenshot** with a mocked import (desktop and phone).
+- **Not run for real yet:** no real CV was sent to Groq; the owner is asked first (cents).

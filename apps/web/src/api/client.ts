@@ -1,4 +1,5 @@
 import {
+  CvDraftSchema,
   PaginatedPostingsSchema,
   PostingScoreSchema,
   PostingSchema,
@@ -6,6 +7,7 @@ import {
 } from "@jobradar/shared";
 import type {
   CreatePostingInput,
+  CvDraft,
   ListPostingsQuery,
   PaginatedPostingsResponse,
   PostingResponse,
@@ -49,6 +51,8 @@ export interface ApiClient {
   /** `null` when the profile has not been configured yet (404). */
   getProfile(): Promise<ProfileResponse | null>;
   saveProfile(body: SaveProfileInput): Promise<ProfileResponse>;
+  /** Reads a CV (PDF) and returns a profile draft to review; nothing is stored by the API. */
+  importCv(file: File): Promise<CvDraft>;
 }
 
 interface ClientOptions {
@@ -80,7 +84,12 @@ export function createApiClient({ baseUrl, fetchFn }: ClientOptions): ApiClient 
     try {
       response = await doFetch(`${base}${path}`, {
         ...init,
-        headers: { Accept: "application/json", ...(init?.body ? { "Content-Type": "application/json" } : {}), ...init?.headers },
+        // JSON bodies get their content type; a FormData body must not (the browser adds the multipart boundary).
+        headers: {
+          Accept: "application/json",
+          ...(typeof init?.body === "string" ? { "Content-Type": "application/json" } : {}),
+          ...init?.headers,
+        },
       });
     } catch {
       throw new ApiError(0, "network_error", "The API is unreachable");
@@ -117,6 +126,11 @@ export function createApiClient({ baseUrl, fetchFn }: ClientOptions): ApiClient 
       }
     },
     saveProfile: (body) => request("/profile", ProfileSchema, { method: "PUT", body: JSON.stringify(body) }),
+    importCv: (file) => {
+      const form = new FormData();
+      form.append("file", file);
+      return request("/profile/import-cv", CvDraftSchema, { method: "POST", body: form });
+    },
   };
 }
 
