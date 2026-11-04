@@ -43,9 +43,10 @@ pnpm e2e                  # Playwright end-to-end test of the dashboard (disposa
 - If a host port is already taken, change `POSTGRES_PORT`, `N8N_PORT` or `GRAFANA_PORT` in `.env`
   (and the port inside `DATABASE_URL` / `TEST_DATABASE_URL`).
 
-### API
+### API (v0.1)
 
-Every endpoint except `/health`, `/docs` and `/auth/register|login|logout` needs the session cookie (`jr_session`: `httpOnly`, `SameSite=Lax`, `Secure` in production, 14 days). Writes that carry an `Origin` header must come from `WEB_ORIGIN` (`403 bad_origin`). Set `ALLOW_SIGNUP=false` to close registration. (v0.1)
+Every endpoint except `/health`, `/docs` and `/auth/register|login|logout` needs the session cookie (`jr_session`: `httpOnly`, `SameSite=Lax`, `Secure` in production, 14 days). Writes that carry an `Origin` header must come from `WEB_ORIGIN` (`403 bad_origin`). Set `ALLOW_SIGNUP=false` to close registration.
+
 | Method | Path | Description |
 |---|---|---|
 | `POST` | `/postings` | Create a posting. `201`, `400` invalid body, `409` URL already exists (tracking params and fragments are ignored) |
