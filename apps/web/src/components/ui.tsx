@@ -28,7 +28,7 @@ const VARIANTS: Record<ButtonVariant, string> = {
 /** Button look for any element, e.g. a router `Link` that must not contain a nested `<button>`. */
 export function buttonClass(variant: ButtonVariant = "primary", size: "sm" | "md" = "md", extra = ""): string {
   const sizing = size === "sm" ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm";
-  return `inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border font-medium transition duration-150 disabled:cursor-not-allowed disabled:border-line-strong disabled:bg-raised disabled:text-muted ${sizing} ${VARIANTS[variant]} ${extra}`.trim();
+  return `inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border font-medium transition duration-150 disabled:cursor-not-allowed disabled:border-line-strong disabled:bg-raised disabled:bg-none disabled:text-muted disabled:shadow-none ${sizing} ${VARIANTS[variant]} ${extra}`.trim();
 }
 
 export function Button({

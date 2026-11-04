@@ -1,28 +1,15 @@
+import { ENGLISH_LEVELS } from "@jobradar/shared";
 import type { Education, Experience, LanguageSkill } from "@jobradar/shared";
+import { useMemo } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { PlusIcon, CloseIcon } from "./icons";
+import { MonthYearInput } from "./MonthYearInput";
+import { Select } from "./Select";
 import { Button, Card, FIELD, FieldLabel } from "./ui";
+import { languageNameOptions } from "../lib/catalog/languages";
 
 const GRID = "grid gap-3 sm:grid-cols-2";
-
-function YearInput({ label, value, disabled, onChange }: { label: string; value: number | undefined; disabled?: boolean; onChange: (year: number | undefined) => void }) {
-  return (
-    <label className="block">
-      <FieldLabel>{label}</FieldLabel>
-      <input
-        className={FIELD}
-        type="number"
-        inputMode="numeric"
-        min={1950}
-        max={2100}
-        disabled={disabled}
-        value={value ?? ""}
-        onChange={(event) => onChange(event.target.value === "" ? undefined : Number(event.target.value))}
-      />
-    </label>
-  );
-}
 
 function TextInput({ label, value, onChange, required }: { label: string; value: string; onChange: (value: string) => void; required?: boolean }) {
   return (
@@ -79,10 +66,8 @@ export function EducationEditor({ items, onChange }: ListProps<Education>) {
               <TextInput label={t("profile.education.institution")} value={item.institution} onChange={(institution) => onChange(replaceAt(items, index, { ...item, institution }))} />
               <TextInput label={t("profile.education.degree")} value={item.degree} onChange={(degree) => onChange(replaceAt(items, index, { ...item, degree }))} />
               <TextInput label={t("profile.education.field")} value={item.field ?? ""} onChange={(field) => onChange(replaceAt(items, index, { ...item, field }))} />
-              <div className="grid grid-cols-2 gap-3">
-                <YearInput label={t("profile.start")} value={item.startYear} onChange={(startYear) => onChange(replaceAt(items, index, { ...item, startYear }))} />
-                <YearInput label={t("profile.end")} value={item.endYear} onChange={(endYear) => onChange(replaceAt(items, index, { ...item, endYear }))} />
-              </div>
+              <MonthYearInput label={t("profile.start")} year={item.startYear} month={item.startMonth} onChange={({ year, month }) => onChange(replaceAt(items, index, { ...item, startYear: year, startMonth: month }))} />
+              <MonthYearInput label={t("profile.end")} year={item.endYear} month={item.endMonth} onChange={({ year, month }) => onChange(replaceAt(items, index, { ...item, endYear: year, endMonth: month }))} />
             </div>
           </ItemBox>
         ))}
@@ -113,16 +98,14 @@ export function ExperienceEditor({ items, onChange }: ListProps<Experience>) {
               <div className={GRID}>
                 <TextInput label={t("profile.experience.company")} value={item.company} onChange={(company) => update({ company })} />
                 <TextInput label={t("profile.experience.role")} value={item.role} onChange={(role) => update({ role })} />
-                <div className="grid grid-cols-2 gap-3">
-                  <YearInput label={t("profile.start")} value={item.startYear} onChange={(startYear) => update({ startYear })} />
-                  <YearInput label={t("profile.end")} value={item.current ? undefined : item.endYear} disabled={item.current} onChange={(endYear) => update({ endYear })} />
-                </div>
-                <label className="flex items-center gap-2 self-end pb-2 text-sm">
+                <MonthYearInput label={t("profile.start")} year={item.startYear} month={item.startMonth} onChange={({ year, month }) => update({ startYear: year, startMonth: month })} />
+                <MonthYearInput label={t("profile.end")} year={item.current ? undefined : item.endYear} month={item.current ? undefined : item.endMonth} disabled={item.current} onChange={({ year, month }) => update({ endYear: year, endMonth: month })} />
+                <label className="flex items-center gap-2 text-sm sm:col-span-2">
                   <input
                     type="checkbox"
                     className="size-4 accent-primary"
                     checked={item.current}
-                    onChange={(event) => update({ current: event.target.checked, endYear: event.target.checked ? undefined : item.endYear })}
+                    onChange={(event) => update({ current: event.target.checked, endYear: event.target.checked ? undefined : item.endYear, endMonth: event.target.checked ? undefined : item.endMonth })}
                   />
                   {t("profile.experience.current")}
                 </label>
@@ -144,7 +127,10 @@ export function ExperienceEditor({ items, onChange }: ListProps<Experience>) {
 }
 
 export function LanguagesEditor({ items, onChange }: ListProps<LanguageSkill>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? "en";
+  const languageOptions = useMemo(() => languageNameOptions(language), [language]);
+  const levelOptions = [...ENGLISH_LEVELS.map((level) => ({ value: level, label: level })), { value: "native", label: t("profile.languages.native") }];
   const add = () => onChange([...items, { language: "", level: "" }]);
   return (
     <Card
@@ -161,8 +147,20 @@ export function LanguagesEditor({ items, onChange }: ListProps<LanguageSkill>) {
         {items.map((item, index) => (
           <ItemBox key={index} label={item.language || t("profile.languages.title")} onRemove={() => onChange(removeAt(items, index))}>
             <div className={GRID}>
-              <TextInput label={t("profile.languages.language")} value={item.language} onChange={(language) => onChange(replaceAt(items, index, { ...item, language }))} />
-              <TextInput label={t("profile.languages.level")} value={item.level} onChange={(level) => onChange(replaceAt(items, index, { ...item, level }))} />
+              <Select
+                label={t("profile.languages.language")}
+                placeholder="—"
+                value={item.language}
+                options={languageOptions}
+                onChange={(language) => onChange(replaceAt(items, index, { ...item, language }))}
+              />
+              <Select
+                label={t("profile.languages.level")}
+                placeholder="—"
+                value={item.level}
+                options={levelOptions}
+                onChange={(level) => onChange(replaceAt(items, index, { ...item, level }))}
+              />
             </div>
           </ItemBox>
         ))}

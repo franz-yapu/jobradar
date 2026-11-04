@@ -126,9 +126,9 @@
     "intro": "Postings are scored against this profile.",
     "empty": "No profile yet. Fill it in and save to start scoring.",
     "stack": "Stack",
-    "stackHint": "Type a technology and press Enter…",
+    "stackHint": "Pick technologies from the list or type your own…",
     "locations": "Allowed locations",
-    "locationsHint": "ISO country code (BO), latam or worldwide; press Enter…",
+    "locationsHint": "Search a country, or choose Latin America / Worldwide…",
     "seniority": "Seniority",
     "english": "Highest English level required that you accept",
     "contracts": "Contracts to exclude",
@@ -199,14 +199,15 @@
       "add": "Add language",
       "empty": "No languages added.",
       "language": "Language",
-      "level": "Level"
+      "level": "Level",
+      "native": "Native"
     },
     "certifications": {
       "title": "Certifications",
       "hint": "Type a certification and press Enter…"
     },
-    "start": "Start year",
-    "end": "End year",
+    "start": "Start",
+    "end": "End",
     "removeItem": "Remove {{item}}",
     "locationKeywords": {
       "latam": "Latin America",
@@ -217,7 +218,9 @@
     "selectedCount": "{{count}} selected",
     "month": "Month",
     "year": "Year",
-    "choose": "Choose…"
+    "choose": "Choose…",
+    "searchHint": "Type to search…",
+    "noneExcluded": "None excluded"
   },
   "layout": {
     "skip": "Skip to content",

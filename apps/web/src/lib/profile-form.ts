@@ -66,6 +66,7 @@ export function toSaveBody(form: ProfileForm): SaveProfileInput {
       .map((item) => ({
         ...item,
         endYear: item.current ? undefined : item.endYear,
+        endMonth: item.current ? undefined : item.endMonth,
         highlights: item.highlights.map((line) => line.trim()).filter(Boolean),
       })),
     languages: form.languages.filter((item) => item.language.trim() && item.level.trim()),

@@ -7,9 +7,9 @@ const CV_EXTRACTION = {
   countryOfResidence: null,
   englishLevel: "B1",
   summary: "Backend developer who builds APIs.",
-  education: [{ institution: "UMSA", degree: "BSc Informatics", field: "Informatics", startYear: 2008, endYear: 2013 }],
+  education: [{ institution: "UMSA", degree: "BSc Informatics", field: "Informatics", startYear: 2008, startMonth: 3, endYear: 2013, endMonth: 12 }],
   experience: [
-    { company: "Acme", role: "Backend Developer", startYear: 2020, endYear: null, current: true, highlights: ["Built the billing API"] },
+    { company: "Acme", role: "Backend Developer", startYear: 2020, startMonth: 3, endYear: null, endMonth: null, current: true, highlights: ["Built the billing API"] },
   ],
   languages: [{ language: "English", level: "B1" }],
   certifications: ["AWS Cloud Practitioner"],

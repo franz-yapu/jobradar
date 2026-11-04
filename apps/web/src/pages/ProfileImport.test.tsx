@@ -65,7 +65,7 @@ describe("CV import on the profile screen", () => {
     expect(screen.getByDisplayValue("Backend developer from the CV")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Acme")).toBeInTheDocument();
     expect(screen.getByDisplayValue("UMSA")).toBeInTheDocument();
-    expect(screen.getByRole("textbox", { name: "Language" })).toHaveValue("English");
+    expect(screen.getByRole("combobox", { name: "Language" })).toHaveValue("English");
     expect(screen.getByText("AWS Cloud Practitioner")).toBeInTheDocument();
 
     expect(screen.getByText(/Draft from your CV/)).toBeInTheDocument();
@@ -81,7 +81,7 @@ describe("CV import on the profile screen", () => {
     await screen.findByText("TypeScript");
 
     // the draft had no location: the candidate completes it before saving
-    await user.type(screen.getByRole("textbox", { name: "Allowed locations" }), "bo{Enter}");
+    await user.type(screen.getByRole("combobox", { name: "Allowed locations" }), "bolivia{Enter}");
     await user.click(screen.getByRole("button", { name: "Save profile" }));
 
     await waitFor(() => expect(saveProfile).toHaveBeenCalledTimes(1));
@@ -170,21 +170,23 @@ describe("background editors", () => {
     await user.click(screen.getByRole("button", { name: "Add job" }));
     await user.type(screen.getByLabelText("Company"), "Initech");
     await user.type(screen.getByLabelText("Role"), "Developer");
-    await user.type(screen.getByLabelText("Start year"), "2019");
+    const start = within(screen.getByRole("group", { name: "Start" }));
+    await user.selectOptions(start.getByLabelText("Year"), "2019");
+    await user.selectOptions(start.getByLabelText("Month"), "3");
     await user.type(screen.getByLabelText(/Highlights/), "Shipped the billing module");
 
     await user.click(screen.getByRole("button", { name: "Add education" }));
     await user.click(screen.getByRole("button", { name: "Add language" }));
     await user.click(screen.getByRole("button", { name: "Add language" }));
-    const languages = screen.getAllByRole("textbox", { name: "Language" });
-    await user.type(languages[0] as HTMLElement, "Spanish");
-    await user.type(screen.getAllByLabelText("Level")[0] as HTMLElement, "native");
+    const languages = screen.getAllByRole("combobox", { name: "Language" });
+    await user.selectOptions(languages[0] as HTMLElement, "Spanish");
+    await user.selectOptions(screen.getAllByLabelText("Level")[0] as HTMLElement, "native");
 
     // the empty education row and the empty second language are dropped when saving
     await user.click(screen.getByRole("button", { name: "Save profile" }));
     await waitFor(() => expect(saveProfile).toHaveBeenCalledTimes(1));
     expect(saveProfile.mock.calls[0]?.[0]).toMatchObject({
-      experience: [{ company: "Initech", role: "Developer", startYear: 2019, current: false, highlights: ["Shipped the billing module"] }],
+      experience: [{ company: "Initech", role: "Developer", startYear: 2019, startMonth: 3, current: false, highlights: ["Shipped the billing module"] }],
       education: [],
       languages: [{ language: "Spanish", level: "native" }],
     });
@@ -195,13 +197,14 @@ describe("background editors", () => {
     renderApp({ route: "/profile" });
     await screen.findByText("COBOL");
     await user.click(screen.getByRole("button", { name: "Add job" }));
-    const endYear = screen.getByLabelText("End year");
-    await user.type(endYear, "2022");
-    expect(endYear).toHaveValue(2022);
+    const end = within(screen.getByRole("group", { name: "End" }));
+    const endYear = end.getByLabelText("Year");
+    await user.selectOptions(endYear, "2022");
+    expect(endYear).toHaveValue("2022");
 
     await user.click(screen.getByLabelText("Current job"));
     expect(endYear).toBeDisabled();
-    expect(endYear).toHaveValue(null);
+    expect(endYear).toHaveValue("");
   });
 
   it("removes an item", async () => {

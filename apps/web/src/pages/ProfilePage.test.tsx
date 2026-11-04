@@ -35,27 +35,31 @@ describe("Profile page", () => {
   it("shows the saved profile", async () => {
     renderApp({ route: "/profile" });
     expect(await screen.findByText("NestJS")).toBeInTheDocument();
-    expect(screen.getByText("latam")).toBeInTheDocument();
+    expect(screen.getByText("Latin America")).toBeInTheDocument();
+    expect(screen.getByText("Bolivia")).toBeInTheDocument();
     expect(screen.getByLabelText("Seniority")).toHaveValue("senior");
     expect(screen.getByLabelText("Highest English level required that you accept")).toHaveValue("B1");
-    expect(screen.getByLabelText("Temporary")).toBeChecked();
-    expect(screen.getByLabelText("Freelance")).not.toBeChecked();
+    expect(screen.getByRole("button", { name: /Contracts to exclude/ })).toHaveTextContent("Temporary");
+    await userEvent.click(screen.getByRole("button", { name: /Contracts to exclude/ }));
+    expect(screen.getByRole("checkbox", { name: "Temporary" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Freelance" })).not.toBeChecked();
   });
 
   it("edits chips, normalizes locations and saves the whole profile", async () => {
     renderApp({ route: "/profile" });
     await screen.findByText("NestJS");
 
-    await userEvent.type(screen.getByRole("textbox", { name: "Stack" }), "Postgres{Enter}");
+    await userEvent.type(screen.getByRole("combobox", { name: "Stack" }), "postgres{Enter}");
     await userEvent.click(screen.getByRole("button", { name: "Remove NestJS" }));
-    await userEvent.type(screen.getByRole("textbox", { name: "Allowed locations" }), "ar{Enter}");
-    await userEvent.click(screen.getByLabelText("Freelance"));
+    await userEvent.type(screen.getByRole("combobox", { name: "Allowed locations" }), "argentina{Enter}");
+    await userEvent.click(screen.getByRole("button", { name: /Contracts to exclude/ }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Freelance" }));
     await userEvent.selectOptions(screen.getByLabelText("Seniority"), "lead");
     await userEvent.click(screen.getByRole("button", { name: "Save profile" }));
 
     await waitFor(() => expect(saveProfile).toHaveBeenCalledTimes(1));
     expect(saveProfile.mock.calls[0]?.[0]).toEqual({
-      stack: ["TypeScript", "Postgres"],
+      stack: ["TypeScript", "PostgreSQL"],
       seniority: "lead",
       allowedLocations: ["BO", "latam", "AR"],
       maxEnglishLevel: "B1",
@@ -70,12 +74,15 @@ describe("Profile page", () => {
     expect(await screen.findByRole("status")).toHaveTextContent("Profile saved (version 4).");
   });
 
-  it("rejects an invalid location without adding it", async () => {
-    renderApp({ route: "/profile" });
+  it("finds countries by name in the active language and offers nothing else", async () => {
+    renderApp({ route: "/profile", language: "es" });
     await screen.findByText("NestJS");
-    await userEvent.type(screen.getByRole("textbox", { name: "Allowed locations" }), "bolivia{Enter}");
-    expect(screen.getByText("Use a country code like BO, or latam / worldwide.")).toBeInTheDocument();
-    expect(screen.queryByText("bolivia")).toBeNull();
+    const input = screen.getByRole("combobox", { name: "Ubicaciones permitidas" });
+    await userEvent.type(input, "alemania");
+    expect(screen.getByRole("option", { name: "Alemania" })).toBeInTheDocument();
+    await userEvent.clear(input);
+    await userEvent.type(input, "zzzz{Enter}");
+    expect(screen.getByText("Sin coincidencias")).toBeInTheDocument();
   });
 
   it("starts empty when no profile exists and refuses to save an incomplete one", async () => {

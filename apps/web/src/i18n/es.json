@@ -126,9 +126,9 @@
     "intro": "Las ofertas se evalúan contra este perfil.",
     "empty": "Todavía no hay perfil. Complétalo y guárdalo para empezar a evaluar.",
     "stack": "Stack",
-    "stackHint": "Escribe una tecnología y pulsa Enter…",
+    "stackHint": "Elige tecnologías de la lista o escribe la tuya…",
     "locations": "Ubicaciones permitidas",
-    "locationsHint": "Código de país ISO (BO), latam o worldwide; pulsa Enter…",
+    "locationsHint": "Busca un país, o elige Latinoamérica / Todo el mundo…",
     "seniority": "Seniority",
     "english": "Nivel máximo de inglés exigido que aceptas",
     "contracts": "Contratos a excluir",
@@ -199,14 +199,15 @@
       "add": "Añadir idioma",
       "empty": "No hay idiomas añadidos.",
       "language": "Idioma",
-      "level": "Nivel"
+      "level": "Nivel",
+      "native": "Nativo"
     },
     "certifications": {
       "title": "Certificaciones",
       "hint": "Escribe una certificación y pulsa Enter…"
     },
-    "start": "Año de inicio",
-    "end": "Año de fin",
+    "start": "Inicio",
+    "end": "Fin",
     "removeItem": "Quitar {{item}}",
     "locationKeywords": {
       "latam": "Latinoamérica",
@@ -217,7 +218,9 @@
     "selectedCount": "{{count}} seleccionados",
     "month": "Mes",
     "year": "Año",
-    "choose": "Elegir…"
+    "choose": "Elegir…",
+    "searchHint": "Escribe para buscar…",
+    "noneExcluded": "Ninguno excluido"
   },
   "layout": {
     "skip": "Saltar al contenido",

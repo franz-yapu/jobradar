@@ -1,22 +1,31 @@
 import { CONTRACT_TYPES, ENGLISH_LEVELS, SaveProfileSchema, SENIORITIES } from "@jobradar/shared";
 import type { ContractType, CvDraft, CvWarning, EnglishLevel, Seniority } from "@jobradar/shared";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { EducationEditor, ExperienceEditor, LanguagesEditor } from "../components/BackgroundEditors";
 import { ChipInput } from "../components/ChipInput";
+import { Combobox } from "../components/Combobox";
 import { CvImportCard } from "../components/CvImportCard";
 import { ErrorMessage } from "../components/ErrorMessage";
+import { MultiSelect } from "../components/MultiSelect";
+import { Select } from "../components/Select";
 import { UserIcon } from "../components/icons";
-import { Alert, Button, Card, FIELD, FieldLabel, PageHeader } from "../components/ui";
-import { normalizeLocation } from "../lib/locations";
+import { Alert, Button, Card, FIELD, PageHeader } from "../components/ui";
+import { locationOptions } from "../lib/catalog/countries";
+import { STACK_OPTIONS } from "../lib/catalog/stack";
 import { EMPTY_FORM, formFromProfile, toSaveBody } from "../lib/profile-form";
 import type { ProfileForm } from "../lib/profile-form";
 
 export function ProfilePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.resolvedLanguage ?? "en";
+  const locations = useMemo(
+    () => locationOptions(language, { latam: t("profile.locationKeywords.latam"), worldwide: t("profile.locationKeywords.worldwide") }),
+    [language, t],
+  );
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: ["profile"], queryFn: () => api.getProfile() });
   const [form, setForm] = useState<ProfileForm>(EMPTY_FORM);
@@ -72,14 +81,6 @@ export function ProfilePage() {
   if (query.isPending) return <p className="text-muted">{t("postings.loading")}</p>;
   if (query.isError) return <ErrorMessage error={query.error} onRetry={() => void query.refetch()} />;
 
-  const toggleContract = (type: ContractType) =>
-    setForm({
-      ...form,
-      excludedContractTypes: form.excludedContractTypes.includes(type)
-        ? form.excludedContractTypes.filter((item) => item !== type)
-        : [...form.excludedContractTypes, type],
-    });
-
   return (
     <div className="space-y-5">
       <PageHeader icon={<UserIcon />} title={t("profile.title")} description={query.data ? t("profile.intro") : t("profile.empty")} />
@@ -108,59 +109,42 @@ export function ProfilePage() {
       <form className="space-y-5" onSubmit={submit}>
         <Card title={t("profile.sectionSearch")}>
           <div className="space-y-5">
-            <ChipInput label={t("profile.stack")} hint={t("profile.stackHint")} values={form.stack} onChange={(stack) => setForm({ ...form, stack })} />
-            <ChipInput
+            <Combobox
+              label={t("profile.stack")}
+              placeholder={t("profile.stackHint")}
+              values={form.stack}
+              options={STACK_OPTIONS}
+              onChange={(stack) => setForm({ ...form, stack })}
+              normalizeCustom={(raw) => (raw.length <= 50 ? raw : null)}
+            />
+            <Combobox
               label={t("profile.locations")}
-              hint={t("profile.locationsHint")}
+              placeholder={t("profile.locationsHint")}
               values={form.allowedLocations}
+              options={locations}
               onChange={(allowedLocations) => setForm({ ...form, allowedLocations })}
-              normalize={normalizeLocation}
-              invalidMessage={t("profile.invalidLocation")}
             />
             <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block">
-                <FieldLabel>{t("profile.seniority")}</FieldLabel>
-                <select className={FIELD} value={form.seniority} onChange={(event) => setForm({ ...form, seniority: event.target.value as Seniority })}>
-                  {SENIORITIES.map((level) => (
-                    <option key={level} value={level}>
-                      {t(`profile.seniorities.${level}`)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="block">
-                <FieldLabel>{t("profile.english")}</FieldLabel>
-                <select
-                  className={FIELD}
-                  value={form.maxEnglishLevel}
-                  onChange={(event) => setForm({ ...form, maxEnglishLevel: event.target.value as EnglishLevel })}
-                >
-                  {ENGLISH_LEVELS.map((level) => (
-                    <option key={level} value={level}>
-                      {level}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <Select
+                label={t("profile.seniority")}
+                value={form.seniority}
+                options={SENIORITIES.map((level) => ({ value: level, label: t(`profile.seniorities.${level}`) }))}
+                onChange={(value) => setForm({ ...form, seniority: value as Seniority })}
+              />
+              <Select
+                label={t("profile.english")}
+                value={form.maxEnglishLevel}
+                options={ENGLISH_LEVELS.map((level) => ({ value: level, label: level }))}
+                onChange={(value) => setForm({ ...form, maxEnglishLevel: value as EnglishLevel })}
+              />
             </div>
-            <fieldset>
-              <legend>
-                <FieldLabel>{t("profile.contracts")}</FieldLabel>
-              </legend>
-              <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-                {CONTRACT_TYPES.map((type) => (
-                  <label key={type} className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      className="size-4 accent-primary"
-                      checked={form.excludedContractTypes.includes(type)}
-                      onChange={() => toggleContract(type)}
-                    />
-                    {t(`profile.contractTypes.${type}`)}
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+            <MultiSelect
+              label={t("profile.contracts")}
+              placeholder={t("profile.noneExcluded")}
+              values={form.excludedContractTypes}
+              options={CONTRACT_TYPES.map((type) => ({ value: type, label: t(`profile.contractTypes.${type}`) }))}
+              onChange={(excludedContractTypes) => setForm({ ...form, excludedContractTypes: excludedContractTypes as ContractType[] })}
+            />
           </div>
         </Card>
 

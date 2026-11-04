@@ -50,10 +50,10 @@ test.describe.serial("accounts", () => {
     await expect(page.getByText("No profile yet")).toBeVisible();
 
     // 2. Fill in and save the profile.
-    await page.getByRole("textbox", { name: "Stack" }).fill("TypeScript");
-    await page.getByRole("textbox", { name: "Stack" }).press("Enter");
-    await page.getByRole("textbox", { name: "Allowed locations" }).fill("bo");
-    await page.getByRole("textbox", { name: "Allowed locations" }).press("Enter");
+    await page.getByRole("combobox", { name: "Stack" }).fill("TypeScript");
+    await page.getByRole("combobox", { name: "Stack" }).press("Enter");
+    await page.getByRole("combobox", { name: "Allowed locations" }).fill("bolivia");
+    await page.getByRole("combobox", { name: "Allowed locations" }).press("Enter");
     await page.getByLabel("Seniority").selectOption("senior");
     await page.getByRole("button", { name: "Save profile" }).click();
     await expect(page.getByRole("status")).toContainText("Profile saved (version 1)");
@@ -120,8 +120,8 @@ test.describe.serial("accounts", () => {
     await expect(fitRow.getByTestId("verdict")).toHaveText(/Fit/);
 
     await page.goto("/profile");
-    await expect(page.getByRole("textbox", { name: "Stack" }).locator("..").getByText("TypeScript")).toBeVisible();
-    await expect(page.getByRole("textbox", { name: "Allowed locations" }).locator("..").getByText("BO")).toBeVisible();
+    await expect(page.getByRole("listitem").filter({ hasText: "TypeScript" })).toBeVisible();
+    await expect(page.getByRole("listitem").filter({ hasText: "Bolivia" })).toBeVisible();
   });
 
   /**
@@ -146,6 +146,10 @@ test.describe.serial("accounts", () => {
     await expect(page.getByText("Seniority was estimated")).toBeVisible();
     await expect(page.getByRole("textbox", { name: "Company" })).toHaveValue("Acme");
     await expect(page.getByRole("textbox", { name: "Institution" })).toHaveValue("UMSA");
+    // jobs keep their start month and year, picked with selects
+    const jobStart = page.getByRole("group", { name: "Start" }).first();
+    await expect(jobStart.getByLabel("Year")).toHaveValue("2020");
+    await expect(jobStart.getByLabel("Month")).toHaveValue("3");
     await expect(page.getByText("AWS Cloud Practitioner")).toBeVisible();
     await expect(page.getByLabel("Seniority")).toHaveValue("senior");
 
@@ -153,8 +157,8 @@ test.describe.serial("accounts", () => {
     await page.getByRole("button", { name: "Save profile" }).click();
     await expect(page.getByText("Check the profile")).toBeVisible();
 
-    await page.getByRole("textbox", { name: "Allowed locations" }).fill("bo");
-    await page.getByRole("textbox", { name: "Allowed locations" }).press("Enter");
+    await page.getByRole("combobox", { name: "Allowed locations" }).fill("bolivia");
+    await page.getByRole("combobox", { name: "Allowed locations" }).press("Enter");
     await page.getByRole("button", { name: "Save profile" }).click();
     await expect(page.getByRole("status").filter({ hasText: "Profile saved (version 2)" })).toBeVisible();
     await expect(page.getByText(/Draft from your CV/)).toHaveCount(0);
@@ -162,7 +166,7 @@ test.describe.serial("accounts", () => {
     // It is really stored: a reload shows the imported background.
     await page.reload();
     await expect(page.getByRole("textbox", { name: "Company" })).toHaveValue("Acme");
-    await expect(page.getByRole("textbox", { name: "Language" }).first()).toHaveValue("English");
+    await expect(page.getByRole("combobox", { name: "Language" }).first()).toHaveValue("English");
 
     // And the preview of an unsaved draft can be discarded.
     await page.getByLabel("CV file (PDF)").setInputFiles({ name: "cv.pdf", mimeType: "application/pdf", buffer: cv });
