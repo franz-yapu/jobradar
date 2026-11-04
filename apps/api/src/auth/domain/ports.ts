@@ -1,3 +1,4 @@
+import type { ApiToken } from "./api-token.js";
 import type { Session } from "./session.js";
 import type { User } from "./user.js";
 
@@ -6,6 +7,7 @@ export const SESSION_REPOSITORY = Symbol("SESSION_REPOSITORY");
 export const PASSWORD_HASHER = Symbol("PASSWORD_HASHER");
 export const TOKEN_GENERATOR = Symbol("TOKEN_GENERATOR");
 export const ATTEMPT_LIMITER = Symbol("ATTEMPT_LIMITER");
+export const API_TOKEN_REPOSITORY = Symbol("API_TOKEN_REPOSITORY");
 
 export interface UserRepository {
   /**
@@ -22,6 +24,17 @@ export interface SessionRepository {
   findByTokenHash(tokenHash: string): Promise<Session | null>;
   updateExpiry(id: string, expiresAt: Date): Promise<void>;
   deleteByTokenHash(tokenHash: string): Promise<void>;
+}
+
+export interface ApiTokenRepository {
+  create(token: ApiToken): Promise<void>;
+  /** All of the account's tokens, revoked ones included, newest first. */
+  listByUser(userId: string): Promise<ApiToken[]>;
+  countActive(userId: string): Promise<number>;
+  findByTokenHash(tokenHash: string): Promise<ApiToken | null>;
+  /** Revokes the account's token. Returns false when the account has no such token. Already revoked: true, unchanged. */
+  revoke(userId: string, id: string, at: Date): Promise<boolean>;
+  touchLastUsed(id: string, at: Date): Promise<void>;
 }
 
 export interface PasswordHasher {

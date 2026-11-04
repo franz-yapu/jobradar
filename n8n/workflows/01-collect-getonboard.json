@@ -123,6 +123,15 @@
               "neverError": true
             }
           }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.JOBRADAR_API_TOKEN }}"
+            }
+          ]
         }
       },
       "id": "58163b99-f73f-5621-be07-4a5f186f500f",
@@ -137,7 +146,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Only postings created in this run (201) are scored; the cap bounds AI spend per run.\nconst MAX_SCORES_PER_RUN = 20;\nconst created = $input.all().filter((item) => item.json.statusCode === 201);\nreturn created\n  .slice(0, MAX_SCORES_PER_RUN)\n  .map((item) => ({ json: { postingId: item.json.body.id, title: item.json.body.title } }));\n"
+        "jsCode": "// Only postings created in this run (201) are scored; the cap bounds AI spend per run.\nconst MAX_SCORES_PER_RUN = 20;\nconst all = $input.all();\n// A rejected token would make every create answer 401 and the run look like \"nothing new\": fail loudly instead.\nif (all.some((item) => item.json.statusCode === 401)) {\n  throw new Error(\"The JobRadar API rejected the API token (401). Create a token in the app and set JOBRADAR_API_TOKEN for n8n.\");\n}\nconst created = all.filter((item) => item.json.statusCode === 201);\nreturn created\n  .slice(0, MAX_SCORES_PER_RUN)\n  .map((item) => ({ json: { postingId: item.json.body.id, title: item.json.body.title } }));\n"
       },
       "id": "a624c53f-1f9c-541b-ba52-af80bbc1d58d",
       "name": "Pick new postings",
@@ -174,6 +183,15 @@
               "neverError": true
             }
           }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.JOBRADAR_API_TOKEN }}"
+            }
+          ]
         }
       },
       "id": "d3b75920-c29f-5b97-925f-4d1a86cab0f4",

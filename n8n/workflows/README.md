@@ -23,6 +23,15 @@ docker compose exec -e N8N_RUNNERS_BROKER_PORT=5690 n8n n8n execute --id=jobrada
 The workflow reaches the API through `$env.JOBRADAR_API_URL` (default `http://host.docker.internal:3000`, see `.env.example`).
 Never put tokens or keys in a workflow: use n8n credentials.
 
+## API token (once per account)
+The API needs to know which account the workflows act for. Create a personal token while logged in and give it to n8n:
+
+1. In the app, create a token (API tokens screen; until it exists, `POST /auth/tokens` with your session cookie and `{ "name": "n8n" }`). The secret (`jr_...`) is shown **once**.
+2. Put it in `.env` as `JOBRADAR_API_TOKEN=jr_...` and run `docker compose up -d n8n` so the container sees it.
+3. Re-import the workflows if they were imported before tokens existed (`n8n import:workflow`, then activate them again).
+
+Every call to the JobRadar API sends `Authorization: Bearer $env.JOBRADAR_API_TOKEN`; the call to Get on Board never does. If the token is missing, wrong or revoked, workflow 1 stops with an error (it does not pretend there was nothing new) and workflow 2 fails. Revoke a token in the app at any time; a token cannot create or revoke tokens. The workflows act on that one account's data (its postings, profile, scores and AI budget).
+
 ## Telegram setup (workflow 2, once)
 1. In Telegram, talk to `@BotFather`, send `/newbot` and keep the **token** it gives you (a secret: never commit it or paste it in chat).
 2. Send any message to your new bot, then find your chat id in your own terminal:

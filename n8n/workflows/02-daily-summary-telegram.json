@@ -69,6 +69,15 @@
         },
         "options": {
           "timeout": 30000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.JOBRADAR_API_TOKEN }}"
+            }
+          ]
         }
       },
       "id": "c1501d39-2922-5ab6-a187-8420f50c810a",

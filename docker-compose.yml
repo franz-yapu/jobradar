@@ -23,6 +23,8 @@ services:
       # The workflows read the API address from the environment ($env).
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
       JOBRADAR_API_URL: ${JOBRADAR_API_URL:-http://host.docker.internal:3000}
+      # Personal API token of the account the workflows act for (created in the app, see n8n/workflows/README.md)
+      JOBRADAR_API_TOKEN: ${JOBRADAR_API_TOKEN:-}
       # Daily summary destination (the bot token is an n8n credential, never an env var)
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
     volumes:

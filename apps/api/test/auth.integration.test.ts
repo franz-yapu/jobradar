@@ -164,6 +164,9 @@ describe("authentication is required everywhere except the public endpoints", ()
     ["post", `/postings/${UNKNOWN_ID}/score`],
     ["get", `/postings/${UNKNOWN_ID}/score`],
     ["get", "/ai/usage"],
+    ["get", "/auth/tokens"],
+    ["post", "/auth/tokens"],
+    ["delete", `/auth/tokens/${UNKNOWN_ID}`],
   ];
 
   it.each(protectedRoutes)("%s %s answers 401 without a session", async (method, path) => {

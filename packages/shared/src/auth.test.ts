@@ -36,3 +36,27 @@ describe("LoginSchema", () => {
     expect(LoginSchema.safeParse({ email: "jane@example.com", password: "x".repeat(MAX_PASSWORD_LENGTH + 1) }).success).toBe(false);
   });
 });
+
+describe("API token schemas", () => {
+  it("trims the name and bounds its length", async () => {
+    const { CreateApiTokenSchema, MAX_API_TOKEN_NAME_LENGTH } = await import("./auth.js");
+    expect(CreateApiTokenSchema.parse({ name: "  n8n  " }).name).toBe("n8n");
+    expect(CreateApiTokenSchema.safeParse({ name: "   " }).success).toBe(false);
+    expect(CreateApiTokenSchema.safeParse({ name: "x".repeat(MAX_API_TOKEN_NAME_LENGTH + 1) }).success).toBe(false);
+  });
+
+  it("a listed token has no secret field, a created one adds it", async () => {
+    const { ApiTokenSchema, CreatedApiTokenSchema } = await import("./auth.js");
+    const listed = {
+      id: "0b0b6b8e-0000-4000-8000-000000000001",
+      name: "n8n",
+      prefix: "jr_abcde",
+      createdAt: "2026-11-04T10:00:00.000Z",
+      lastUsedAt: null,
+      revokedAt: null,
+    };
+    expect(ApiTokenSchema.safeParse(listed).success).toBe(true);
+    expect(CreatedApiTokenSchema.safeParse(listed).success).toBe(false);
+    expect(CreatedApiTokenSchema.safeParse({ ...listed, token: "jr_secret" }).success).toBe(true);
+  });
+});

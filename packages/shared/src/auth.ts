@@ -36,5 +36,29 @@ export const AUTH_ERROR_CODES = [
   "weak_password",
   "signup_disabled",
   "bad_origin",
+  "session_required",
+  "too_many_tokens",
 ] as const;
 export type AuthErrorCode = (typeof AUTH_ERROR_CODES)[number];
+
+export const MAX_API_TOKEN_NAME_LENGTH = 60;
+
+export const CreateApiTokenSchema = z.object({
+  name: z.string().trim().min(1).max(MAX_API_TOKEN_NAME_LENGTH),
+});
+export type CreateApiTokenBody = z.output<typeof CreateApiTokenSchema>;
+
+/** What a token looks like in a list: never the secret, only enough to recognise it. */
+export const ApiTokenSchema = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  prefix: z.string(),
+  createdAt: z.iso.datetime({ offset: true }),
+  lastUsedAt: z.iso.datetime({ offset: true }).nullable(),
+  revokedAt: z.iso.datetime({ offset: true }).nullable(),
+});
+export type ApiTokenResponse = z.infer<typeof ApiTokenSchema>;
+
+/** Returned once, when the token is created: the only time the secret is shown. */
+export const CreatedApiTokenSchema = ApiTokenSchema.extend({ token: z.string() });
+export type CreatedApiTokenResponse = z.infer<typeof CreatedApiTokenSchema>;

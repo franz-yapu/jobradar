@@ -4,7 +4,11 @@ import { describe, expect, it } from "vitest";
 interface Node {
   name: string;
   type: string;
-  parameters: Record<string, unknown> & { jsCode?: string; url?: string };
+  parameters: Record<string, unknown> & {
+    jsCode?: string;
+    url?: string;
+    headerParameters?: { parameters: { name: string; value: string }[] };
+  };
 }
 interface Workflow {
   id: string;
@@ -37,6 +41,7 @@ const SECRET_PATTERNS: [string, RegExp][] = [
   ["Groq key", /\bgsk_[A-Za-z0-9]{20,}/],
   ["Anthropic key", /\bsk-ant-[A-Za-z0-9_-]{10,}/],
   ["bearer token", /Bearer\s+[A-Za-z0-9._-]{20,}/],
+  ["JobRadar API token", /\bjr_[A-Za-z0-9_-]{30,}/],
 ];
 
 it("has at least the collect workflow", () => {
@@ -86,6 +91,33 @@ describe.each(files)("n8n workflow %s", (file) => {
       const url = node.parameters.url ?? "";
       expect(url, node.name).not.toMatch(/localhost|127\.0\.0\.1|host\.docker\.internal/);
       if (url.includes("/postings")) expect(url, node.name).toMatch(/^=\{\{ \$env\.JOBRADAR_API_URL \}\}\//);
+    }
+  });
+});
+
+/** Every request node, with whether it talks to the JobRadar API (the URL comes from the environment). */
+const requests = (wf: Workflow) =>
+  wf.nodes
+    .filter((n) => n.type === "n8n-nodes-base.httpRequest")
+    .map((node) => ({ node, toJobRadar: (node.parameters.url ?? "").includes("$env.JOBRADAR_API_URL") }));
+const authHeader = (node: Node) => node.parameters.headerParameters?.parameters.find((h) => h.name === "Authorization");
+
+describe.each(files)("API token in %s", (file) => {
+  const wf = load(file);
+
+  it("sends the API token from the environment on every call to the JobRadar API", () => {
+    const calls = requests(wf).filter((r) => r.toJobRadar);
+    expect(calls.length).toBeGreaterThan(0);
+    for (const { node } of calls) {
+      expect(node.parameters["sendHeaders"], node.name).toBe(true);
+      expect(authHeader(node)?.value, node.name).toBe("=Bearer {{ $env.JOBRADAR_API_TOKEN }}");
+    }
+  });
+
+  it("never sends the token anywhere else (e.g. to Get on Board)", () => {
+    for (const { node } of requests(wf).filter((r) => !r.toJobRadar)) {
+      expect(authHeader(node), node.name).toBeUndefined();
+      expect(JSON.stringify(node.parameters), node.name).not.toContain("JOBRADAR_API_TOKEN");
     }
   });
 });
@@ -164,5 +196,26 @@ describe("02-daily-summary-telegram.json", () => {
 
   it("fails loudly instead of claiming 'no postings' when the API did not answer", () => {
     expect(node("Build summary").parameters.jsCode).toContain("did not answer");
+  });
+});
+
+describe("the collect workflow fails loudly when the API rejects its token", () => {
+  const code = load("01-collect-getonboard.json").nodes.find((n) => n.name === "Pick new postings")?.parameters.jsCode ?? "";
+  const run = (statuses: number[]) =>
+    new Function("$input", code)({
+      all: () => statuses.map((statusCode, i) => ({ json: { statusCode, body: { id: `id-${i}`, title: `T${i}` } } })),
+    }) as { json: { postingId: string } }[];
+
+  it("throws on a 401 instead of reporting 'nothing new'", () => {
+    expect(() => run([401, 401])).toThrow(/rejected the API token/);
+    expect(() => run([201, 401])).toThrow(/JOBRADAR_API_TOKEN/);
+  });
+
+  it("still scores only the new postings (201) and ignores the already known ones (409)", () => {
+    expect(run([201, 409, 201]).map((item) => item.json.postingId)).toEqual(["id-0", "id-2"]);
+  });
+
+  it("keeps the cap of 20 scored postings per run", () => {
+    expect(run(Array.from({ length: 30 }, () => 201))).toHaveLength(20);
   });
 });

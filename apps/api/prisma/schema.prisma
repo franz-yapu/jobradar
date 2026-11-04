@@ -157,6 +157,7 @@ model User {
   profile       CandidateProfile?
   postingScores PostingScore[]
   aiCalls       AiCall[]
+  apiTokens     ApiToken[]
 
   @@map("users")
 }
@@ -173,4 +174,21 @@ model Session {
   @@index([userId])
   @@index([expiresAt])
   @@map("sessions")
+}
+
+/// A personal API token (for n8n and scripts). Only its SHA-256 is stored; the token is shown once.
+model ApiToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  name       String
+  /// First characters of the token, to recognise it in a list. Not secret on its own.
+  prefix     String
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("api_tokens")
 }
