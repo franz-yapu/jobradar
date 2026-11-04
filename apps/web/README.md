@@ -19,4 +19,6 @@ pnpm --filter @jobradar/web exec playwright install chromium   # once, ~120 MB
 pnpm e2e                                                       # from the repo root
 ```
 
-`pnpm e2e` starts the real API on :3100 (`apps/api/e2e/server.ts`: real database, **deterministic fake AI**, never Groq or Anthropic) and Vite on :5174, so it does not collide with `pnpm dev`. The API **empties** its database, so it only starts against a name ending in `_test` or `_e2e` (`E2E_DATABASE_URL`, then `TEST_DATABASE_URL`). In CI it is a separate job so `pnpm quality` stays offline.
+`pnpm e2e` starts the real API on :3100 (`apps/api/e2e/server.ts`: real database, **deterministic fake AI**, never Groq or Anthropic) and Vite on :5174, so it does not collide with `pnpm dev`. It empties the database, including users, so every run starts from zero. It only starts against a name ending in `_test` or `_e2e` (`E2E_DATABASE_URL`, then `TEST_DATABASE_URL`). In CI it is a separate job so `pnpm quality` stays offline.
+
+The suite registers two accounts: it checks the anonymous redirect, account A's full flow (profile, manual postings, scoring, filters, EN/ES, CV import) and that account B starts empty and account A still sees its own data after logging back in.

@@ -32,6 +32,9 @@ async function main(): Promise<void> {
   await prisma.aiCall.deleteMany();
   await prisma.posting.deleteMany();
   await prisma.candidateProfile.deleteMany();
+  // Users cascade to sessions and API tokens; deleting them last also prevents the first
+  // registration of a run from adopting rows left by the previous one.
+  await prisma.user.deleteMany();
 
   await app.listen(Number(process.env["PORT"] ?? 3100));
 }
