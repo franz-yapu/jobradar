@@ -22,7 +22,7 @@ function TokenRow({ token, onRevoked }: { token: ApiTokenResponse; onRevoked: ()
       <div className="min-w-0">
         <p className="font-semibold">{token.name}</p>
         <p className="text-sm text-muted">
-          <code>{token.prefix}…</code> · {t("tokens.created", { date: date.format(new Date(token.createdAt)) })} ·{" "}
+          <code translate="no">{token.prefix}…</code> · {t("tokens.created", { date: date.format(new Date(token.createdAt)) })} ·{" "}
           {token.lastUsedAt ? t("tokens.lastUsed", { date: date.format(new Date(token.lastUsedAt)) }) : t("tokens.neverUsed")}
         </p>
         {revoke.isError ? (
@@ -33,7 +33,7 @@ function TokenRow({ token, onRevoked }: { token: ApiTokenResponse; onRevoked: ()
       </div>
       <div className="flex items-center gap-2">
         <span
-          className={`rounded-md px-2.5 py-1 text-xs font-semibold ${revoked ? "bg-line text-muted" : "bg-success-soft text-success-ink"}`}
+          className={`rounded-md px-2.5 py-1 text-xs font-semibold ${revoked ? "bg-neutral-soft text-neutral-ink" : "bg-success-soft text-success-ink"}`}
         >
           {revoked ? t("tokens.revoked") : t("tokens.active")}
         </span>
@@ -75,7 +75,7 @@ function NewSecret({ created, onDone }: { created: CreatedApiTokenResponse; onDo
       <p className="font-medium">{t("tokens.secretTitle", { name: created.name })}</p>
       <p className="mt-1">{t("tokens.secretWarning")}</p>
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <code className="select-all break-all rounded-lg bg-card px-3 py-2 text-sm text-ink" data-testid="new-token">
+        <code translate="no" className="select-all break-all rounded-md bg-card px-3 py-2 text-sm text-ink" data-testid="new-token">
           {created.token}
         </code>
         <Button variant="outline" size="sm" onClick={() => void copy()}>
@@ -115,7 +115,7 @@ export function TokensPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-2xl font-semibold">{t("tokens.title")}</h2>
+        <h1 className="text-2xl font-semibold">{t("tokens.title")}</h1>
         <p className="mt-1 text-sm text-muted">{t("tokens.intro")}</p>
       </div>
 

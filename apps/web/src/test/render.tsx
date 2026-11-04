@@ -6,6 +6,7 @@ import { MemoryRouter, useLocation } from "react-router-dom";
 import { App } from "../App";
 import { AuthProvider, ME_KEY } from "../auth/AuthProvider";
 import { createI18n } from "../i18n";
+import { ThemeProvider } from "../theme/ThemeProvider";
 
 export const TEST_USER: UserResponse = { id: "0b0b6b8e-0000-4000-8000-0000000000aa", email: "jane@example.com" };
 
@@ -31,6 +32,7 @@ export function renderApp(options: Options = {}) {
   if (user !== "ask") client.setQueryData(ME_KEY, user);
   const view = render(
     <I18nextProvider i18n={createI18n(options.language ?? "en")}>
+      <ThemeProvider>
       <QueryClientProvider client={client}>
         <MemoryRouter initialEntries={[options.route ?? "/"]}>
           <AuthProvider>
@@ -39,6 +41,7 @@ export function renderApp(options: Options = {}) {
           </AuthProvider>
         </MemoryRouter>
       </QueryClientProvider>
+      </ThemeProvider>
     </I18nextProvider>,
   );
   return { ...view, client };

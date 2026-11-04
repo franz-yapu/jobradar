@@ -49,6 +49,8 @@ export function RegisterPage() {
           <input
             className={FIELD}
             type="email"
+            name="email"
+            spellCheck={false}
             autoComplete="email"
             required
             value={email}
@@ -60,6 +62,7 @@ export function RegisterPage() {
           <input
             className={FIELD}
             type="password"
+            name="new-password"
             autoComplete="new-password"
             required
             value={password}
@@ -71,6 +74,7 @@ export function RegisterPage() {
           <input
             className={FIELD}
             type="password"
+            name="confirm-password"
             autoComplete="new-password"
             required
             value={confirm}
@@ -85,7 +89,7 @@ export function RegisterPage() {
       </form>
       <p className="mt-6 text-center text-sm text-muted">
         {t("auth.register.haveAccount")}{" "}
-        <Link to="/login" state={state} className="font-medium text-primary hover:underline">
+        <Link to="/login" state={state} className="font-medium text-primary-ink hover:underline">
           {t("auth.register.login")}
         </Link>
       </p>

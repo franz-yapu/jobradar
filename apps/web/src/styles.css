@@ -1,55 +1,100 @@
 @import "tailwindcss";
 
 /*
- * Design tokens (SDD-005 T2). Admin-dashboard look: light grey page, white cards, soft shadows, rounded
- * controls, one blue accent. Values are CSS variables so dark mode only swaps them; Tailwind utilities
- * (bg-card, text-muted, border-line, bg-primary...) are generated from the @theme block below.
+ * Design tokens. A matte green, working-tool look (design-taste-frontend, app-screen rules):
+ *  - one hue, a desaturated forest/sage green, on the primary action, the active item, links, focus and
+ *    the "fit" verdict; everything else is a green-tinted neutral;
+ *  - flat surfaces: a border or a tone step, no shadow on anything at rest, no gradients, no blur;
+ *  - tight radii (8 cards, 6 controls), one typeface (Geist), figures with tabular digits;
+ *  - every text colour reaches 4.5:1 on the surface it sits on, in both themes.
+ * Light and dark are sets of CSS variables. `data-theme="light|dark"` on <html> forces one; with none,
+ * the system preference decides. Tailwind utilities (bg-card, text-muted, border-line...) come from the
+ * @theme block at the bottom.
  */
 :root {
-  --page: #f9f9f9;
-  --card: #ffffff;
-  --sidebar: #ffffff;
-  --line: #f1f1f4;
-  --line-strong: #dbdfe9;
-  --ink: #071437;
-  --muted: #78829d;
-  --primary: #1b84ff;
-  --primary-hover: #056ee9;
-  --primary-soft: #eff6ff;
+  color-scheme: light;
+  --page: #ecf1ec; /* sage ground */
+  --card: #f8faf7;
+  --sidebar: #e3eae3; /* one step deeper than the ground, so the green frames the work */
+  --raised: #dfe7df; /* hover, nested wells */
+  --line: #d6dfd6;
+  --line-strong: #bdc8bd;
+  --ink: #1b211c;
+  --muted: #566058;
+  --primary: #3d6b4f;
+  --primary-hover: #335a42;
+  --primary-soft: #d5e4d8;
+  --primary-ink: #2d5a3f; /* green text on card and ground */
   --on-primary: #ffffff;
-  --success: #17c653;
-  --success-soft: #dfffea;
-  --success-ink: #0b7a30;
-  --warning: #f6b100;
-  --warning-soft: #fff8dd;
-  --warning-ink: #8a6100;
-  --danger: #f8285a;
-  --danger-soft: #ffeef3;
-  --danger-ink: #c01445;
-  --shadow-card: 0 3px 4px 0 rgb(0 0 0 / 3%);
-  --shadow-pop: 0 4px 24px 0 rgb(0 0 0 / 12%);
+  --success-soft: #dde9df;
+  --success-ink: #1f4a30;
+  --warning-soft: #f0e8d0;
+  --warning-ink: #67490f;
+  --danger: #a24339;
+  --on-danger: #ffffff;
+  --danger-soft: #efdeda;
+  --danger-ink: #7a2e26;
+  --neutral-soft: #e0e7e0;
+  --neutral-ink: #465048;
+  --shadow-pop: 0 4px 20px 0 rgb(20 30 22 / 14%);
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #101411;
+  --card: #161b17;
+  --sidebar: #101411;
+  --raised: #1f2621;
+  --line: #242c26;
+  --line-strong: #364038;
+  --ink: #e5eae5;
+  --muted: #98a39a;
+  --primary: #5f9a77;
+  --primary-hover: #74ad8b;
+  --primary-soft: #1d2b21;
+  --primary-ink: #86c29d;
+  --on-primary: #0c150f;
+  --success-soft: #1b2b20;
+  --success-ink: #8fcba5;
+  --warning-soft: #2b2514;
+  --warning-ink: #d5b66a;
+  --danger: #c2675c;
+  --on-danger: #1a0d0b;
+  --danger-soft: #2e1b18;
+  --danger-ink: #e49a8f;
+  --neutral-soft: #222a24;
+  --neutral-ink: #a9b4ab;
+  --shadow-pop: 0 4px 24px 0 rgb(0 0 0 / 55%);
+}
+
+/* No explicit choice: follow the system. Same values as the dark block above. */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --page: #0b0c10;
-    --card: #15171c;
-    --sidebar: #111318;
-    --line: #22252d;
-    --line-strong: #2f333d;
-    --ink: #eceef5;
-    --muted: #8c93a8;
-    --primary: #3b97ff;
-    --primary-hover: #66adff;
-    --primary-soft: #11233f;
-    --success-soft: #0f2a1b;
-    --success-ink: #4ade80;
-    --warning-soft: #2a2208;
-    --warning-ink: #fbbf24;
-    --danger-soft: #2f1019;
-    --danger-ink: #fb7185;
-    --shadow-card: none;
-    --shadow-pop: 0 4px 24px 0 rgb(0 0 0 / 50%);
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --page: #101411;
+    --card: #161b17;
+    --sidebar: #101411;
+    --raised: #1f2621;
+    --line: #242c26;
+    --line-strong: #364038;
+    --ink: #e5eae5;
+    --muted: #98a39a;
+    --primary: #5f9a77;
+    --primary-hover: #74ad8b;
+    --primary-soft: #1d2b21;
+    --primary-ink: #86c29d;
+    --on-primary: #0c150f;
+    --success-soft: #1b2b20;
+    --success-ink: #8fcba5;
+    --warning-soft: #2b2514;
+    --warning-ink: #d5b66a;
+    --danger: #c2675c;
+    --on-danger: #1a0d0b;
+    --danger-soft: #2e1b18;
+    --danger-ink: #e49a8f;
+    --neutral-soft: #222a24;
+    --neutral-ink: #a9b4ab;
+    --shadow-pop: 0 4px 24px 0 rgb(0 0 0 / 55%);
   }
 }
 
@@ -57,6 +102,7 @@
   --color-page: var(--page);
   --color-card: var(--card);
   --color-sidebar: var(--sidebar);
+  --color-raised: var(--raised);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-ink: var(--ink);
@@ -64,30 +110,63 @@
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-soft: var(--primary-soft);
+  --color-primary-ink: var(--primary-ink);
   --color-on-primary: var(--on-primary);
-  --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-success-ink: var(--success-ink);
-  --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
   --color-warning-ink: var(--warning-ink);
   --color-danger: var(--danger);
+  --color-on-danger: var(--on-danger);
   --color-danger-soft: var(--danger-soft);
   --color-danger-ink: var(--danger-ink);
-  --shadow-card: var(--shadow-card);
+  --color-neutral-soft: var(--neutral-soft);
+  --color-neutral-ink: var(--neutral-ink);
   --shadow-pop: var(--shadow-pop);
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-}
-
-html {
-  color-scheme: light dark;
+  --font-sans: "Geist Variable", Geist, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 body {
   background: var(--page);
   color: var(--ink);
   font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Figures line up in columns, lists and counters. */
+body {
+  font-variant-numeric: tabular-nums;
+}
+
+html {
+  /* The sticky header must never cover what keyboard focus or an anchor scrolls to. */
+  scroll-padding-top: 5rem;
+}
+
+/* Native controls follow the theme (Windows dark mode paints selects from these two values). */
+select,
+option {
+  background-color: var(--card);
+  color: var(--ink);
+}
+
+/* No double-tap zoom delay; the tap flash is a soft green instead of the browser's grey. */
+a,
+button,
+input,
+select,
+textarea,
+summary {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+::selection {
+  background: var(--primary-soft);
+  color: var(--ink);
 }
 
 /* Visible keyboard focus on every interactive element. */

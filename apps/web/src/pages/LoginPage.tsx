@@ -42,6 +42,8 @@ export function LoginPage() {
           <input
             className={FIELD}
             type="email"
+            name="email"
+            spellCheck={false}
             autoComplete="username"
             required
             value={email}
@@ -53,6 +55,7 @@ export function LoginPage() {
           <input
             className={FIELD}
             type="password"
+            name="password"
             autoComplete="current-password"
             required
             value={password}
@@ -66,7 +69,7 @@ export function LoginPage() {
       </form>
       <p className="mt-6 text-center text-sm text-muted">
         {t("auth.login.noAccount")}{" "}
-        <Link to="/register" state={state} className="font-medium text-primary hover:underline">
+        <Link to="/register" state={state} className="font-medium text-primary-ink hover:underline">
           {t("auth.login.register")}
         </Link>
       </p>

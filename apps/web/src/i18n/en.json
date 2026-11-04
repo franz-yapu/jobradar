@@ -58,7 +58,7 @@
   },
   "filters": {
     "search": "Search",
-    "searchPlaceholder": "Title, company or text",
+    "searchPlaceholder": "Title, company or text…",
     "verdict": "Verdict",
     "allVerdicts": "All verdicts",
     "source": "Source",
@@ -105,7 +105,7 @@
     "title": "Add a posting",
     "intro": "Paste the posting text. Everything else is optional: missing title and company are guessed.",
     "text": "Posting text",
-    "textPlaceholder": "Paste the whole posting here",
+    "textPlaceholder": "Paste the whole posting here…",
     "title_field": "Title",
     "company": "Company",
     "url": "Link",
@@ -126,9 +126,9 @@
     "intro": "Postings are scored against this profile.",
     "empty": "No profile yet. Fill it in and save to start scoring.",
     "stack": "Stack",
-    "stackHint": "Type a technology and press Enter",
+    "stackHint": "Type a technology and press Enter…",
     "locations": "Allowed locations",
-    "locationsHint": "ISO country code (BO), latam or worldwide; press Enter",
+    "locationsHint": "ISO country code (BO), latam or worldwide; press Enter…",
     "seniority": "Seniority",
     "english": "Highest English level required that you accept",
     "contracts": "Contracts to exclude",
@@ -201,7 +201,7 @@
     },
     "certifications": {
       "title": "Certifications",
-      "hint": "Type a certification and press Enter"
+      "hint": "Type a certification and press Enter…"
     },
     "start": "Start year",
     "end": "End year",
@@ -265,5 +265,11 @@
     "revokeNamed": "Revoke {{name}}",
     "confirmRevoke": "Yes, revoke",
     "cancel": "Cancel"
+  },
+  "theme": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

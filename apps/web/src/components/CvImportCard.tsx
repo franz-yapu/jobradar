@@ -58,7 +58,7 @@ export function CvImportCard({ onDraft }: { onDraft: (draft: CvDraft) => void })
             id={inputId}
             type="file"
             accept="application/pdf,.pdf"
-            className="block max-w-full text-sm text-muted file:mr-3 file:cursor-pointer file:rounded-lg file:border file:border-line-strong file:bg-card file:px-4 file:py-2 file:text-sm file:font-medium file:text-ink hover:file:bg-primary-soft"
+            className="block max-w-full text-sm text-muted file:mr-3 file:cursor-pointer file:rounded-md file:border file:border-line-strong file:bg-card file:px-4 file:py-2 file:text-sm file:font-medium file:text-ink hover:file:bg-primary-soft"
             onChange={(event) => choose(event.target.files?.[0] ?? null)}
           />
           <Button disabled={!file || localError !== null || read.isPending} onClick={() => file && read.mutate(file)}>

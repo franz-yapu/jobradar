@@ -50,11 +50,11 @@ export function ChipInput({ label, hint, values, onChange, normalize, invalidMes
       {values.length > 0 ? (
         <ul className="mb-2 flex flex-wrap gap-1.5" aria-label={label}>
           {values.map((value) => (
-            <li key={value} className="inline-flex items-center gap-1 rounded-md bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary">
+            <li key={value} className="inline-flex items-center gap-1 rounded-md bg-primary-soft px-2.5 py-1 text-xs font-medium text-primary-ink">
               {value}
               <button
                 type="button"
-                className="rounded p-0.5 hover:bg-primary hover:text-on-primary"
+                className="-mr-1.5 flex size-6 items-center justify-center rounded hover:bg-primary hover:text-on-primary"
                 aria-label={t("profile.remove", { item: value })}
                 onClick={() => onChange(values.filter((item) => item !== value))}
               >

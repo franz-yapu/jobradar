@@ -58,7 +58,7 @@
   },
   "filters": {
     "search": "Buscar",
-    "searchPlaceholder": "Título, empresa o texto",
+    "searchPlaceholder": "Título, empresa o texto…",
     "verdict": "Veredicto",
     "allVerdicts": "Todos los veredictos",
     "source": "Fuente",
@@ -105,7 +105,7 @@
     "title": "Añadir una oferta",
     "intro": "Pega el texto de la oferta. Todo lo demás es opcional: si faltan título y empresa, se deducen.",
     "text": "Texto de la oferta",
-    "textPlaceholder": "Pega aquí la oferta completa",
+    "textPlaceholder": "Pega aquí la oferta completa…",
     "title_field": "Título",
     "company": "Empresa",
     "url": "Enlace",
@@ -126,9 +126,9 @@
     "intro": "Las ofertas se evalúan contra este perfil.",
     "empty": "Todavía no hay perfil. Complétalo y guárdalo para empezar a evaluar.",
     "stack": "Stack",
-    "stackHint": "Escribe una tecnología y pulsa Enter",
+    "stackHint": "Escribe una tecnología y pulsa Enter…",
     "locations": "Ubicaciones permitidas",
-    "locationsHint": "Código de país ISO (BO), latam o worldwide; pulsa Enter",
+    "locationsHint": "Código de país ISO (BO), latam o worldwide; pulsa Enter…",
     "seniority": "Seniority",
     "english": "Nivel máximo de inglés exigido que aceptas",
     "contracts": "Contratos a excluir",
@@ -201,7 +201,7 @@
     },
     "certifications": {
       "title": "Certificaciones",
-      "hint": "Escribe una certificación y pulsa Enter"
+      "hint": "Escribe una certificación y pulsa Enter…"
     },
     "start": "Año de inicio",
     "end": "Año de fin",
@@ -265,5 +265,11 @@
     "revokeNamed": "Revocar {{name}}",
     "confirmRevoke": "Sí, revocar",
     "cancel": "Cancelar"
+  },
+  "theme": {
+    "label": "Tema",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "system": "Sistema"
   }
 }

@@ -36,7 +36,7 @@ function TextInput({ label, value, onChange, required }: { label: string; value:
 function ItemBox({ label, onRemove, children }: { label: string; onRemove: () => void; children: ReactNode }) {
   const { t } = useTranslation();
   return (
-    <li className="relative rounded-lg border border-line p-4" data-testid="background-item">
+    <li className="relative rounded-md border border-line p-4" data-testid="background-item">
       <Button variant="ghost" size="sm" className="absolute right-2 top-2" aria-label={t("profile.removeItem", { item: label })} onClick={onRemove}>
         <CloseIcon width={14} height={14} />
       </Button>

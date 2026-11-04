@@ -23,12 +23,13 @@ export function PostingRow({ posting, scoring, scoreError, onScore }: Props) {
   const web = isWebUrl(posting.url);
 
   return (
-    <li className="px-5 py-4 transition-colors hover:bg-page" data-testid="posting-row">
+    <li className={`border-l-[3px] px-5 py-4 transition-colors hover:bg-page ${score?.verdict === "fit" ? "border-l-primary" : "border-l-transparent"}`}
+      data-testid="posting-row">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-ink">
             {web ? (
-              <a href={posting.url} target="_blank" rel="noreferrer noopener" className="text-ink hover:text-primary hover:underline">
+              <a href={posting.url} target="_blank" rel="noreferrer noopener" className="text-ink hover:text-primary-ink hover:underline">
                 {posting.title}
               </a>
             ) : (
@@ -72,11 +73,11 @@ export function PostingRow({ posting, scoring, scoreError, onScore }: Props) {
         </div>
       ) : null}
       {open ? (
-        <div id={detailsId} className="mt-4 space-y-4 rounded-lg bg-page p-4 text-sm">
+        <div id={detailsId} className="mt-4 space-y-4 rounded-md bg-page p-4 text-sm">
           {score ? (
             <>
               <div>
-                <h4 className="mb-1 font-semibold">{t("row.reasons")}</h4>
+                <h2 className="mb-1 font-semibold">{t("row.reasons")}</h2>
                 <ul className="list-inside list-disc space-y-0.5 text-ink">
                   {score.reasons.map((reason) => (
                     <li key={reason}>{reason}</li>
@@ -85,7 +86,7 @@ export function PostingRow({ posting, scoring, scoreError, onScore }: Props) {
               </div>
               {score.blockers.length > 0 ? (
                 <div>
-                  <h4 className="mb-1 font-semibold">{t("row.blockers")}</h4>
+                  <h2 className="mb-1 font-semibold">{t("row.blockers")}</h2>
                   <ul className="list-inside list-disc space-y-0.5 text-ink">
                     {score.blockers.map((blocker) => (
                       <li key={`${blocker.type}-${blocker.evidence}`}>
@@ -100,7 +101,7 @@ export function PostingRow({ posting, scoring, scoreError, onScore }: Props) {
             <p className="text-muted">{t("row.noReasons")}</p>
           )}
           {web ? (
-            <a href={posting.url} target="_blank" rel="noreferrer noopener" className="inline-block font-medium text-primary hover:underline">
+            <a href={posting.url} target="_blank" rel="noreferrer noopener" className="inline-block font-medium text-primary-ink hover:underline">
               {t("row.open")}
             </a>
           ) : null}

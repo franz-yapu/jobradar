@@ -35,6 +35,15 @@ export function ProfilePage() {
     },
   });
 
+  // An imported CV draft only exists in this page: leaving without saving would silently lose it.
+  const hasUnsavedDraft = draftWarnings !== null;
+  useEffect(() => {
+    if (!hasUnsavedDraft) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [hasUnsavedDraft]);
+
   function submit(event: SyntheticEvent) {
     event.preventDefault();
     setProblem(null);
@@ -73,7 +82,7 @@ export function ProfilePage() {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-2xl font-semibold">{t("profile.title")}</h2>
+        <h1 className="text-2xl font-semibold">{t("profile.title")}</h1>
         <p className="mt-1 text-sm text-muted">{query.data ? t("profile.intro") : t("profile.empty")}</p>
       </div>
 

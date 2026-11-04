@@ -5,7 +5,7 @@ import { GlobeIcon } from "./icons";
 export function LanguageSwitcher() {
   const { t, i18n } = useTranslation();
   return (
-    <label className="flex items-center gap-2 rounded-lg border border-line-strong bg-card px-3 py-1.5 text-sm text-ink focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30">
+    <label className="flex items-center gap-2 rounded-md border border-line-strong bg-card px-3 py-1.5 text-sm text-ink focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30">
       <GlobeIcon width={16} height={16} className="text-muted" />
       <span className="sr-only">{t("language.label")}</span>
       <select

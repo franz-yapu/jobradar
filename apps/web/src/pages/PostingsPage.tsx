@@ -43,7 +43,7 @@ export function PostingsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-semibold">{t("postings.title")}</h2>
+          <h1 className="text-2xl font-semibold">{t("postings.title")}</h1>
           <p className="mt-1 text-sm text-muted">{query.data ? t("postings.total", { count: query.data.total }) : t("app.tagline")}</p>
         </div>
         <Link to="/postings/new" className={buttonClass()}>

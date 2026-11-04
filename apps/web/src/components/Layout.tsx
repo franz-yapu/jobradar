@@ -4,6 +4,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/auth-context";
 import { ChevronsLeftIcon, CloseIcon, KeyIcon, ListIcon, LogoutIcon, MenuIcon, PlusIcon, RadarIcon, UserIcon } from "./icons";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 
 const COLLAPSED_KEY = "jobradar.sidebar.collapsed";
 
@@ -69,7 +70,7 @@ export function Layout() {
     <div className="min-h-screen bg-page text-ink">
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-card focus:px-3 focus:py-2 focus:shadow-pop"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:shadow-pop"
       >
         {t("layout.skip")}
       </a>
@@ -87,14 +88,14 @@ export function Layout() {
       >
         <div className="flex h-16 items-center justify-between gap-2 border-b border-line px-5">
           <div className="flex items-center gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-on-primary">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary text-on-primary">
               <RadarIcon />
             </span>
-            <span className={`text-lg font-semibold ${labelClass}`}>{t("app.name")}</span>
+            <span translate="no" className={`text-lg font-semibold ${labelClass}`}>{t("app.name")}</span>
           </div>
           <button
             type="button"
-            className="rounded-lg p-1.5 text-muted hover:bg-primary-soft hover:text-primary lg:hidden"
+            className="rounded-md p-1.5 text-muted hover:bg-raised hover:text-ink lg:hidden"
             aria-label={t("layout.closeMenu")}
             onClick={() => setDrawerOpen(false)}
           >
@@ -102,7 +103,7 @@ export function Layout() {
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4" aria-label={t("layout.main")}>
+        <nav className="flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 py-4" aria-label={t("layout.main")}>
           {LINKS.map(({ to, key, end, Icon }) => (
             <NavLink
               key={to}
@@ -111,9 +112,9 @@ export function Layout() {
               title={collapsed ? t(key) : undefined}
               onClick={() => setDrawerOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
                   collapsed ? "lg:justify-center" : ""
-                } ${isActive ? "bg-primary-soft text-primary" : "text-muted hover:bg-primary-soft hover:text-primary"}`
+                } ${isActive ? "bg-primary-soft text-primary-ink" : "text-muted hover:bg-raised hover:text-ink"}`
               }
             >
               <Icon className="shrink-0" />
@@ -125,7 +126,7 @@ export function Layout() {
         <div className="hidden border-t border-line p-3 lg:block">
           <button
             type="button"
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted hover:bg-primary-soft hover:text-primary lg:justify-start"
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm text-muted hover:bg-raised hover:text-ink lg:justify-start"
             aria-pressed={collapsed}
             aria-label={collapsed ? t("layout.expand") : t("layout.collapse")}
             onClick={toggleCollapsed}
@@ -137,10 +138,10 @@ export function Layout() {
       </aside>
 
       <div className={`transition-[padding] duration-200 ${collapsed ? "lg:pl-[76px]" : "lg:pl-64"}`}>
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-card/90 px-4 backdrop-blur sm:px-6">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-line bg-page px-3 sm:gap-3 sm:px-6">
           <button
             type="button"
-            className="rounded-lg p-2 text-muted hover:bg-primary-soft hover:text-primary lg:hidden"
+            className="rounded-md p-2 text-muted hover:bg-raised hover:text-ink lg:hidden"
             aria-label={t("layout.openMenu")}
             aria-controls="sidebar"
             aria-expanded={drawerOpen}
@@ -148,8 +149,8 @@ export function Layout() {
           >
             <MenuIcon />
           </button>
-          <nav aria-label={t("layout.breadcrumb")} className="min-w-0 flex-1 truncate text-sm text-muted">
-            <span>{t("app.name")}</span>
+          <nav aria-label={t("layout.breadcrumb")} className="min-w-0 flex-1 truncate text-sm text-muted max-sm:invisible">
+            <span translate="no">{t("app.name")}</span>
             <span className="mx-2" aria-hidden="true">
               /
             </span>
@@ -157,18 +158,19 @@ export function Layout() {
               {t(titleKey(pathname))}
             </span>
           </nav>
+          <ThemeSwitcher />
           <LanguageSwitcher />
-          <div className="flex items-center gap-2 border-l border-line pl-3">
+          <div className="flex items-center gap-1 sm:gap-2 sm:border-l sm:border-line sm:pl-3">
             <span className="hidden max-w-48 truncate text-sm text-muted sm:inline" title={user?.email}>
               {user?.email}
             </span>
             <button
               type="button"
-              className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-muted hover:bg-primary-soft hover:text-primary"
+              className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-muted hover:bg-raised hover:text-ink"
               onClick={() => void logout().then(() => navigate("/login", { replace: true }))}
             >
               <LogoutIcon width={16} height={16} />
-              {t("auth.logout")}
+              <span className="sr-only sm:not-sr-only">{t("auth.logout")}</span>
             </button>
           </div>
         </header>
