@@ -2,6 +2,7 @@ import { Controller, Get, Inject, ServiceUnavailableException } from "@nestjs/co
 import { ApiOkResponse, ApiProperty, ApiServiceUnavailableResponse, ApiTags } from "@nestjs/swagger";
 import { HealthResponseSchema } from "@jobradar/shared";
 import { CheckHealth } from "../application/check-health.use-case.js";
+import { Public } from "../../auth/infrastructure/public.decorator.js";
 
 export class HealthResponseDto {
   @ApiProperty({ enum: ["ok", "degraded"] })
@@ -11,6 +12,7 @@ export class HealthResponseDto {
   db!: "up" | "down";
 }
 
+@Public()
 @ApiTags("health")
 @Controller("health")
 export class HealthController {

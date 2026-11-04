@@ -1,7 +1,6 @@
 import "reflect-metadata";
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import request from "supertest";
 import { z } from "zod";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { AppModule } from "../src/app.module.js";
@@ -9,6 +8,7 @@ import { AI_PROVIDER, BudgetExceededError, type AiProvider } from "../src/ai/dom
 import { AI_INNER_PROVIDER } from "../src/ai/infrastructure/ai.module.js";
 import { FakeAiProvider } from "../src/ai/infrastructure/fake-ai.provider.js";
 import { PrismaService } from "../src/shared/infrastructure/prisma/prisma.service.js";
+import { loginAgent, removeTestUsers, type Agent } from "./helpers/auth.js";
 
 process.env["AI_DAILY_BUDGET_USD"] = "0.05";
 
@@ -19,17 +19,20 @@ let app: INestApplication;
 let prisma: PrismaService;
 let fake: FakeAiProvider;
 let provider: AiProvider;
-const http = () => request(app.getHttpServer());
+let agent: Agent;
+const http = () => agent;
 
 beforeAll(async () => {
   fake = new FakeAiProvider();
   app = (await Test.createTestingModule({ imports: [AppModule] }).overrideProvider(AI_INNER_PROVIDER).useValue(fake).compile())
     .createNestApplication();
   await app.init();
+  agent = await loginAgent(app);
   prisma = app.get(PrismaService);
   provider = app.get<AiProvider>(AI_PROVIDER);
 });
 afterAll(async () => {
+  await removeTestUsers(app);
   await app.close();
 });
 beforeEach(async () => {

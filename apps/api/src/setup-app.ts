@@ -6,11 +6,12 @@ export function setupSwagger(app: INestApplication): void {
     .setTitle("JobRadar API")
     .setDescription("Job postings, AI scoring and application drafts")
     .setVersion("0.1.0")
+    .addCookieAuth("jr_session")
     .build();
   SwaggerModule.setup("docs", app, SwaggerModule.createDocument(app, config));
 }
 
 /** Browsers may call the API only from the configured origins (never a wildcard). */
 export function setupCors(app: INestApplication, allowedOrigins: string[]): void {
-  app.enableCors({ origin: allowedOrigins, methods: ["GET", "POST", "PUT", "OPTIONS"], maxAge: 600 });
+  app.enableCors({ origin: allowedOrigins, credentials: true, methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], maxAge: 600 });
 }

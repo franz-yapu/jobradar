@@ -2,7 +2,6 @@ import "reflect-metadata";
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { CvDraftSchema } from "@jobradar/shared";
-import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { AppModule } from "../src/app.module.js";
 import { AiNotConfiguredError, AiProviderError, AiRefusalError } from "../src/ai/domain/ai-provider.js";
@@ -10,6 +9,7 @@ import { AI_INNER_PROVIDER } from "../src/ai/infrastructure/ai.module.js";
 import { FakeAiProvider } from "../src/ai/infrastructure/fake-ai.provider.js";
 import { PrismaService } from "../src/shared/infrastructure/prisma/prisma.service.js";
 import { makePdf } from "./helpers/make-pdf.js";
+import { loginAgent, removeTestUsers, type Agent } from "./helpers/auth.js";
 
 process.env["AI_DAILY_BUDGET_USD"] = "0.05";
 
@@ -29,7 +29,8 @@ const CV = makePdf([["Backend developer", "TypeScript, NestJS", "BSc Informatics
 let app: INestApplication;
 let prisma: PrismaService;
 let fake: FakeAiProvider;
-const http = () => request(app.getHttpServer());
+let agent: Agent;
+const http = () => agent;
 const upload = (file: Buffer, filename = "cv.pdf", contentType = "application/pdf") =>
   http().post("/profile/import-cv").attach("file", file, { filename, contentType });
 
@@ -38,9 +39,11 @@ beforeAll(async () => {
   app = (await Test.createTestingModule({ imports: [AppModule] }).overrideProvider(AI_INNER_PROVIDER).useValue(fake).compile())
     .createNestApplication();
   await app.init();
+  agent = await loginAgent(app);
   prisma = app.get(PrismaService);
 });
 afterAll(async () => {
+  await removeTestUsers(app);
   await app.close();
 });
 beforeEach(async () => {

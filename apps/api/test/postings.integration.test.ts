@@ -1,10 +1,10 @@
 import "reflect-metadata";
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import request from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { AppModule } from "../src/app.module.js";
 import { PrismaService } from "../src/shared/infrastructure/prisma/prisma.service.js";
+import { loginAgent, removeTestUsers, type Agent } from "./helpers/auth.js";
 
 const body = {
   title: "Backend Developer",
@@ -17,14 +17,17 @@ const body = {
 
 let app: INestApplication;
 let prisma: PrismaService;
-const http = () => request(app.getHttpServer());
+let agent: Agent;
+const http = () => agent;
 
 beforeAll(async () => {
   app = (await Test.createTestingModule({ imports: [AppModule] }).compile()).createNestApplication();
   await app.init();
+  agent = await loginAgent(app);
   prisma = app.get(PrismaService);
 });
 afterAll(async () => {
+  await removeTestUsers(app);
   await app.close();
 });
 beforeEach(async () => {

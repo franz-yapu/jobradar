@@ -1,6 +1,6 @@
 # SDD-006 – Accounts: sign up, login and per-account data
 
-**Status:** Draft (2026-11-04) · **Week:** 4 · **Depends on:** SDD-001…005 · **Decision record:** ADR-0002 (PRD updated)
+**Status:** Approved (2026-11-04) · **Week:** 4 · **Depends on:** SDD-001…005 · **Decision record:** ADR-0002 (PRD updated)
 
 ## Context
 The API has no authentication and all data is one person's. The app will be deployed as a small SaaS: people create their own account, and nobody may read or change another account's postings, profile, scores or AI spend. n8n needs a non-browser way in.

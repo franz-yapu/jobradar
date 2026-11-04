@@ -43,12 +43,18 @@ pnpm e2e                  # Playwright end-to-end test of the dashboard (disposa
 - If a host port is already taken, change `POSTGRES_PORT`, `N8N_PORT` or `GRAFANA_PORT` in `.env`
   (and the port inside `DATABASE_URL` / `TEST_DATABASE_URL`).
 
-### API (v0.1)
+### API
+
+Every endpoint except `/health`, `/docs` and `/auth/register|login|logout` needs the session cookie (`jr_session`: `httpOnly`, `SameSite=Lax`, `Secure` in production, 14 days). Writes that carry an `Origin` header must come from `WEB_ORIGIN` (`403 bad_origin`). Set `ALLOW_SIGNUP=false` to close registration. (v0.1)
 | Method | Path | Description |
 |---|---|---|
 | `POST` | `/postings` | Create a posting. `201`, `400` invalid body, `409` URL already exists (tracking params and fragments are ignored) |
 | `GET` | `/postings?source=&q=&verdict=&createdSince=&page=1&pageSize=20` | Paginated list, newest first, each item with its `latestScore` (or `null`). `q` matches title, company and description; `verdict` (`fit`/`maybe`/`reject`/`unscored`) filters on the **latest** score; `createdSince` is an ISO 8601 instant. `400` on invalid values |
 | `GET` | `/health` | `200` with DB status, `503` if the database is down |
+| `POST` | `/auth/register` | Create an account (email + password of 10-128 characters) and log in. `201` + session cookie, `400` invalid / `weak_password`, `403` `signup_disabled`, `409` `email_taken`, `429` `too_many_attempts` |
+| `POST` | `/auth/login` | `200` + session cookie; `401` `invalid_credentials` (same answer for an unknown email), `429` `too_many_attempts` (5 failures per email / 20 per address every 15 minutes, `Retry-After`) |
+| `POST` | `/auth/logout` | `204`; deletes the session on the server and clears the cookie |
+| `GET` | `/auth/me` | The logged-in user, `401` otherwise |
 | `GET` / `PUT` | `/profile` | The single candidate profile (`404` until saved; every `PUT` bumps `version`). Besides the criteria it holds `education`, `experience`, `languages` and `certifications` (optional lists) |
 | `POST` | `/profile/import-cv` | Upload a CV (`multipart/form-data`, field `file`, PDF up to 5 MB / 15 pages). Returns a **draft** profile to review (`200`, nothing is stored; `warnings` lists what could not be found). `400` no file, `413` too large, `415` `cv_not_pdf`, `422` `cv_no_text` / `cv_too_long` / `ai_refused`, `429` `ai_budget_exceeded`, `502` `ai_provider_error`, `503` `ai_not_configured`. The CV text is sent to the configured AI provider; contact data is never asked for nor stored |
 | `POST` | `/postings/:id/score` | Score a posting against the profile. `201` (history is kept), `400` bad id, `404` unknown posting, `422` `profile_not_configured` / `ai_refused`, `429` `ai_budget_exceeded`, `502` `ai_provider_error`, `503` `ai_not_configured` |

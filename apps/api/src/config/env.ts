@@ -19,6 +19,11 @@ const EnvSchema = z.object({
   /** Defaults to the provider's recommended model. */
   AI_MODEL: z.string().trim().optional(),
   AI_DAILY_BUDGET_USD: z.coerce.number().min(0).default(1),
+  /** Open registration. Set to false to close it once the intended accounts exist. */
+  ALLOW_SIGNUP: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((value) => value === "true"),
   /** Origins allowed to call the API from a browser (comma separated). The dashboard's dev server by default. */
   WEB_ORIGIN: z
     .string()
