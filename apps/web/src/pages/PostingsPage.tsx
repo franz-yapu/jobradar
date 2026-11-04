@@ -3,10 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { ErrorMessage } from "../components/ErrorMessage";
-import { PlusIcon } from "../components/icons";
+import { ListIcon, PlusIcon } from "../components/icons";
 import { PostingFiltersBar } from "../components/PostingFiltersBar";
 import { PostingRow } from "../components/PostingRow";
-import { Button, buttonClass, Card } from "../components/ui";
+import { Button, buttonClass, Card, PageHeader } from "../components/ui";
 import { PAGE_SIZE, parseFilters, serializeFilters, sinceToCreatedSince } from "../lib/filters";
 import type { PostingFilters } from "../lib/filters";
 
@@ -41,16 +41,17 @@ export function PostingsPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">{t("postings.title")}</h1>
-          <p className="mt-1 text-sm text-muted">{query.data ? t("postings.total", { count: query.data.total }) : t("app.tagline")}</p>
-        </div>
-        <Link to="/postings/new" className={buttonClass()}>
-          <PlusIcon width={16} height={16} />
-          {t("postings.paste")}
-        </Link>
-      </div>
+      <PageHeader
+        icon={<ListIcon />}
+        title={t("postings.title")}
+        description={query.data ? t("postings.total", { count: query.data.total }) : t("app.tagline")}
+        actions={
+          <Link to="/postings/new" className={buttonClass()}>
+            <PlusIcon width={16} height={16} />
+            {t("postings.paste")}
+          </Link>
+        }
+      />
 
       <Card>
         <PostingFiltersBar key={filters.q} filters={filters} onChange={change} />
@@ -66,7 +67,7 @@ export function PostingsPage() {
         ) : (
           <>
             <Card className="overflow-hidden [&>div]:p-0">
-              <ul className="divide-y divide-line">
+              <ul className="stagger divide-y divide-line">
                 {query.data.items.map((posting) => (
                   <PostingRow
                     key={posting.id}

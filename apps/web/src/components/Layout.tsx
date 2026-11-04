@@ -67,7 +67,7 @@ export function Layout() {
   const labelClass = collapsed ? "lg:sr-only" : "";
 
   return (
-    <div className="min-h-screen bg-page text-ink">
+    <div className="app-backdrop min-h-screen text-ink">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2 focus:shadow-pop"
@@ -88,7 +88,7 @@ export function Layout() {
       >
         <div className="flex h-16 items-center justify-between gap-2 border-b border-line px-5">
           <div className="flex items-center gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary text-on-primary">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-on-primary shadow-sm">
               <RadarIcon />
             </span>
             <span translate="no" className={`text-lg font-semibold ${labelClass}`}>{t("app.name")}</span>
@@ -112,9 +112,9 @@ export function Layout() {
               title={collapsed ? t(key) : undefined}
               onClick={() => setDrawerOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors ${
+                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
                   collapsed ? "lg:justify-center" : ""
-                } ${isActive ? "bg-primary-soft text-primary-ink" : "text-muted hover:bg-raised hover:text-ink"}`
+                } ${isActive ? "bg-primary-soft text-primary-ink shadow-[inset_3px_0_0_var(--primary)]" : "text-muted hover:translate-x-0.5 hover:bg-raised hover:text-ink"}`
               }
             >
               <Icon className="shrink-0" />
@@ -138,7 +138,7 @@ export function Layout() {
       </aside>
 
       <div className={`transition-[padding] duration-200 ${collapsed ? "lg:pl-[76px]" : "lg:pl-64"}`}>
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-line bg-page px-3 sm:gap-3 sm:px-6">
+        <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-line bg-page/80 px-3 backdrop-blur-md sm:gap-3 sm:px-6">
           <button
             type="button"
             className="rounded-md p-2 text-muted hover:bg-raised hover:text-ink lg:hidden"
@@ -161,7 +161,13 @@ export function Layout() {
           <ThemeSwitcher />
           <LanguageSwitcher />
           <div className="flex items-center gap-1 sm:gap-2 sm:border-l sm:border-line sm:pl-3">
-            <span className="hidden max-w-48 truncate text-sm text-muted sm:inline" title={user?.email}>
+            <span
+              aria-hidden="true"
+              className="hidden size-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-xs font-bold uppercase text-on-primary sm:flex"
+            >
+              {user?.email.charAt(0)}
+            </span>
+            <span className="hidden max-w-40 truncate text-sm text-muted md:inline" title={user?.email}>
               {user?.email}
             </span>
             <button
@@ -174,7 +180,7 @@ export function Layout() {
             </button>
           </div>
         </header>
-        <main id="main" className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+        <main id="main" className="mx-auto max-w-6xl space-y-5 px-4 py-6 sm:px-6">
           <Outlet />
         </main>
       </div>

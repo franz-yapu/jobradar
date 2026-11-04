@@ -7,7 +7,8 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { api, ApiError } from "../api/client";
 import { ErrorMessage } from "../components/ErrorMessage";
-import { Alert, Button, Card, FIELD, FieldLabel } from "../components/ui";
+import { PlusIcon } from "../components/icons";
+import { Alert, Button, Card, FIELD, FieldLabel, PageHeader } from "../components/ui";
 import { toCreatePosting } from "../lib/manual-posting";
 
 class FormProblem extends Error {}
@@ -50,10 +51,7 @@ export function NewPostingPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold">{t("add.title")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("add.intro")}</p>
-      </div>
+      <PageHeader icon={<PlusIcon />} title={t("add.title")} description={t("add.intro")} />
       <form className="space-y-5" onSubmit={submit}>
         <Card>
           <label className="block">

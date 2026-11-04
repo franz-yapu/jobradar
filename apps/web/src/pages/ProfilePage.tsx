@@ -9,7 +9,8 @@ import { EducationEditor, ExperienceEditor, LanguagesEditor } from "../component
 import { ChipInput } from "../components/ChipInput";
 import { CvImportCard } from "../components/CvImportCard";
 import { ErrorMessage } from "../components/ErrorMessage";
-import { Alert, Button, Card, FIELD, FieldLabel } from "../components/ui";
+import { UserIcon } from "../components/icons";
+import { Alert, Button, Card, FIELD, FieldLabel, PageHeader } from "../components/ui";
 import { normalizeLocation } from "../lib/locations";
 import { EMPTY_FORM, formFromProfile, toSaveBody } from "../lib/profile-form";
 import type { ProfileForm } from "../lib/profile-form";
@@ -81,10 +82,7 @@ export function ProfilePage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold">{t("profile.title")}</h1>
-        <p className="mt-1 text-sm text-muted">{query.data ? t("profile.intro") : t("profile.empty")}</p>
-      </div>
+      <PageHeader icon={<UserIcon />} title={t("profile.title")} description={query.data ? t("profile.intro") : t("profile.empty")} />
 
       <CvImportCard onDraft={loadDraft} />
 

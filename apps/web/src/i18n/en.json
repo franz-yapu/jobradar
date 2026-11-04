@@ -240,6 +240,14 @@
       "tooShort": "The password needs at least {{count}} characters.",
       "haveAccount": "Already have an account?",
       "login": "Log in"
+    },
+    "brand": {
+      "headline": "Your next job, found while you sleep.",
+      "text": "JobRadar collects remote postings, scores each one against your profile and tells you which are worth your time.",
+      "f1": "Postings collected every day",
+      "f2": "Scored against your own profile",
+      "f3": "A summary in Telegram each morning",
+      "footer": "Private by default: every account sees only its own data."
     }
   },
   "tokens": {

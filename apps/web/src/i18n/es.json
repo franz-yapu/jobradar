@@ -240,6 +240,14 @@
       "tooShort": "La contraseña necesita al menos {{count}} caracteres.",
       "haveAccount": "¿Ya tienes cuenta?",
       "login": "Inicia sesión"
+    },
+    "brand": {
+      "headline": "Tu próximo trabajo, encontrado mientras duermes.",
+      "text": "JobRadar reúne ofertas remotas, puntúa cada una según tu perfil y te dice cuáles valen tu tiempo.",
+      "f1": "Ofertas recogidas cada día",
+      "f2": "Puntuadas según tu propio perfil",
+      "f3": "Un resumen en Telegram cada mañana",
+      "footer": "Privado por defecto: cada cuenta ve solo sus propios datos."
     }
   },
   "tokens": {

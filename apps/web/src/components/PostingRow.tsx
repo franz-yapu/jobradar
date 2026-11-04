@@ -23,7 +23,7 @@ export function PostingRow({ posting, scoring, scoreError, onScore }: Props) {
   const web = isWebUrl(posting.url);
 
   return (
-    <li className={`border-l-[3px] px-5 py-4 transition-colors hover:bg-page ${score?.verdict === "fit" ? "border-l-primary" : "border-l-transparent"}`}
+    <li className={`border-l-[3px] px-5 py-4 transition-colors hover:bg-raised/60 ${score?.verdict === "fit" ? "border-l-primary" : "border-l-transparent"}`}
       data-testid="posting-row">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 flex-1">

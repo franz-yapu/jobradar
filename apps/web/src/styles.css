@@ -37,6 +37,12 @@
   --neutral-soft: #e0e7e0;
   --neutral-ink: #465048;
   --shadow-pop: 0 4px 20px 0 rgb(20 30 22 / 14%);
+  --accent: #2f7d7a; /* deep teal, the second hue next to the green */
+  --accent-soft: #d3e7e4;
+  --glow-a: rgb(61 107 79 / 18%);
+  --glow-b: rgb(47 125 122 / 14%);
+  --hero-from: #1f3d2c;
+  --hero-to: #2f6b4f;
 }
 
 :root[data-theme="dark"] {
@@ -65,6 +71,12 @@
   --neutral-soft: #222a24;
   --neutral-ink: #a9b4ab;
   --shadow-pop: 0 4px 24px 0 rgb(0 0 0 / 55%);
+  --accent: #5fb3ad;
+  --accent-soft: #17302e;
+  --glow-a: rgb(95 154 119 / 14%);
+  --glow-b: rgb(95 179 173 / 10%);
+  --hero-from: #0d1f15;
+  --hero-to: #1d4a33;
 }
 
 /* No explicit choice: follow the system. Same values as the dark block above. */
@@ -95,6 +107,12 @@
     --neutral-soft: #222a24;
     --neutral-ink: #a9b4ab;
     --shadow-pop: 0 4px 24px 0 rgb(0 0 0 / 55%);
+    --accent: #5fb3ad;
+    --accent-soft: #17302e;
+    --glow-a: rgb(95 154 119 / 14%);
+    --glow-b: rgb(95 179 173 / 10%);
+    --hero-from: #0d1f15;
+    --hero-to: #1d4a33;
   }
 }
 
@@ -122,13 +140,15 @@
   --color-danger-ink: var(--danger-ink);
   --color-neutral-soft: var(--neutral-soft);
   --color-neutral-ink: var(--neutral-ink);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
   --shadow-pop: var(--shadow-pop);
   --font-sans: "Geist Variable", Geist, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 body {
-  background: var(--page);
+  background-color: var(--page);
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 14px;
@@ -181,3 +201,62 @@ summary {
     animation: none !important;
   }
 }
+
+/* App backdrop: two soft colour glows and a faint dot grid behind everything. */
+.app-backdrop {
+  background-image:
+    radial-gradient(60rem 40rem at 90% -10%, var(--glow-a), transparent 60%),
+    radial-gradient(50rem 36rem at -10% 20%, var(--glow-b), transparent 60%),
+    radial-gradient(color-mix(in srgb, var(--ink) 9%, transparent) 1px, transparent 1px);
+  background-size: auto, auto, 22px 22px;
+  background-attachment: fixed;
+}
+
+/* Brand panel of the login: a green gradient with slow radar rings and drifting blobs. */
+.brand-panel {
+  background: linear-gradient(150deg, var(--hero-from), var(--hero-to));
+  color: #eaf4ec;
+}
+.radar-ring {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  animation: ring 6s ease-out infinite;
+}
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(60px);
+  animation: drift 14s ease-in-out infinite alternate;
+}
+
+@keyframes ring {
+  from { transform: scale(0.4); opacity: 0.9; }
+  to { transform: scale(1.6); opacity: 0; }
+}
+@keyframes drift {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(40px, -30px) scale(1.15); }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop {
+  from { opacity: 0; transform: translateY(-4px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes sweep {
+  to { transform: rotate(360deg); }
+}
+.rise { animation: rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.pop { animation: pop 0.14s ease-out both; transform-origin: top right; }
+.sweep { animation: sweep 5s linear infinite; }
+
+/* List rows slide in one after another. */
+.stagger > * { animation: rise 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.stagger > :nth-child(2) { animation-delay: 40ms; }
+.stagger > :nth-child(3) { animation-delay: 80ms; }
+.stagger > :nth-child(4) { animation-delay: 120ms; }
+.stagger > :nth-child(5) { animation-delay: 160ms; }
+.stagger > :nth-child(n + 6) { animation-delay: 200ms; }

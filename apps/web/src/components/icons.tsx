@@ -106,3 +106,32 @@ export const MonitorIcon = (props: IconProps) => (
     <path d="M8 20h8M12 16v4" />
   </Icon>
 );
+export const CheckIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="m5 12 5 5 9-10" />
+  </Icon>
+);
+export const BoltIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M13 3 5 14h6l-1 7 8-11h-6z" />
+  </Icon>
+);
+export const TargetIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="5" />
+    <circle cx="12" cy="12" r="1" />
+  </Icon>
+);
+export const SendIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="m21 3-9 18-2-8-8-2z" />
+    <path d="m21 3-11 10" />
+  </Icon>
+);
+export const ShieldIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z" />
+    <path d="m9 12 2 2 4-4" />
+  </Icon>
+);

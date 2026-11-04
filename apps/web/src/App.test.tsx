@@ -43,12 +43,14 @@ describe("App", () => {
     await screen.findByText("Backend Engineer");
     expect(screen.getByRole("link", { name: "Profile" })).toBeInTheDocument();
 
-    await userEvent.selectOptions(screen.getByLabelText(/Language|Idioma/), "es");
+    await userEvent.click(screen.getByRole("button", { name: /Language|Idioma/ }));
+    await userEvent.click(screen.getByRole("option", { name: /Español/ }));
     expect(screen.getByRole("link", { name: "Perfil" })).toBeInTheDocument();
     expect(within(screen.getByTestId("posting-row")).getByText("Encaja")).toBeInTheDocument();
     expect(screen.getByText("Backend Engineer")).toBeInTheDocument();
 
-    await userEvent.selectOptions(screen.getByLabelText(/Language|Idioma/), "en");
+    await userEvent.click(screen.getByRole("button", { name: /Language|Idioma/ }));
+    await userEvent.click(screen.getByRole("option", { name: /English/ }));
     expect(screen.getByRole("link", { name: "Profile" })).toBeInTheDocument();
   });
 

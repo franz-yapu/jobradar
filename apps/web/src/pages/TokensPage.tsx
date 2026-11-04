@@ -6,7 +6,8 @@ import type { SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../api/client";
 import { ErrorMessage } from "../components/ErrorMessage";
-import { Alert, Button, Card, FIELD, FieldLabel } from "../components/ui";
+import { KeyIcon } from "../components/icons";
+import { Alert, Button, Card, FIELD, FieldLabel, PageHeader } from "../components/ui";
 
 const TOKENS_KEY = ["api-tokens"] as const;
 
@@ -114,10 +115,7 @@ export function TokensPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold">{t("tokens.title")}</h1>
-        <p className="mt-1 text-sm text-muted">{t("tokens.intro")}</p>
-      </div>
+      <PageHeader icon={<KeyIcon />} title={t("tokens.title")} description={t("tokens.intro")} />
 
       <Card title={t("tokens.createTitle")}>
         <form className="flex flex-wrap items-end gap-3" onSubmit={onSubmit}>
