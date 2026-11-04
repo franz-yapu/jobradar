@@ -1,4 +1,5 @@
 import type { ApiToken } from "./api-token.js";
+import type { OAuthFlow } from "./oauth-flow.js";
 import type { Session } from "./session.js";
 import type { User } from "./user.js";
 
@@ -8,6 +9,8 @@ export const PASSWORD_HASHER = Symbol("PASSWORD_HASHER");
 export const TOKEN_GENERATOR = Symbol("TOKEN_GENERATOR");
 export const ATTEMPT_LIMITER = Symbol("ATTEMPT_LIMITER");
 export const API_TOKEN_REPOSITORY = Symbol("API_TOKEN_REPOSITORY");
+export const OAUTH_FLOW_REPOSITORY = Symbol("OAUTH_FLOW_REPOSITORY");
+export const PKCE_GENERATOR = Symbol("PKCE_GENERATOR");
 
 export interface UserRepository {
   /**
@@ -17,6 +20,28 @@ export interface UserRepository {
   create(user: User): Promise<void>;
   findByEmail(email: string): Promise<User | null>;
   findById(id: string): Promise<User | null>;
+  findByGoogleSub(sub: string): Promise<User | null>;
+  /**
+   * Attaches a Google identity. "taken" when another account already has that `sub`. `emailVerifiedAt` is kept
+   * as given (the caller decides whether Google verified this account's own email).
+   */
+  linkGoogle(userId: string, sub: string, emailVerifiedAt: Date | null): Promise<"linked" | "taken">;
+  /** Detaches Google, but only if the account has a password (so it can never lock itself out). False otherwise. */
+  unlinkGoogleIfPassword(userId: string): Promise<boolean>;
+  /** Sets the first password of an account that has none. False when it already has one. */
+  setPasswordIfNone(userId: string, passwordHash: string): Promise<boolean>;
+}
+
+/** Single-use state of a Google sign-in attempt. */
+export interface OAuthFlowRepository {
+  create(flow: OAuthFlow): Promise<void>;
+  /** Returns the unexpired flow and deletes it, atomically: a state can be used once. Null when unknown or expired. */
+  consume(stateHash: string, now: Date): Promise<OAuthFlow | null>;
+  deleteExpired(now: Date): Promise<void>;
+}
+
+export interface PkceGenerator {
+  generate(): { codeVerifier: string; codeChallenge: string };
 }
 
 export interface SessionRepository {

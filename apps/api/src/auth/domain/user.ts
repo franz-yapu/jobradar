@@ -63,6 +63,20 @@ export class WeakPasswordError extends Error {
   }
 }
 
+export class PasswordRequiredError extends Error {
+  constructor() {
+    super("Set a password before disconnecting Google, or you could not log in");
+    this.name = "PasswordRequiredError";
+  }
+}
+
+export class PasswordExistsError extends Error {
+  constructor() {
+    super("This account already has a password");
+    this.name = "PasswordExistsError";
+  }
+}
+
 export class SignupDisabledError extends Error {
   constructor() {
     super("Registration is closed");

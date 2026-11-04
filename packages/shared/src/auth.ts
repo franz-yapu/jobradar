@@ -43,6 +43,8 @@ export const AUTH_ERROR_CODES = [
   "bad_origin",
   "session_required",
   "too_many_tokens",
+  "password_required",
+  "password_exists",
 ] as const;
 export type AuthErrorCode = (typeof AUTH_ERROR_CODES)[number];
 
@@ -67,3 +69,17 @@ export type ApiTokenResponse = z.infer<typeof ApiTokenSchema>;
 /** Returned once, when the token is created: the only time the secret is shown. */
 export const CreatedApiTokenSchema = ApiTokenSchema.extend({ token: z.string() });
 export type CreatedApiTokenResponse = z.infer<typeof CreatedApiTokenSchema>;
+
+/** Which sign-in methods the server offers; the login screen shows only these. */
+export const ProvidersSchema = z.object({ google: z.boolean() });
+export type ProvidersResponse = z.infer<typeof ProvidersSchema>;
+
+/** Codes in `?error=` when the Google round trip ends on the login or account screen. Generic on purpose. */
+export const GOOGLE_ERROR_CODES = ["google_failed", "google_link_required", "google_taken", "signup_disabled", "too_many_attempts"] as const;
+export type GoogleErrorCode = (typeof GOOGLE_ERROR_CODES)[number];
+
+/** For an account created with Google that has no password yet. */
+export const SetPasswordSchema = z.object({
+  password: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH),
+});
+export type SetPasswordBody = z.output<typeof SetPasswordSchema>;

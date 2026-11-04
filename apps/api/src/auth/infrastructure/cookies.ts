@@ -22,3 +22,14 @@ export function readCookie(header: string | undefined, name: string): string | u
 export function sessionCookieOptions(production: boolean): CookieOptions {
   return { httpOnly: true, sameSite: "lax", secure: production, path: "/" };
 }
+
+/** Holds the `state` of a Google attempt, so only the browser that began it can finish it. */
+export const OAUTH_COOKIE = "jr_oauth";
+
+/**
+ * httpOnly and short-lived. SameSite=Lax is required: Google returns the browser with a top-level GET,
+ * which Lax cookies accompany and Strict ones would not. Scoped to the callback's folder.
+ */
+export function oauthCookieOptions(production: boolean, path: string): CookieOptions {
+  return { httpOnly: true, sameSite: "lax", secure: production, path, maxAge: 10 * 60 * 1000 };
+}

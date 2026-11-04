@@ -1,7 +1,8 @@
 import type { ApiToken } from "../domain/api-token.js";
 import type { Session } from "../domain/session.js";
 import { EmailTakenError, type User } from "../domain/user.js";
-import type { ApiTokenRepository, SessionRepository, UserRepository } from "../domain/ports.js";
+import type { OAuthFlow } from "../domain/oauth-flow.js";
+import type { ApiTokenRepository, OAuthFlowRepository, SessionRepository, UserRepository } from "../domain/ports.js";
 
 export class InMemoryUserRepository implements UserRepository {
   readonly users = new Map<string, User>();
@@ -17,6 +18,50 @@ export class InMemoryUserRepository implements UserRepository {
 
   async findById(id: string): Promise<User | null> {
     return this.users.get(id) ?? null;
+  }
+
+  async findByGoogleSub(sub: string): Promise<User | null> {
+    return [...this.users.values()].find((user) => user.googleSub === sub) ?? null;
+  }
+
+  async linkGoogle(userId: string, sub: string, emailVerifiedAt: Date | null): Promise<"linked" | "taken"> {
+    if ([...this.users.values()].some((user) => user.googleSub === sub && user.id !== userId)) return "taken";
+    const user = this.users.get(userId);
+    if (user) this.users.set(userId, { ...user, googleSub: sub, emailVerifiedAt });
+    return "linked";
+  }
+
+  async unlinkGoogleIfPassword(userId: string): Promise<boolean> {
+    const user = this.users.get(userId);
+    if (!user || user.passwordHash === null) return false;
+    this.users.set(userId, { ...user, googleSub: null });
+    return true;
+  }
+
+  async setPasswordIfNone(userId: string, passwordHash: string): Promise<boolean> {
+    const user = this.users.get(userId);
+    if (!user || user.passwordHash !== null) return false;
+    this.users.set(userId, { ...user, passwordHash });
+    return true;
+  }
+}
+
+export class InMemoryOAuthFlowRepository implements OAuthFlowRepository {
+  readonly flows = new Map<string, OAuthFlow>();
+
+  async create(flow: OAuthFlow): Promise<void> {
+    this.flows.set(flow.stateHash, flow);
+  }
+
+  async consume(stateHash: string, now: Date): Promise<OAuthFlow | null> {
+    const flow = this.flows.get(stateHash);
+    if (!flow) return null;
+    this.flows.delete(stateHash);
+    return flow.expiresAt.getTime() > now.getTime() ? flow : null;
+  }
+
+  async deleteExpired(now: Date): Promise<void> {
+    for (const [hash, flow] of this.flows) if (flow.expiresAt.getTime() <= now.getTime()) this.flows.delete(hash);
   }
 }
 

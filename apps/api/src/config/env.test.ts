@@ -25,4 +25,14 @@ describe("WEB_ORIGIN", () => {
     const env = loadEnv({ DATABASE_URL: "postgresql://x", WEB_ORIGIN: "https://a.example, https://b.example" });
     expect(env.WEB_ORIGIN).toEqual(["https://a.example", "https://b.example"]);
   });
+
+  it("turns Google sign-in on only when the client id, the secret and the redirect URI are all set", () => {
+    const base = { DATABASE_URL: "postgresql://x" };
+    const all = { GOOGLE_CLIENT_ID: "id", GOOGLE_CLIENT_SECRET: "secret", GOOGLE_REDIRECT_URI: "http://localhost:3000/auth/google/callback" };
+    expect(loadEnv(base).GOOGLE).toBeNull();
+    expect(loadEnv({ ...base, ...all }).GOOGLE).toEqual({ clientId: "id", clientSecret: "secret", redirectUri: all.GOOGLE_REDIRECT_URI });
+    expect(loadEnv({ ...base, ...all, GOOGLE_CLIENT_SECRET: "" }).GOOGLE).toBeNull();
+    expect(loadEnv({ ...base, ...all, GOOGLE_REDIRECT_URI: "" }).GOOGLE).toBeNull();
+    expect(() => loadEnv({ ...base, ...all, GOOGLE_REDIRECT_URI: "not a url" })).toThrow();
+  });
 });

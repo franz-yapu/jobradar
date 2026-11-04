@@ -37,7 +37,7 @@ Accounts are email + password with unverified emails. People want to join and lo
 |---|---|
 | `GET /auth/providers` (public) | `{ google: boolean }` |
 | `GET /auth/google/start?returnTo=` (public) | `302` to Google with `state`, `nonce`, `code_challenge` (S256), `scope=openid email`; flow cookie set |
-| `GET /auth/google/start?intent=link` (session) | same, bound to the current user · `401` without a session |
+| `GET /auth/google/link` (browser session only) | same, bound to the current user · `401` without a session · `403 session_required` with an API token |
 | `GET /auth/google/callback?code&state` (public) | `302` to the web app with the session cookie, or to `/login?error=` (`google_link_required`, `google_failed`, `signup_disabled`, `too_many_attempts`) |
 | `DELETE /auth/google` (session only) | `204` · `409 password_required` |
 | `PUT /auth/password {password}` (session only) | `204` only when the account has none · `409 password_exists` |

@@ -24,6 +24,13 @@ const EnvSchema = z.object({
     .enum(["true", "false"])
     .default("true")
     .transform((value) => value === "true"),
+  /**
+   * Sign in with Google (ADR-0003). All three or none: without them the feature is off and the button is hidden.
+   * The redirect URI is the API's callback, registered in Google Cloud Console.
+   */
+  GOOGLE_CLIENT_ID: z.string().trim().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().trim().optional(),
+  GOOGLE_REDIRECT_URI: z.url().optional().or(z.literal("")),
   /** Origins allowed to call the API from a browser (comma separated). The dashboard's dev server by default. */
   WEB_ORIGIN: z
     .string()
@@ -39,9 +46,23 @@ const EnvSchema = z.object({
 
 const DEFAULT_MODELS = { anthropic: "claude-sonnet-5-5", groq: "openai/gpt-oss-20b" } as const;
 
-export type Env = Omit<z.infer<typeof EnvSchema>, "AI_MODEL"> & { AI_MODEL: string };
+export interface GoogleSettings {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+}
+
+export type Env = Omit<z.infer<typeof EnvSchema>, "AI_MODEL" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "GOOGLE_REDIRECT_URI"> & {
+  AI_MODEL: string;
+  /** Null unless the client id, the secret and the redirect URI are all set. */
+  GOOGLE: GoogleSettings | null;
+};
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  const env = EnvSchema.parse(source);
-  return { ...env, AI_MODEL: env.AI_MODEL || DEFAULT_MODELS[env.AI_PROVIDER] };
+  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, ...env } = EnvSchema.parse(source);
+  const google =
+    GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET && GOOGLE_REDIRECT_URI
+      ? { clientId: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET, redirectUri: GOOGLE_REDIRECT_URI }
+      : null;
+  return { ...env, AI_MODEL: env.AI_MODEL || DEFAULT_MODELS[env.AI_PROVIDER], GOOGLE: google };
 }

@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "node:crypto";
+import type { PkceGenerator } from "../domain/ports.js";
 
 const base64url = (bytes: Buffer): string => bytes.toString("base64url");
 
@@ -10,4 +11,11 @@ export function generatePkce(): { codeVerifier: string; codeChallenge: string } 
 
 export function challengeFor(codeVerifier: string): string {
   return base64url(createHash("sha256").update(codeVerifier).digest());
+}
+
+
+export class CryptoPkceGenerator implements PkceGenerator {
+  generate(): { codeVerifier: string; codeChallenge: string } {
+    return generatePkce();
+  }
 }
