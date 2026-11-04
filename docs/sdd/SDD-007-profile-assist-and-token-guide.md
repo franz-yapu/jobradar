@@ -1,6 +1,6 @@
 # SDD-007 – Assisted profile (autocomplete, selects, full CV fill) and an API-token guide
 
-**Status:** Approved (2026-11-04) · **Week:** 4 · **Depends on:** SDD-005, SDD-006
+**Status:** Implemented (2026-11-04) – pending: one real-CV run with `cv-v2` · **Week:** 4 · **Depends on:** SDD-005, SDD-006
 
 ## Context
 The profile asks people to type stack items and country codes (`BO`) by hand, shows only years for jobs, and the CV import leaves several fields empty. The API-token screen creates a token but never says what to do with it, and n8n is where it has to go.
@@ -24,7 +24,7 @@ The profile asks people to type stack items and country codes (`BO`) by hand, sh
 ## Domain model
 - `ExperienceSchema` and `EducationSchema` gain optional `startMonth` / `endMonth` (1–12); the years stay, so stored profiles stay valid. Rules: end not before start; `current` means no end.
 - `CV_WARNINGS` gains `locations_suggested` (the allowed locations were proposed, not read from the CV) and `dates_incomplete`.
-- Catalogs live in the web app: `STACK_CATALOG` (~300 common technologies, canonical spelling, searchable by lowercase and without punctuation, e.g. "nodejs" finds "Node.js") and the ISO country list, shown by name through `Intl.DisplayNames` in the active language, plus `LatAm` and `Worldwide`. Any value outside the catalog can still be added for stack; locations stay ISO codes or the two keywords.
+- Catalogs live in the web app: `STACK_CATALOG` (~470 common technologies, canonical spelling, searchable by lowercase and without punctuation, e.g. "nodejs" finds "Node.js") and the ISO country list, shown by name through `Intl.DisplayNames` in the active language, plus `LatAm` and `Worldwide`. Any value outside the catalog can still be added for stack; locations stay ISO codes or the two keywords.
 
 ## Ports & adapters
 - No new ports. `ImportCv` keeps using `AiProvider`; `CvExtractionSchema` and the system prompt (`cv-v2`) now ask for months, and the use case clamps them, drops impossible ranges (warning `dates_incomplete`) and, when the CV gives a country, proposes `allowedLocations = [country, "latam"]` flagged with `locations_suggested`. Contact data stays out (existing scrub). Nothing is invented: absent facts stay empty.

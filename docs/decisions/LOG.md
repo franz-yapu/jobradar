@@ -179,3 +179,12 @@
 - **Language:** a custom listbox menu (button, popover, EN/ES chips, check mark, arrow/Home/End/Enter/Escape) instead of the native select. The E2E and unit tests open the menu and pick an option.
 - **App:** second hue (deep teal) mixed with the green, gradient page headers with an icon tile, gradient primary button, translucent header with an avatar, active nav marked by a green bar, cards and alerts that rise in, rows that stagger in, focus halo on fields.
 - **Kept:** the matte, desaturated palette, light/dark/system themes and the contrast checks; all motion is off under `prefers-reduced-motion`.
+
+## 2026-11-04 – SDD-007: assisted profile and token guide
+- **Months:** `startMonth`/`endMonth` (1-12) on jobs and studies, optional and only with their year, end not before start; stored in the existing JSON, so old profiles stay valid. Education keeps the same fields so both use one picker.
+- **CV import `cv-v2`:** asks for months only when the CV states them, for every entry; the use case drops impossible months/ranges (`dates_incomplete`) and, when the CV gives a country, proposes `[country, "latam"]` flagged `locations_suggested` (where to work is a preference, not a CV fact). The scoring prompt is unchanged: months do not affect scores.
+- **Widgets:** `Combobox` (multi autocomplete, ARIA combobox), `Select`, `MultiSelect`, `MonthYearInput`. Catalogs live in the web app: ~470 technologies (free entry still allowed for the stack), countries by name via `Intl.DisplayNames` (ISO code stays the stored value; `latam`/`worldwide` as keywords), ~60 languages stored by English name so the import and scoring keep working. Search ignores case, accents and punctuation and spells out `c#`, `c++`, `.net`.
+- **Select keeps unknown stored values** (older free-text levels) as an extra option instead of dropping them.
+- **Token guide:** four steps with copy buttons; the `.env` line carries the real token only while the one-time secret is on screen, then falls back to a placeholder.
+- **Review fixes:** `aria-controls` only while the list is open; Escape in the multiselect returns focus to its button; disabled buttons drop the gradient so their text is readable.
+- **Not done yet:** a real CV through Groq with `cv-v2` (costs cents; the owner is asked first).

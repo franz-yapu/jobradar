@@ -18,6 +18,7 @@ export function MultiSelect({ label, hint, values, options, onChange, placeholde
   const { t } = useTranslation();
   const id = useId();
   const root = useRef<HTMLDivElement>(null);
+  const button = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -26,7 +27,10 @@ export function MultiSelect({ label, hint, values, options, onChange, placeholde
       if (root.current && !root.current.contains(event.target as Node)) setOpen(false);
     };
     const key = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        button.current?.focus();
+      }
     };
     document.addEventListener("mousedown", away);
     document.addEventListener("keydown", key);
@@ -49,6 +53,7 @@ export function MultiSelect({ label, hint, values, options, onChange, placeholde
         <FieldLabel hint={hint}>{label}</FieldLabel>
       </span>
       <button
+        ref={button}
         type="button"
         aria-haspopup="true"
         aria-expanded={open}

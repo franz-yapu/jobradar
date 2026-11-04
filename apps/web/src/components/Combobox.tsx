@@ -113,7 +113,7 @@ export function Combobox({ label, hint, values, onChange, options, placeholder, 
         id={id}
         role="combobox"
         aria-expanded={open}
-        aria-controls={listId}
+        aria-controls={open ? listId : undefined}
         aria-autocomplete="list"
         aria-activedescendant={activeId}
         aria-invalid={invalid || undefined}
