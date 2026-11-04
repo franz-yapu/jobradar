@@ -114,7 +114,7 @@
         "url": "={{ $env.JOBRADAR_API_URL }}/postings",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}",
+        "jsonBody": "={{ JSON.stringify({ ...$json, scope: \"catalog\" }) }}",
         "options": {
           "timeout": 30000,
           "response": {
@@ -146,7 +146,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Only postings created in this run (201) are scored; the cap bounds AI spend per run.\nconst MAX_SCORES_PER_RUN = 20;\nconst all = $input.all();\n// A rejected token would make every create answer 401 and the run look like \"nothing new\": fail loudly instead.\nif (all.some((item) => item.json.statusCode === 401)) {\n  throw new Error(\"The JobRadar API rejected the API token (401). Create a token in the app and set JOBRADAR_API_TOKEN for n8n.\");\n}\nconst created = all.filter((item) => item.json.statusCode === 201);\nreturn created\n  .slice(0, MAX_SCORES_PER_RUN)\n  .map((item) => ({ json: { postingId: item.json.body.id, title: item.json.body.title } }));\n"
+        "jsCode": "// Only postings created in this run (201) are scored; the cap bounds AI spend per run.\nconst MAX_SCORES_PER_RUN = 20;\nconst all = $input.all();\n// A rejected token would make every create answer 401 and the run look like \"nothing new\": fail loudly instead.\nif (all.some((item) => item.json.statusCode === 401)) {\n  throw new Error(\"The JobRadar API rejected the API token (401). Create a token in the app and set JOBRADAR_API_TOKEN for n8n.\");\n}\n// The shared catalog can only be written by an administrator (ADMIN_EMAILS, signed in with Google).\nif (all.some((item) => item.json.statusCode === 403)) {\n  throw new Error(\"The JobRadar API refused to write to the shared catalog (403): the token must belong to an administrator account (ADMIN_EMAILS).\");\n}\nconst created = all.filter((item) => item.json.statusCode === 201);\nreturn created\n  .slice(0, MAX_SCORES_PER_RUN)\n  .map((item) => ({ json: { postingId: item.json.body.id, title: item.json.body.title } }));\n"
       },
       "id": "a624c53f-1f9c-541b-ba52-af80bbc1d58d",
       "name": "Pick new postings",

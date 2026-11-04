@@ -51,8 +51,8 @@ Data belongs to the account that created it: postings (unique per account and UR
 
 | Method | Path | Description |
 |---|---|---|
-| `POST` | `/postings` | Create a posting. `201`, `400` invalid body, `409` URL already exists (tracking params and fragments are ignored) |
-| `GET` | `/postings?source=&q=&verdict=&createdSince=&page=1&pageSize=20` | Paginated list, newest first, each item with its `latestScore` (or `null`). `q` matches title, company and description; `verdict` (`fit`/`maybe`/`reject`/`unscored`) filters on the **latest** score; `createdSince` is an ISO 8601 instant. `400` on invalid values |
+| `POST` | `/postings` | Create a posting (private by default; an administrator can send `"scope": "catalog"` to publish to the shared catalog). `201`, `400` invalid body, `403` `not_admin`, `409` URL already exists (tracking params and fragments are ignored) |
+| `GET` | `/postings?source=&q=&verdict=&createdSince=&page=1&pageSize=20` | Your own postings plus the shared catalog (`scope` optional filter: `mine` / `catalog`), paginated, newest first, each item (with its `scope`) with its `latestScore` (or `null`). `q` matches title, company and description; `verdict` (`fit`/`maybe`/`reject`/`unscored`) filters on the **latest** score; `createdSince` is an ISO 8601 instant. `400` on invalid values |
 | `GET` | `/health` | `200` with DB status, `503` if the database is down |
 | `POST` | `/auth/register` | Create an account (email + password of 10-128 characters) and log in. `201` + session cookie, `400` invalid / `weak_password`, `403` `signup_disabled`, `409` `email_taken`, `429` `too_many_attempts` |
 | `POST` | `/auth/login` | `200` + session cookie; `401` `invalid_credentials` (same answer for an unknown email), `429` `too_many_attempts` (5 failures per email / 20 per address every 15 minutes, `Retry-After`) |
@@ -115,6 +115,9 @@ Off by default: the button only appears when the three `GOOGLE_*` variables are 
 
 How it is secured is in `docs/adr/ADR-0003-google-sign-in.md` and `docs/security-review.md`.
 
+### Administrator and the shared catalog
+Jobs are collected once for everybody (the **shared catalog**) and every account sees them; profiles, verdicts and AI spend stay personal. The administrator is the account whose email is in `ADMIN_EMAILS` (in `.env`, comma separated) **and** that signed in with Google, because only Google verifies the email. The administrator creates the n8n token (API tokens screen, visible only to them); jobs published by n8n go to the catalog.
+
 ## Project structure
 ```
 apps/api        NestJS API (domain / application / infrastructure)
@@ -136,8 +139,8 @@ architecture decisions live in `docs/adr/`, and Claude Code follows the rules an
 - [x] Week 4a – Web dashboard (list, filters, scoring, manual paste, profile, EN/ES, Playwright E2E)
 - [x] Week 4b – CV import from a PDF and admin-style interface (SDD-005)
 - [x] Week 4c – Accounts / SaaS: per-account data, login/register, API tokens, two-account E2E (SDD-006, see `docs/security-review.md`)
-- [ ] Week 4d – Profile assist and token guide (SDD-007), Google sign-in (SDD-008)
-- [ ] Week 4e – Shared job catalog and guided first use (SDD-009)
+- [x] Week 4d – Profile assist and token guide (SDD-007), Google sign-in (SDD-008)
+- [x] Week 4e – Shared job catalog, administrator role and guided first use (SDD-009, ADR-0004)
 - [ ] Week 4f – AWS deploy with Terraform, Grafana (SDD-010), live demo
 
 ## Author

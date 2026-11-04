@@ -188,3 +188,13 @@
 - **Token guide:** four steps with copy buttons; the `.env` line carries the real token only while the one-time secret is on screen, then falls back to a placeholder.
 - **Review fixes:** `aria-controls` only while the list is open; Escape in the multiselect returns focus to its button; disabled buttons drop the gradient so their text is readable.
 - **Not done yet:** a real CV through Groq with `cv-v2` (costs cents; the owner is asked first).
+
+## 2026-11-04 – SDD-008 closed and SDD-009: shared catalog and guided first use
+- **Google sign-in** works end to end with a real account (sign in, sign out, sign in again); security notes added to `docs/security-review.md`.
+- **CV import on Groq:** `gpt-oss` spent its output tokens thinking and the longer `cv-v2` answer was cut off (even at 8000). Fix: `reasoning_effort: "low"` for `openai/gpt-oss*` and an 8000-token default; checked with a synthetic CV (months, current job, studies, languages, certifications all filled).
+- **Catalog (ADR-0004):** a posting with no owner is shared; scores, profiles and AI spend stay per account. Administrators are `ADMIN_EMAILS` with a verified (Google) email. Only `scope=catalog` writes need it. Dedupe through `catalogKey`.
+- **Data step:** `apps/api/scripts/move-postings-to-catalog.ts` (idempotent) moved the 29 Get on Board postings of the demo account to the catalog after a dump; first-account adoption no longer touches ownerless postings.
+- **First use:** the list shows the catalog; without a profile a banner leads to it; after saving, "Score the newest jobs" scores up to 10 unscored ones one by one and stops on a budget error. Tokens and the n8n guide are administrator-only.
+- **n8n:** workflow 1 sends `scope: "catalog"` and fails loudly on 403; the token must come from the administrator account.
+- **Tests that read `.env`:** the "Google not configured" test now clears the GOOGLE_* variables itself, so a developer's real `.env` cannot break it.
+

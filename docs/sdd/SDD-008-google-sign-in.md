@@ -1,6 +1,6 @@
 # SDD-008 – Sign in and sign up with Google
 
-**Status:** Approved (2026-11-04) · **Week:** 4 · **Depends on:** SDD-006 · **Decision record:** ADR-0003
+**Status:** Implemented (2026-11-04) · **Week:** 4 · **Depends on:** SDD-006 · **Decision record:** ADR-0003
 
 ## Context
 Accounts are email + password with unverified emails. People want to join and log in with Google, with Google's verified email, without losing the current method, and with the strongest practical security.

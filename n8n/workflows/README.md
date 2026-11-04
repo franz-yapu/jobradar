@@ -23,12 +23,14 @@ docker compose exec -e N8N_RUNNERS_BROKER_PORT=5690 n8n n8n execute --id=jobrada
 The workflow reaches the API through `$env.JOBRADAR_API_URL` (default `http://host.docker.internal:3000`, see `.env.example`).
 Never put tokens or keys in a workflow: use n8n credentials.
 
-## API token (once per account)
+## API token (once, from the administrator's account)
 The API needs to know which account the workflows act for. Create a personal token while logged in and give it to n8n:
 
 1. In the app, create a token (API tokens screen; until it exists, `POST /auth/tokens` with your session cookie and `{ "name": "n8n" }`). The secret (`jr_...`) is shown **once**.
 2. Put it in `.env` as `JOBRADAR_API_TOKEN=jr_...` and run `docker compose up -d n8n` so the container sees it.
 3. Re-import the workflows if they were imported before tokens existed (`n8n import:workflow`, then activate them again).
+
+Workflow 1 publishes to the **shared catalog** (`scope: "catalog"`), which only an administrator may do (ADR-0004): create the token from the account whose email is in `ADMIN_EMAILS` and that signed in with Google. With any other token the workflow stops with a clear 403 error. Everybody else just sees the jobs in the app.
 
 Every call to the JobRadar API sends `Authorization: Bearer $env.JOBRADAR_API_TOKEN`; the call to Get on Board never does. If the token is missing, wrong or revoked, workflow 1 stops with an error (it does not pretend there was nothing new) and workflow 2 fails. Revoke a token in the app at any time; a token cannot create or revoke tokens. The workflows act on that one account's data (its postings, profile, scores and AI budget).
 

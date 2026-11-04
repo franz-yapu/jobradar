@@ -31,3 +31,22 @@
 5. **No password recovery / email verification.** Accepted by the PRD for v1; a lost password needs the operator and anyone can register with an unverified address (mitigated by `ALLOW_SIGNUP` and the registration throttle).
 6. **Session cookie renewal.** The server extends a session when it is more than a day old, but the browser cookie keeps its original expiry; the user logs in again after 14 days even if active. Not a security issue, but worth aligning if longer sessions are wanted.
 7. **Same-site deployment assumed.** Cross-site cookies would need `SameSite=None; Secure` and a different CSRF story; the README documents that the dashboard and API share a site or reverse proxy.
+
+## Update – Google sign-in (SDD-008) and the shared catalog (SDD-009)
+
+**Date:** 2026-11-04 · **Scope:** `auth/application/google-flow.use-cases.ts`, `google-identity.provider.ts`, `oauth.controller.ts`, `admin-policy.ts`, the posting repository and the catalog endpoints.
+
+| Area | Result |
+|---|---|
+| Google flow | Authorization code + PKCE (S256) done by the API; `state` is single use (hash in `oauth_flows`, 10-minute expiry) and also bound to the browser by an httpOnly `jr_oauth` cookie scoped to `/auth/google`. A replayed, expired, cross-browser or unknown callback fails with a generic `?error=` code. |
+| id_token | Verified with `jose`: RS256 only, signature against Google's JWKS, `iss`, `aud`, `exp`/`iat`, `nonce`, `sub` required, `email_verified === true`. Covered by tests with locally signed tokens (wrong key, algorithm, audience, issuer, nonce, expiry, unverified email). |
+| Account takeover | Accounts are keyed by Google's `sub`; there is no automatic link by email (pre-hijacking). A password account with the same email gets `google_link_required` and must connect Google while logged in. Disconnecting is refused when no password exists. |
+| Secrets | `GOOGLE_CLIENT_SECRET` only in `.env`; Google's tokens are never stored or sent to the browser; return paths accept local paths only (`safeReturnTo`). The feature is off (404 + hidden button) unless all three variables are set. |
+| Administrator | `ADMIN_EMAILS` plus a **verified** email (`emailVerifiedAt`, set only by Google). Registering an administrator's address with a password gives nothing (unit and integration tests). Role is computed per request; an API token inherits its owner's role. |
+| Catalog writes | `scope=catalog` needs the administrator role (`403 not_admin` otherwise, nothing stored). Without the flag a posting is private, so a leaked ordinary token cannot touch the catalog. Catalog deduplicates by normalized URL through a unique `catalogKey`. |
+| Catalog reads | `list`/`findById` return the caller's postings plus ownerless ones; another account's private posting is still `404` (integration tests with three accounts). Scores, profiles and AI spend remain per account, and the joined latest score is always the caller's. |
+| Leaks | Responses expose `scope` but never `userId` or `catalogKey`. Ownerless rows are no longer adopted by the first account. |
+| Technical screens | API tokens and the n8n guide are hidden from non-administrators in the UI and redirected; the API checks remain the real protection. |
+
+Residual risks: the administrator list lives in `.env` (changing it needs a restart); a malicious administrator could publish misleading catalog entries (the catalog is trusted content, scoring treats descriptions as data); the catalog is read by every account, so nothing private may ever be ingested into it.
+

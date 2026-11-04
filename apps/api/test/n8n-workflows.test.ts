@@ -211,11 +211,23 @@ describe("the collect workflow fails loudly when the API rejects its token", () 
     expect(() => run([201, 401])).toThrow(/JOBRADAR_API_TOKEN/);
   });
 
+  it("throws on a 403, which means the token's account may not write to the shared catalog", () => {
+    expect(() => run([403, 403])).toThrow(/ADMIN_EMAILS/);
+  });
+
   it("still scores only the new postings (201) and ignores the already known ones (409)", () => {
     expect(run([201, 409, 201]).map((item) => item.json.postingId)).toEqual(["id-0", "id-2"]);
   });
 
   it("keeps the cap of 20 scored postings per run", () => {
     expect(run(Array.from({ length: 30 }, () => 201))).toHaveLength(20);
+  });
+});
+
+describe("the collect workflow publishes to the shared catalog (ADR-0004)", () => {
+  it("sends every posting with scope catalog", () => {
+    const body = load("01-collect-getonboard.json").nodes.find((n) => n.name === "Create posting")?.parameters["jsonBody"];
+    expect(String(body)).toContain('scope: "catalog"');
+    expect(String(body)).toContain("...$json");
   });
 });

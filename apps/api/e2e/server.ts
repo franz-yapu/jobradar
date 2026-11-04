@@ -36,6 +36,15 @@ async function main(): Promise<void> {
   // registration of a run from adopting rows left by the previous one.
   await prisma.user.deleteMany();
 
+  // The shared catalog every new account sees on its first visit (ADR-0004). Real runs fill it with n8n.
+  const seeded = new Date();
+  await prisma.posting.createMany({
+    data: [
+      { title: "Staff Backend Engineer (shared)", company: "Catalog Co", url: "https://catalog.example/jobs/backend", source: "getonboard", remoteScope: "latam", description: "Remote in LATAM. NestJS and PostgreSQL.", createdAt: seeded, catalogKey: "https://catalog.example/jobs/backend" },
+      { title: "Support Lead (shared)", company: "Catalog Co", url: "https://catalog.example/jobs/support", source: "getonboard", remoteScope: "latam", description: "Proficient English (C2) required.", createdAt: new Date(seeded.getTime() - 1000), catalogKey: "https://catalog.example/jobs/support" },
+    ],
+  });
+
   await app.listen(Number(process.env["PORT"] ?? 3100));
 }
 
