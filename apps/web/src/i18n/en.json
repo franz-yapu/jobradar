@@ -207,7 +207,17 @@
     },
     "start": "Start year",
     "end": "End year",
-    "removeItem": "Remove {{item}}"
+    "removeItem": "Remove {{item}}",
+    "locationKeywords": {
+      "latam": "Latin America",
+      "worldwide": "Worldwide"
+    },
+    "noOptions": "No matches",
+    "addCustom": "Add “{{value}}”",
+    "selectedCount": "{{count}} selected",
+    "month": "Month",
+    "year": "Year",
+    "choose": "Choose…"
   },
   "layout": {
     "skip": "Skip to content",

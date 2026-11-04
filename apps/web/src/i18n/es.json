@@ -207,7 +207,17 @@
     },
     "start": "Año de inicio",
     "end": "Año de fin",
-    "removeItem": "Quitar {{item}}"
+    "removeItem": "Quitar {{item}}",
+    "locationKeywords": {
+      "latam": "Latinoamérica",
+      "worldwide": "Todo el mundo"
+    },
+    "noOptions": "Sin coincidencias",
+    "addCustom": "Añadir «{{value}}»",
+    "selectedCount": "{{count}} seleccionados",
+    "month": "Mes",
+    "year": "Año",
+    "choose": "Elegir…"
   },
   "layout": {
     "skip": "Saltar al contenido",
