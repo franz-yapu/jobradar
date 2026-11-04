@@ -29,8 +29,6 @@ import { SESSION_COOKIE } from "./cookies.js";
 import { CurrentUser } from "./current-user.decorator.js";
 import { SessionOnly } from "./public.decorator.js";
 
-const IdPipe = new ZodValidationPipe(z.uuid());
-
 function toResponse(token: ApiToken): ApiTokenResponse {
   return {
     id: token.id,
@@ -84,7 +82,7 @@ export class ApiTokensController {
   @ApiParam({ name: "id", format: "uuid" })
   @ApiNoContentResponse({ description: "Revoked (also when it already was)" })
   @ApiNotFoundResponse({ description: "No such token in your account" })
-  async revoke(@CurrentUser() user: AuthenticatedUser, @Param("id", IdPipe) id: string): Promise<void> {
+  async revoke(@CurrentUser() user: AuthenticatedUser, @Param("id", new ZodValidationPipe(z.uuid())) id: string): Promise<void> {
     try {
       await this.revokeToken.execute(user.id, id);
     } catch (error) {
