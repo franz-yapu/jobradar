@@ -11,6 +11,7 @@ import {
 import type { Response } from "express";
 import { toSwaggerSchema } from "../../shared/infrastructure/swagger-schema.js";
 import { ZodValidationPipe } from "../../shared/infrastructure/zod-validation.pipe.js";
+import { GetAccount } from "../application/get-account.use-case.js";
 import { LoginUser } from "../application/login-user.use-case.js";
 import { LogoutUser } from "../application/logout-user.use-case.js";
 import { RegisterUser, type SessionGrant } from "../application/register-user.use-case.js";
@@ -54,6 +55,7 @@ export class AuthController {
     @Inject(RegisterUser) private readonly registerUser: RegisterUser,
     @Inject(LoginUser) private readonly loginUser: LoginUser,
     @Inject(LogoutUser) private readonly logoutUser: LogoutUser,
+    @Inject(GetAccount) private readonly getAccount: GetAccount,
   ) {}
 
   @Public()
@@ -109,7 +111,7 @@ export class AuthController {
   @ApiCookieAuth(SESSION_COOKIE)
   @ApiOkResponse({ schema: toSwaggerSchema(UserSchema) })
   @ApiResponse({ status: 401, description: "unauthenticated" })
-  me(@CurrentUser() user: AuthenticatedUser): UserResponse {
-    return { id: user.id, email: user.email };
+  me(@CurrentUser() user: AuthenticatedUser): Promise<UserResponse> {
+    return this.getAccount.execute(user.id);
   }
 }

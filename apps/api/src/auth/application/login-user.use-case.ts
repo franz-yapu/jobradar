@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { SESSION_TTL_MS, type Session } from "../domain/session.js";
-import { InvalidCredentialsError, normalizeEmail } from "../domain/user.js";
+import { InvalidCredentialsError, normalizeEmail, toAccount } from "../domain/user.js";
 import type {
   AttemptLimiter,
   Clock,
@@ -36,9 +36,11 @@ export class LoginUser {
     this.limiter.check(ipKey, LOGIN_IP_LIMIT, LOGIN_WINDOW_MS);
 
     const user = await this.users.findByEmail(email);
+    // An unknown email and an account without a password (created with Google) both verify against a dummy
+    // hash, so the answer and the time taken do not reveal which case it was.
     const hash = user?.passwordHash ?? (await this.getDummyHash());
     const matches = await this.hasher.verify(input.password, hash);
-    if (!user || !matches) {
+    if (!user || user.passwordHash === null || !matches) {
       this.limiter.record(emailKey, LOGIN_WINDOW_MS);
       this.limiter.record(ipKey, LOGIN_WINDOW_MS);
       throw new InvalidCredentialsError();
@@ -55,7 +57,7 @@ export class LoginUser {
       createdAt: now,
     };
     await this.sessions.create(session);
-    return { user: { id: user.id, email: user.email }, sessionToken, expiresAt: session.expiresAt };
+    return { user: toAccount(user), sessionToken, expiresAt: session.expiresAt };
   }
 
   private getDummyHash(): Promise<string> {

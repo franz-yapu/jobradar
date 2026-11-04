@@ -6,7 +6,8 @@ import {
   passwordProblem,
   SignupDisabledError,
   WeakPasswordError,
-  type AuthenticatedUser,
+  toAccount,
+  type Account,
   type User,
 } from "../domain/user.js";
 import type {
@@ -19,7 +20,7 @@ import type {
 } from "../domain/ports.js";
 
 export interface SessionGrant {
-  user: AuthenticatedUser;
+  user: Account;
   /** The cookie value. Shown to the client only now. */
   sessionToken: string;
   expiresAt: Date;
@@ -56,6 +57,8 @@ export class RegisterUser {
       id: randomUUID(),
       email,
       passwordHash: await this.hasher.hash(input.password),
+      googleSub: null,
+      emailVerifiedAt: null,
       createdAt: now,
     };
     await this.users.create(user); // throws EmailTakenError
@@ -69,7 +72,7 @@ export class RegisterUser {
       createdAt: now,
     };
     await this.sessions.create(session);
-    return { user: { id: user.id, email: user.email }, sessionToken, expiresAt: session.expiresAt };
+    return { user: toAccount(user), sessionToken, expiresAt: session.expiresAt };
   }
 }
 

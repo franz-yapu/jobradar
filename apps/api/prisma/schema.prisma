@@ -148,16 +148,20 @@ model PostingScore {
 
 /// A person with an account (ADR-0002). Email is stored lowercase.
 model User {
-  id            String            @id @default(uuid()) @db.Uuid
-  email         String            @unique
-  passwordHash  String
-  createdAt     DateTime          @default(now())
-  sessions      Session[]
-  postings      Posting[]
-  profile       CandidateProfile?
-  postingScores PostingScore[]
-  aiCalls       AiCall[]
-  apiTokens     ApiToken[]
+  id              String            @id @default(uuid()) @db.Uuid
+  email           String            @unique
+  /// Null for an account created with Google until the owner sets a password.
+  passwordHash    String?
+  /// Google's stable subject id; accounts are keyed by it, never by email (ADR-0003).
+  googleSub       String?           @unique
+  emailVerifiedAt DateTime?
+  createdAt       DateTime          @default(now())
+  sessions        Session[]
+  postings        Posting[]
+  profile         CandidateProfile?
+  postingScores   PostingScore[]
+  aiCalls         AiCall[]
+  apiTokens       ApiToken[]
 
   @@map("users")
 }
@@ -191,4 +195,21 @@ model ApiToken {
 
   @@index([userId])
   @@map("api_tokens")
+}
+
+/// State of one Google sign-in attempt, single use. Only the SHA-256 of `state` is stored (ADR-0003).
+model OAuthFlow {
+  id           String   @id @default(uuid()) @db.Uuid
+  stateHash    String   @unique
+  nonce        String
+  codeVerifier String
+  /// "login" (sign in or sign up) or "link" (attach Google to the logged-in account).
+  intent       String
+  userId       String?  @db.Uuid
+  returnTo     String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([expiresAt])
+  @@map("oauth_flows")
 }

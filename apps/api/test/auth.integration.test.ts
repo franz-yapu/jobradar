@@ -54,8 +54,8 @@ describe("POST /auth/register", () => {
     const res = await http().post("/auth/register").send({ email: address, password: TEST_PASSWORD });
 
     expect(res.status).toBe(201);
-    expect(res.body).toEqual({ id: expect.any(String), email: address });
-    expect(JSON.stringify(res.body)).not.toMatch(/password|hash/i);
+    expect(res.body).toEqual({ id: expect.any(String), email: address, hasPassword: true, googleLinked: false, emailVerified: false });
+    expect(Object.keys(res.body).sort()).toEqual(["emailVerified", "email", "googleLinked", "hasPassword", "id"].sort()); // no hash, no provider id
 
     const cookie = sessionCookie(res);
     expect(cookie).toMatch(/HttpOnly/i);

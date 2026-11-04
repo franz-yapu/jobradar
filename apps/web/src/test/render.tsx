@@ -8,7 +8,13 @@ import { AuthProvider, ME_KEY } from "../auth/AuthProvider";
 import { createI18n } from "../i18n";
 import { ThemeProvider } from "../theme/ThemeProvider";
 
-export const TEST_USER: UserResponse = { id: "0b0b6b8e-0000-4000-8000-0000000000aa", email: "jane@example.com" };
+export const TEST_USER: UserResponse = {
+  id: "0b0b6b8e-0000-4000-8000-0000000000aa",
+  email: "jane@example.com",
+  hasPassword: true,
+  googleLinked: false,
+  emailVerified: false,
+};
 
 function LocationProbe() {
   const location = useLocation();

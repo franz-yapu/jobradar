@@ -11,7 +11,7 @@ const generator = new CryptoTokenGenerator();
 let tokens: InMemoryApiTokenRepository;
 let users: InMemoryUserRepository;
 
-const user = (id: string): User => ({ id, email: `${id}@example.com`, passwordHash: "x", createdAt: new Date() });
+const user = (id: string): User => ({ id, email: `${id}@example.com`, passwordHash: "x", googleSub: null, emailVerifiedAt: null, createdAt: new Date() });
 const create = () => new CreateApiToken(tokens, generator, clock);
 const authenticate = () => new AuthenticateApiToken(tokens, users, generator, clock);
 

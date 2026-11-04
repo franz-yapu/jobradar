@@ -12,6 +12,15 @@ Accounts are email + password with unverified emails. People want to join and lo
 **In:** OIDC code flow with PKCE, flow state table, `IdentityProvider` port with a Google adapter, new session on success, connect/disconnect Google, set a password on a Google-first account, account screen, button and error messages (EN/ES), setup guide, tests.
 **Out:** other providers, email verification for password accounts, password recovery, storing Google tokens or profile data, Google one-tap, roles.
 
+## Tasks
+| # | Task | Verification |
+|---|---|---|
+| T1 | Data and domain: nullable password, `googleSub`, `emailVerifiedAt`, `oauth_flows`; login and `/auth/me` handle accounts without a password; shared schemas | Unit + Supertest |
+| T2 | `IdentityProvider` port, Google adapter with `jose`, token verification | Verifier tests with local keys |
+| T3 | Use cases, flow repository, controller, throttle, cookies | Unit + Supertest |
+| T4 | Web: button, error messages, account screen (connect, disconnect, set password) | Component tests |
+| T5 | E2E, README setup guide, security review | Playwright, checklist |
+
 ## Domain model
 - `User` gains `googleSub?` (unique), `emailVerifiedAt?`; `passwordHash` becomes optional. `UserResponse` adds `hasPassword`, `googleLinked`, `emailVerified`.
 - `OAuthFlow { id, stateHash, nonce, codeVerifier, intent: "login" | "link", userId?, returnTo, expiresAt }`: single use, 10 minutes.

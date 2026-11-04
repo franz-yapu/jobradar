@@ -13,6 +13,7 @@ import {
   WeakPasswordError,
 } from "../domain/user.js";
 import { AuthenticateSession } from "./authenticate-session.use-case.js";
+import { GetAccount } from "./get-account.use-case.js";
 import { LoginUser, LOGIN_EMAIL_LIMIT, LOGIN_IP_LIMIT, LOGIN_WINDOW_MS } from "./login-user.use-case.js";
 import { LogoutUser } from "./logout-user.use-case.js";
 import { RegisterUser, REGISTER_LIMIT } from "./register-user.use-case.js";
@@ -54,7 +55,8 @@ describe("RegisterUser", () => {
     expect(grant.expiresAt.getTime()).toBe(now.getTime() + SESSION_TTL_MS);
     const stored = await users.findByEmail("jane@example.com");
     expect(stored?.passwordHash).not.toContain(PASSWORD);
-    expect(stored?.passwordHash.startsWith("scrypt$")).toBe(true);
+    expect(stored?.passwordHash?.startsWith("scrypt$")).toBe(true);
+    expect(grant.user).toMatchObject({ hasPassword: true, googleLinked: false, emailVerified: false });
     // the session is stored under the hash of the token, never the token itself
     expect(sessions.sessions.has(grant.sessionToken)).toBe(false);
     expect(sessions.sessions.has(tokens.hash(grant.sessionToken))).toBe(true);
@@ -114,6 +116,17 @@ describe("LoginUser", () => {
     expect((wrong as Error).message).toBe((unknown as Error).message);
   });
 
+  it("treats an account without a password (created with Google) like an unknown email", async () => {
+    const { login } = build();
+    const id = "00000000-0000-4000-8000-0000000000a1";
+    users.users.set(id, { id, email: "g@example.com", passwordHash: null, googleSub: "sub-1", emailVerifiedAt: now, createdAt: now });
+    const googleOnly = await login.execute({ email: "g@example.com", password: PASSWORD }, IP).catch((e: unknown) => e);
+    const unknown = await login.execute({ email: "nobody@example.com", password: PASSWORD }, IP).catch((e: unknown) => e);
+    expect(googleOnly).toBeInstanceOf(InvalidCredentialsError);
+    expect((googleOnly as Error).message).toBe((unknown as Error).message);
+    expect(sessions.sessions.size).toBe(1); // only the session of the earlier registration
+  });
+
   it("blocks an email after too many failures, even with the right password, until the window passes", async () => {
     const { login } = build();
     for (let i = 0; i < LOGIN_EMAIL_LIMIT; i += 1) {
@@ -149,7 +162,25 @@ describe("AuthenticateSession", () => {
   it("returns the user for a valid session token", async () => {
     const { register, authenticate } = build();
     const grant = await register.execute({ email: "jane@example.com", password: PASSWORD }, IP);
-    await expect(authenticate.execute(grant.sessionToken)).resolves.toEqual(grant.user);
+    await expect(authenticate.execute(grant.sessionToken)).resolves.toEqual({ id: grant.user.id, email: grant.user.email });
+  });
+
+  it("GetAccount reports how the account signs in, without hashes or provider ids", async () => {
+    const { register } = build();
+    const grant = await register.execute({ email: "jane@example.com", password: PASSWORD }, IP);
+    const getAccount = new GetAccount(users);
+    await expect(getAccount.execute(grant.user.id)).resolves.toEqual({
+      id: grant.user.id,
+      email: "jane@example.com",
+      hasPassword: true,
+      googleLinked: false,
+      emailVerified: false,
+    });
+
+    const id = "00000000-0000-4000-8000-0000000000b2";
+    users.users.set(id, { id, email: "g@example.com", passwordHash: null, googleSub: "sub-2", emailVerifiedAt: now, createdAt: now });
+    await expect(getAccount.execute(id)).resolves.toMatchObject({ hasPassword: false, googleLinked: true, emailVerified: true });
+    await expect(getAccount.execute("00000000-0000-4000-8000-0000000000ff")).rejects.toBeInstanceOf(UnauthenticatedError);
   });
 
   it("rejects an unknown token", async () => {

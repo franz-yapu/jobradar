@@ -124,7 +124,7 @@ describe("api client", () => {
   });
 
   describe("accounts", () => {
-    const USER = { id: "0b0b6b8e-0000-4000-8000-000000000001", email: "jane@example.com" };
+    const USER = { id: "0b0b6b8e-0000-4000-8000-000000000001", email: "jane@example.com", hasPassword: true, googleLinked: false, emailVerified: false };
     const TOKEN = {
       id: "0b0b6b8e-0000-4000-8000-000000000002",
       name: "n8n",

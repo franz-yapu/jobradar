@@ -4,6 +4,7 @@ import { loadEnv } from "../../config/env.js";
 import { PrismaService } from "../../shared/infrastructure/prisma/prisma.service.js";
 import { AuthenticateApiToken, CreateApiToken, ListApiTokens, RevokeApiToken } from "../application/api-token.use-cases.js";
 import { AuthenticateSession } from "../application/authenticate-session.use-case.js";
+import { GetAccount } from "../application/get-account.use-case.js";
 import { LoginUser } from "../application/login-user.use-case.js";
 import { LogoutUser } from "../application/logout-user.use-case.js";
 import { RegisterUser } from "../application/register-user.use-case.js";
@@ -82,6 +83,7 @@ const systemClock: Clock = { now: () => new Date() };
         new AuthenticateSession(users, sessions, tokens, clock),
       inject: [USER_REPOSITORY, SESSION_REPOSITORY, TOKEN_GENERATOR, CLOCK],
     },
+    { provide: GetAccount, useFactory: (users: UserRepository) => new GetAccount(users), inject: [USER_REPOSITORY] },
     {
       provide: LogoutUser,
       useFactory: (sessions: SessionRepository, tokens: SecureTokenGenerator) => new LogoutUser(sessions, tokens),

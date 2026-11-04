@@ -2,8 +2,30 @@ export interface User {
   readonly id: string;
   /** Lowercase, trimmed. */
   readonly email: string;
-  readonly passwordHash: string;
+  /** Null for an account created with Google that has not set a password. */
+  readonly passwordHash: string | null;
+  /** Google's stable subject id, when Google is connected. Accounts are keyed by it, never by email. */
+  readonly googleSub: string | null;
+  /** Set when the email was verified by an identity provider (Google); password sign-ups stay null. */
+  readonly emailVerifiedAt: Date | null;
   readonly createdAt: Date;
+}
+
+/** What the account screen needs to know about a user; never a hash or a provider id. */
+export interface Account extends AuthenticatedUser {
+  readonly hasPassword: boolean;
+  readonly googleLinked: boolean;
+  readonly emailVerified: boolean;
+}
+
+export function toAccount(user: User): Account {
+  return {
+    id: user.id,
+    email: user.email,
+    hasPassword: user.passwordHash !== null,
+    googleLinked: user.googleSub !== null,
+    emailVerified: user.emailVerifiedAt !== null,
+  };
 }
 
 /** Who is making a request, once authenticated. */

@@ -24,6 +24,11 @@ export type LoginBody = z.output<typeof LoginSchema>;
 export const UserSchema = z.object({
   id: z.uuid(),
   email: z.string(),
+  /** False for an account created with Google that has not set a password. */
+  hasPassword: z.boolean(),
+  googleLinked: z.boolean(),
+  /** True when an identity provider (Google) verified the email. */
+  emailVerified: z.boolean(),
 });
 export type UserResponse = z.infer<typeof UserSchema>;
 
