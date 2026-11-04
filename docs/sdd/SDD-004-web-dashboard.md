@@ -13,7 +13,7 @@ A local web app where the candidate sees postings with verdict, reasons and bloc
 **Out, as separate SDDs (needs your OK on the numbering):**
 - **SDD-005 – CV import:** upload a PDF, extract text, `AiProvider` call that returns a structured profile (stack, seniority, locations, English level, plus new fields: education, experience, languages), user reviews and confirms before saving. Extends `Profile` (migration) and the scoring prompt.
 - **SDD-006 – Accounts / SaaS:** login, per-user data (`userId` on profile, postings, scores, AI calls, budget per user), auth guard on every endpoint. This **contradicts the PRD** ("multi-user auth" out of scope), so it needs a PRD update and an ADR first.
-- **SDD-009 – AWS deploy, Terraform, Grafana** (was SDD-005 in the README roadmap).
+- **SDD-010 – AWS deploy, Terraform, Grafana** (was SDD-005 in the README roadmap).
 No login in SDD-004: the app runs locally for one candidate. It is built so auth can be added later: all API access goes through one client module, which will carry the token.
 
 ## Domain model
