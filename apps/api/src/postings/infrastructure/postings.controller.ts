@@ -1,8 +1,9 @@
-import { Body, ConflictException, Controller, Get, HttpCode, Inject, Post, Query } from "@nestjs/common";
+import { Body, ConflictException, Controller, Get, HttpCode, HttpException, Inject, Post, Query } from "@nestjs/common";
 import {
   ApiBadRequestResponse,
   ApiBody,
   ApiConflictResponse,
+  ApiForbiddenResponse,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiQuery,
@@ -20,7 +21,7 @@ import {
 } from "@jobradar/shared";
 import { ZodValidationPipe } from "../../shared/infrastructure/zod-validation.pipe.js";
 import { toSwaggerSchema } from "../../shared/infrastructure/swagger-schema.js";
-import { CreatePosting } from "../application/create-posting.use-case.js";
+import { CreatePosting, NotAdminError } from "../application/create-posting.use-case.js";
 import { ListPostings } from "../application/list-postings.use-case.js";
 import { DuplicatePostingError } from "../domain/posting.repository.js";
 import { toPostingListItemResponse, toPostingResponse } from "./postings.presenter.js";
@@ -40,24 +41,29 @@ export class PostingsController {
   @ApiBody({ schema: toSwaggerSchema(CreatePostingSchema, "input") })
   @ApiCreatedResponse({ schema: toSwaggerSchema(PostingSchema) })
   @ApiBadRequestResponse({ description: "Invalid body" })
+  @ApiForbiddenResponse({ description: "not_admin: only an administrator can send scope=catalog" })
   @ApiConflictResponse({ description: "A posting with the same (normalized) URL already exists" })
   async create(
     @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(CreatePostingSchema)) body: CreatePostingBody,
   ): Promise<PostingResponse> {
     try {
-      const posting = await this.createPosting.execute(user.id, {
-        ...body,
-        publishedAt: body.publishedAt ? new Date(body.publishedAt) : undefined,
-      });
+      const { scope, ...fields } = body;
+      const posting = await this.createPosting.execute(
+        user,
+        { ...fields, publishedAt: fields.publishedAt ? new Date(fields.publishedAt) : undefined },
+        scope,
+      );
       return toPostingResponse(posting);
     } catch (error) {
       if (error instanceof DuplicatePostingError) throw new ConflictException(error.message);
+      if (error instanceof NotAdminError) throw new HttpException({ statusCode: 403, error: "not_admin", message: error.message }, 403);
       throw error;
     }
   }
 
   @Get()
+  @ApiQuery({ name: "scope", required: false, enum: ["mine", "catalog"], description: "Your own postings or the shared catalog; both when omitted" })
   @ApiQuery({ name: "source", required: false })
   @ApiQuery({ name: "q", required: false, description: "Matches title, company or description" })
   @ApiQuery({

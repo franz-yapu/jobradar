@@ -10,9 +10,17 @@ import {
   type VerdictFilter,
 } from "../domain/posting.repository.js";
 
-/** Rows are always read through a `userId` filter, so the owner is known to be `userId`. */
-function toDomain(row: PostingRow, userId: string): Posting {
-  return { ...row, userId };
+/** `catalogKey` is storage only (it deduplicates the catalog) and never leaves this file. */
+function toDomain(row: PostingRow): Posting {
+  const { catalogKey: _catalogKey, ...posting } = row;
+  return posting;
+}
+
+/** What an account may read: its own postings and the catalog (no owner). */
+function visibleTo(userId: string, scope: PostingFilter["scope"]): Prisma.PostingWhereInput {
+  if (scope === "mine") return { userId };
+  if (scope === "catalog") return { userId: null };
+  return { OR: [{ userId }, { userId: null }] };
 }
 
 export class PrismaPostingRepository implements PostingRepository {
@@ -20,7 +28,7 @@ export class PrismaPostingRepository implements PostingRepository {
 
   async save(posting: Posting): Promise<void> {
     try {
-      await this.prisma.posting.create({ data: posting });
+      await this.prisma.posting.create({ data: { ...posting, catalogKey: posting.userId === null ? posting.url : null } });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
         throw new DuplicatePostingError(posting.url);
@@ -29,20 +37,23 @@ export class PrismaPostingRepository implements PostingRepository {
     }
   }
 
-  async findByUrl(userId: string, url: string): Promise<Posting | null> {
-    const row = await this.prisma.posting.findUnique({ where: { userId_url: { userId, url } } });
-    return row ? toDomain(row, userId) : null;
+  async findByUrl(userId: string | null, url: string): Promise<Posting | null> {
+    const row =
+      userId === null
+        ? await this.prisma.posting.findUnique({ where: { catalogKey: url } })
+        : await this.prisma.posting.findUnique({ where: { userId_url: { userId, url } } });
+    return row ? toDomain(row) : null;
   }
 
   async findById(userId: string, id: string): Promise<Posting | null> {
-    const row = await this.prisma.posting.findFirst({ where: { id, userId } });
-    return row ? toDomain(row, userId) : null;
+    const row = await this.prisma.posting.findFirst({ where: { id, ...visibleTo(userId, undefined) } });
+    return row ? toDomain(row) : null;
   }
 
   async list(userId: string, filter: PostingFilter): Promise<PostingPage> {
-    const verdictIds = filter.verdict === undefined ? undefined : await this.idsWithLatestVerdict(userId, filter.verdict);
+    const verdictIds = filter.verdict === undefined ? undefined : await this.idsWithLatestVerdict(userId, filter.verdict, filter.scope);
     const where: Prisma.PostingWhereInput = {
-      userId,
+      AND: [visibleTo(userId, filter.scope)],
       ...(filter.source !== undefined && { source: filter.source }),
       ...(filter.createdSince !== undefined && { createdAt: { gte: filter.createdSince } }),
       ...(verdictIds !== undefined && { id: { in: verdictIds } }),
@@ -65,14 +76,20 @@ export class PrismaPostingRepository implements PostingRepository {
     ]);
 
     const latest = await this.latestScores(userId, rows.map((row) => row.id));
-    return { items: rows.map((row) => ({ ...toDomain(row, userId), latestScore: latest.get(row.id) ?? null })), total };
+    return { items: rows.map((row) => ({ ...toDomain(row), latestScore: latest.get(row.id) ?? null })), total };
   }
 
   /**
    * Ids whose NEWEST score has the verdict (or that have no score, for `unscored`).
    * Single-user volumes: the id list is small; revisit with a keyset query if postings reach the millions.
    */
-  private async idsWithLatestVerdict(userId: string, verdict: VerdictFilter): Promise<string[]> {
+  private async idsWithLatestVerdict(userId: string, verdict: VerdictFilter, scope: PostingFilter["scope"]): Promise<string[]> {
+    const visible =
+      scope === "mine"
+        ? Prisma.sql`p."userId" = ${userId}::uuid`
+        : scope === "catalog"
+          ? Prisma.sql`p."userId" IS NULL`
+          : Prisma.sql`(p."userId" = ${userId}::uuid OR p."userId" IS NULL)`;
     const condition = verdict === "unscored" ? Prisma.sql`ls.verdict IS NULL` : Prisma.sql`ls.verdict = ${verdict}::"Verdict"`;
     const rows = await this.prisma.$queryRaw<{ id: string }[]>`
       SELECT p.id FROM postings p
@@ -82,7 +99,7 @@ export class PrismaPostingRepository implements PostingRepository {
         ORDER BY s."createdAt" DESC, s.id DESC
         LIMIT 1
       ) ls ON true
-      WHERE p."userId" = ${userId}::uuid AND ${condition}`;
+      WHERE ${visible} AND ${condition}`;
     return rows.map((row) => row.id);
   }
 

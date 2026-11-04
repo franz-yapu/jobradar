@@ -11,6 +11,11 @@ const HttpUrlSchema = z.url({ protocol: /^https?$/ });
 export const MANUAL_URL_PATTERN = /^manual:[0-9a-f]{64}$/;
 export const ManualUrlSchema = z.string().regex(MANUAL_URL_PATTERN, "Expected manual:<64 hex characters>");
 
+/** `mine` is private to the account; `catalog` is shared with everyone and only an administrator may write it (ADR-0004). */
+export const POSTING_SCOPES = ["mine", "catalog"] as const;
+export const PostingScopeSchema = z.enum(POSTING_SCOPES);
+export type PostingScope = z.infer<typeof PostingScopeSchema>;
+
 export const CreatePostingSchema = z.object({
   title: z.string().trim().min(1).max(300),
   company: z.string().trim().min(1).max(300),
@@ -20,6 +25,7 @@ export const CreatePostingSchema = z.object({
   remoteScope: RemoteScopeSchema.default("unknown"),
   description: z.string().default(""),
   publishedAt: z.iso.datetime({ offset: true }).optional(),
+  scope: PostingScopeSchema.default("mine"),
 });
 export type CreatePostingInput = z.input<typeof CreatePostingSchema>;
 export type CreatePostingBody = z.output<typeof CreatePostingSchema>;
@@ -35,6 +41,7 @@ export const PostingSchema = z.object({
   description: z.string(),
   publishedAt: z.iso.datetime({ offset: true }).nullable(),
   createdAt: z.iso.datetime({ offset: true }),
+  scope: PostingScopeSchema,
 });
 export type PostingResponse = z.infer<typeof PostingSchema>;
 
@@ -51,6 +58,8 @@ export const ListPostingsQuerySchema = z.object({
   source: optionalText,
   q: optionalText,
   verdict: z.enum(VERDICT_FILTERS).optional(),
+  /** Only your own postings, or only the shared catalog. Both when omitted. */
+  scope: PostingScopeSchema.optional(),
   /** Only postings stored at or after this instant. */
   createdSince: z.iso.datetime({ offset: true }).optional(),
   page: z.coerce.number().int().min(1).default(1),

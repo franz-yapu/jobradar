@@ -29,6 +29,8 @@ export const UserSchema = z.object({
   googleLinked: z.boolean(),
   /** True when an identity provider (Google) verified the email. */
   emailVerified: z.boolean(),
+  /** May feed the shared job catalog (ADR-0004). */
+  isAdmin: z.boolean(),
 });
 export type UserResponse = z.infer<typeof UserSchema>;
 

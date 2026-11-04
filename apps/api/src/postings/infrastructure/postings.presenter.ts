@@ -1,5 +1,5 @@
 import type { PostingListItemResponse, PostingResponse } from "@jobradar/shared";
-import type { Posting } from "../domain/posting.js";
+import { postingScope, type Posting } from "../domain/posting.js";
 import type { PostingListItem } from "../domain/posting.repository.js";
 
 /** The owner is internal: it is never part of the API response. */
@@ -9,6 +9,7 @@ export function toPostingResponse(posting: Posting): PostingResponse {
     ...visible,
     publishedAt: posting.publishedAt?.toISOString() ?? null,
     createdAt: posting.createdAt.toISOString(),
+    scope: postingScope(posting),
   };
 }
 

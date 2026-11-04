@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { APP_GUARD } from "@nestjs/core";
 import { loadEnv } from "../../config/env.js";
 import { PrismaService } from "../../shared/infrastructure/prisma/prisma.service.js";
+import { ADMIN_POLICY, EmailAdminPolicy, type AdminPolicy } from "../domain/admin-policy.js";
 import { AuthenticateApiToken, CreateApiToken, ListApiTokens, RevokeApiToken } from "../application/api-token.use-cases.js";
 import { CompleteGoogleFlow, SetPassword, StartGoogleFlow, UnlinkGoogle } from "../application/google-flow.use-cases.js";
 import { AuthenticateSession } from "../application/authenticate-session.use-case.js";
@@ -67,6 +68,7 @@ const systemClock: Clock = { now: () => new Date() };
   controllers: [AuthController, ApiTokensController, OAuthController],
   providers: [
     { provide: CLOCK, useValue: systemClock },
+    { provide: ADMIN_POLICY, useFactory: (): AdminPolicy => new EmailAdminPolicy(loadEnv().ADMIN_EMAILS) },
     { provide: USER_REPOSITORY, useFactory: (prisma: PrismaService) => new PrismaUserRepository(prisma), inject: [PrismaService] },
     { provide: SESSION_REPOSITORY, useFactory: (prisma: PrismaService) => new PrismaSessionRepository(prisma), inject: [PrismaService] },
     {
@@ -110,8 +112,9 @@ const systemClock: Clock = { now: () => new Date() };
         tokens: SecureTokenGenerator,
         limiter: AttemptLimiter,
         clock: Clock,
-      ) => new CompleteGoogleFlow(provider, flows, users, sessions, tokens, limiter, clock, { signupAllowed: loadEnv().ALLOW_SIGNUP }),
-      inject: [IDENTITY_PROVIDER, OAUTH_FLOW_REPOSITORY, USER_REPOSITORY, SESSION_REPOSITORY, TOKEN_GENERATOR, ATTEMPT_LIMITER, CLOCK],
+        admins: AdminPolicy,
+      ) => new CompleteGoogleFlow(provider, flows, users, sessions, tokens, limiter, clock, { signupAllowed: loadEnv().ALLOW_SIGNUP }, admins),
+      inject: [IDENTITY_PROVIDER, OAUTH_FLOW_REPOSITORY, USER_REPOSITORY, SESSION_REPOSITORY, TOKEN_GENERATOR, ATTEMPT_LIMITER, CLOCK, ADMIN_POLICY],
     },
     { provide: UnlinkGoogle, useFactory: (users: UserRepository) => new UnlinkGoogle(users), inject: [USER_REPOSITORY] },
     {
@@ -129,8 +132,9 @@ const systemClock: Clock = { now: () => new Date() };
         tokens: SecureTokenGenerator,
         limiter: AttemptLimiter,
         clock: Clock,
-      ) => new RegisterUser(users, sessions, hasher, tokens, limiter, clock, { signupAllowed: loadEnv().ALLOW_SIGNUP }),
-      inject: [USER_REPOSITORY, SESSION_REPOSITORY, PASSWORD_HASHER, TOKEN_GENERATOR, ATTEMPT_LIMITER, CLOCK],
+        admins: AdminPolicy,
+      ) => new RegisterUser(users, sessions, hasher, tokens, limiter, clock, { signupAllowed: loadEnv().ALLOW_SIGNUP }, admins),
+      inject: [USER_REPOSITORY, SESSION_REPOSITORY, PASSWORD_HASHER, TOKEN_GENERATOR, ATTEMPT_LIMITER, CLOCK, ADMIN_POLICY],
     },
     {
       provide: LoginUser,
@@ -141,16 +145,21 @@ const systemClock: Clock = { now: () => new Date() };
         tokens: SecureTokenGenerator,
         limiter: AttemptLimiter,
         clock: Clock,
-      ) => new LoginUser(users, sessions, hasher, tokens, limiter, clock),
-      inject: [USER_REPOSITORY, SESSION_REPOSITORY, PASSWORD_HASHER, TOKEN_GENERATOR, ATTEMPT_LIMITER, CLOCK],
+        admins: AdminPolicy,
+      ) => new LoginUser(users, sessions, hasher, tokens, limiter, clock, admins),
+      inject: [USER_REPOSITORY, SESSION_REPOSITORY, PASSWORD_HASHER, TOKEN_GENERATOR, ATTEMPT_LIMITER, CLOCK, ADMIN_POLICY],
     },
     {
       provide: AuthenticateSession,
-      useFactory: (users: UserRepository, sessions: SessionRepository, tokens: SecureTokenGenerator, clock: Clock) =>
-        new AuthenticateSession(users, sessions, tokens, clock),
-      inject: [USER_REPOSITORY, SESSION_REPOSITORY, TOKEN_GENERATOR, CLOCK],
+      useFactory: (users: UserRepository, sessions: SessionRepository, tokens: SecureTokenGenerator, clock: Clock, admins: AdminPolicy) =>
+        new AuthenticateSession(users, sessions, tokens, clock, admins),
+      inject: [USER_REPOSITORY, SESSION_REPOSITORY, TOKEN_GENERATOR, CLOCK, ADMIN_POLICY],
     },
-    { provide: GetAccount, useFactory: (users: UserRepository) => new GetAccount(users), inject: [USER_REPOSITORY] },
+    {
+      provide: GetAccount,
+      useFactory: (users: UserRepository, admins: AdminPolicy) => new GetAccount(users, admins),
+      inject: [USER_REPOSITORY, ADMIN_POLICY],
+    },
     {
       provide: LogoutUser,
       useFactory: (sessions: SessionRepository, tokens: SecureTokenGenerator) => new LogoutUser(sessions, tokens),
@@ -158,9 +167,9 @@ const systemClock: Clock = { now: () => new Date() };
     },
     {
       provide: AuthenticateApiToken,
-      useFactory: (tokens: ApiTokenRepository, users: UserRepository, generator: SecureTokenGenerator, clock: Clock) =>
-        new AuthenticateApiToken(tokens, users, generator, clock),
-      inject: [API_TOKEN_REPOSITORY, USER_REPOSITORY, TOKEN_GENERATOR, CLOCK],
+      useFactory: (tokens: ApiTokenRepository, users: UserRepository, generator: SecureTokenGenerator, clock: Clock, admins: AdminPolicy) =>
+        new AuthenticateApiToken(tokens, users, generator, clock, admins),
+      inject: [API_TOKEN_REPOSITORY, USER_REPOSITORY, TOKEN_GENERATOR, CLOCK, ADMIN_POLICY],
     },
     {
       provide: CreateApiToken,

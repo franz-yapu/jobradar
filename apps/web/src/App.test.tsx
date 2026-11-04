@@ -22,6 +22,7 @@ const SCORED = {
   description: "",
   publishedAt: null,
   createdAt: "2026-11-04T10:00:00.000Z",
+  scope: "mine",
   latestScore: { verdict: "fit", reasons: [], blockers: [], scoredAt: "2026-11-04T10:00:00.000Z" },
 };
 

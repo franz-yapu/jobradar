@@ -33,6 +33,8 @@ export interface PostingFilter {
   source?: string | undefined;
   /** Matches the LATEST score of each posting; `unscored` matches postings without any score. */
   verdict?: VerdictFilter | undefined;
+  /** Only your own postings, or only the catalog. Both when omitted. */
+  scope?: "mine" | "catalog" | undefined;
   /** Only postings with createdAt >= this instant. */
   createdSince?: Date | undefined;
   /** Case-insensitive match on title, company or description. */
@@ -47,13 +49,16 @@ export interface PostingPage {
 }
 
 /**
- * Every read is scoped to one account (ADR-0002): a posting of another account behaves as if it did not exist.
+ * Every read is scoped to one account (ADR-0002): a private posting of another account behaves as if it did not exist.
+ * Catalog postings (no owner, ADR-0004) are readable by every account.
  */
 export interface PostingRepository {
-  /** Throws DuplicatePostingError if THIS account already stored the URL. */
+  /** Throws DuplicatePostingError if THIS account (or, for a catalog posting, the catalog) already stored the URL. */
   save(posting: Posting): Promise<void>;
-  findByUrl(userId: string, url: string): Promise<Posting | null>;
+  /** `null` looks in the catalog. */
+  findByUrl(userId: string | null, url: string): Promise<Posting | null>;
+  /** A posting of this account or a catalog posting; anything else behaves as if it did not exist. */
   findById(userId: string, id: string): Promise<Posting | null>;
-  /** Newest first (createdAt desc, id desc). */
+  /** The account's own postings plus the catalog, newest first (createdAt desc, id desc). Scores are the account's. */
   list(userId: string, filter: PostingFilter): Promise<PostingPage>;
 }

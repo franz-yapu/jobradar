@@ -1,6 +1,6 @@
 # SDD-009 – Shared job catalog and guided first use
 
-**Status:** Draft (2026-11-04), waiting for approval · **Week:** 4 · **Depends on:** SDD-006, 007, 008 · **Decision record:** ADR-0004
+**Status:** Approved (2026-11-04) · **Week:** 4 · **Depends on:** SDD-006, 007, 008 · **Decision record:** ADR-0004
 
 ## Context
 A new account is empty: jobs are per account and only n8n (with that account's token) fills them. Users should enter, see jobs, be asked to fill their profile, and then use the system; collection settings should stay behind the scenes.

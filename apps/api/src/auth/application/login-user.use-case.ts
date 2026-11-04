@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { NO_ADMINS, type AdminPolicy } from "../domain/admin-policy.js";
 import { SESSION_TTL_MS, type Session } from "../domain/session.js";
 import { InvalidCredentialsError, normalizeEmail, toAccount } from "../domain/user.js";
 import type {
@@ -26,6 +27,7 @@ export class LoginUser {
     private readonly tokens: SecureTokenGenerator,
     private readonly limiter: AttemptLimiter,
     private readonly clock: Clock,
+    private readonly admins: AdminPolicy = NO_ADMINS,
   ) {}
 
   async execute(input: { email: string; password: string }, context: { ip: string }): Promise<SessionGrant> {
@@ -57,7 +59,7 @@ export class LoginUser {
       createdAt: now,
     };
     await this.sessions.create(session);
-    return { user: toAccount(user), sessionToken, expiresAt: session.expiresAt };
+    return { user: toAccount(user, this.admins), sessionToken, expiresAt: session.expiresAt };
   }
 
   private getDummyHash(): Promise<string> {

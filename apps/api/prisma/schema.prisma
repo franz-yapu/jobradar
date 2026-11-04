@@ -27,9 +27,13 @@ model Posting {
   publishedAt DateTime?
   createdAt   DateTime       @default(now())
   scores      PostingScore[]
-  /// Owner (ADR-0002). Null only for rows that predate accounts; the first account adopts them.
+  /// Owner (ADR-0002). Null means a catalog posting, visible to every account (ADR-0004).
   userId      String?        @db.Uuid
   user        User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Set (to the normalized URL) only on catalog postings (userId null, ADR-0004): a unique index over a
+  /// nullable userId would not deduplicate them in PostgreSQL.
+  catalogKey  String?        @unique
 
   /// A posting is unique per account, not globally: two accounts may track the same URL.
   @@unique([userId, url])

@@ -36,3 +36,10 @@ describe("WEB_ORIGIN", () => {
     expect(() => loadEnv({ ...base, ...all, GOOGLE_REDIRECT_URI: "not a url" })).toThrow();
   });
 });
+
+describe("ADMIN_EMAILS", () => {
+  it("is empty by default, and lowercases, trims and splits a comma separated list", () => {
+    expect(loadEnv({ DATABASE_URL: "x" }).ADMIN_EMAILS).toEqual([]);
+    expect(loadEnv({ DATABASE_URL: "x", ADMIN_EMAILS: " Boss@Example.com, ops@example.com ,," }).ADMIN_EMAILS).toEqual(["boss@example.com", "ops@example.com"]);
+  });
+});

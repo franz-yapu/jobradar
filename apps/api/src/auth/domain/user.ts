@@ -1,3 +1,5 @@
+import { NO_ADMINS, type AdminPolicy } from "./admin-policy.js";
+
 export interface User {
   readonly id: string;
   /** Lowercase, trimmed. */
@@ -18,10 +20,11 @@ export interface Account extends AuthenticatedUser {
   readonly emailVerified: boolean;
 }
 
-export function toAccount(user: User): Account {
+export function toAccount(user: User, admins: AdminPolicy = NO_ADMINS): Account {
   return {
     id: user.id,
     email: user.email,
+    isAdmin: admins.isAdmin(user),
     hasPassword: user.passwordHash !== null,
     googleLinked: user.googleSub !== null,
     emailVerified: user.emailVerifiedAt !== null,
@@ -32,6 +35,8 @@ export function toAccount(user: User): Account {
 export interface AuthenticatedUser {
   readonly id: string;
   readonly email: string;
+  /** May write to the shared job catalog (ADR-0004). */
+  readonly isAdmin: boolean;
 }
 
 export const MIN_PASSWORD_LENGTH = 10;

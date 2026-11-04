@@ -14,6 +14,7 @@ export const TEST_USER: UserResponse = {
   hasPassword: true,
   googleLinked: false,
   emailVerified: false,
+  isAdmin: false,
 };
 
 function LocationProbe() {

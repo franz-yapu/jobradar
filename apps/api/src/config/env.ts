@@ -31,6 +31,17 @@ const EnvSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().trim().optional(),
   GOOGLE_CLIENT_SECRET: z.string().trim().optional(),
   GOOGLE_REDIRECT_URI: z.url().optional().or(z.literal("")),
+  /** Emails of the administrators who feed the shared job catalog (ADR-0004). Their email must also be verified (Google). */
+  ADMIN_EMAILS: z
+    .string()
+    .trim()
+    .default("")
+    .transform((value) =>
+      value
+        .split(",")
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean),
+    ),
   /** Origins allowed to call the API from a browser (comma separated). The dashboard's dev server by default. */
   WEB_ORIGIN: z
     .string()

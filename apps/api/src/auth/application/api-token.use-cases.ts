@@ -1,3 +1,4 @@
+import { NO_ADMINS, type AdminPolicy } from "../domain/admin-policy.js";
 import { randomUUID } from "node:crypto";
 import {
   API_TOKEN_DISPLAY_PREFIX_LENGTH,
@@ -70,6 +71,7 @@ export class AuthenticateApiToken {
     private readonly users: UserRepository,
     private readonly generator: SecureTokenGenerator,
     private readonly clock: Clock,
+    private readonly admins: AdminPolicy = NO_ADMINS,
   ) {}
 
   async execute(token: string): Promise<AuthenticatedUser> {
@@ -84,6 +86,6 @@ export class AuthenticateApiToken {
     if (!stored.lastUsedAt || now.getTime() - stored.lastUsedAt.getTime() >= LAST_USED_RESOLUTION_MS) {
       await this.tokens.touchLastUsed(stored.id, now);
     }
-    return { id: user.id, email: user.email };
+    return { id: user.id, email: user.email, isAdmin: this.admins.isAdmin(user) };
   }
 }

@@ -5,6 +5,7 @@ import { CreatePosting } from "./create-posting.use-case.js";
 import { ListPostings } from "./list-postings.use-case.js";
 
 const USER = "user-a";
+const account = (id: string, isAdmin = false) => ({ id, isAdmin });
 
 let repo: InMemoryPostingRepository;
 let list: ListPostings;
@@ -13,7 +14,7 @@ async function seed(n: number, overrides: Record<string, string> = {}): Promise<
   let tick = 0;
   const create = new CreatePosting(repo, () => new Date(Date.UTC(2026, 0, 1, 0, 0, tick++)));
   for (let i = 1; i <= n; i++) {
-    await create.execute(USER, {
+    await create.execute(account(USER), {
       title: `Job ${i}`,
       company: "Acme",
       url: `https://acme.com/jobs/${overrides["prefix"] ?? ""}${i}`,
@@ -110,7 +111,7 @@ describe("ListPostings is scoped to the account", () => {
   it("never returns, counts or pages another account's postings", async () => {
     await seed(3);
     const create = new CreatePosting(repo);
-    await create.execute("user-b", {
+    await create.execute(account("user-b"), {
       title: "Private job of B", company: "Other", url: "https://other.com/1", source: "manual",
       remoteScope: "unknown", description: "secret",
     });
@@ -126,5 +127,38 @@ describe("ListPostings is scoped to the account", () => {
     // search and filters cannot reach across accounts either
     expect((await list.execute(USER, { q: "secret", page: 1, pageSize: 20 })).total).toBe(0);
     expect((await list.execute("nobody", { page: 1, pageSize: 20 })).total).toBe(0);
+  });
+});
+
+describe("ListPostings with the shared catalog", () => {
+  const job = (n: number) => ({ title: `Shared ${n}`, company: "Acme", url: `https://acme.com/shared/${n}`, source: "getonboard", remoteScope: "unknown" as const, description: "x" });
+  const score = (verdict: LatestScore["verdict"]): LatestScore => ({ verdict, reasons: [], blockers: [], scoredAt: new Date("2026-02-01T00:00:00Z") });
+
+  it("returns my postings plus the catalog, with a scope on each, and never another account's private ones", async () => {
+    const create = new CreatePosting(repo);
+    await create.execute(account("boss", true), job(1), "catalog");
+    await seed(2);
+    await create.execute(account("user-b"), { ...job(9), title: "Private of B" });
+
+    const all = await list.execute("user-c", { page: 1, pageSize: 20 });
+    expect(all.items.map((p) => p.title)).toEqual(["Shared 1"]);
+
+    const mine = await list.execute(USER, { page: 1, pageSize: 20 });
+    expect(mine.total).toBe(3);
+    expect(mine.items.map((p) => p.title)).not.toContain("Private of B");
+    expect((await list.execute(USER, { page: 1, pageSize: 20, scope: "catalog" })).items.map((p) => p.title)).toEqual(["Shared 1"]);
+    expect((await list.execute(USER, { page: 1, pageSize: 20, scope: "mine" })).total).toBe(2);
+  });
+
+  it("scores are personal: my verdict on a catalog posting is invisible to everyone else", async () => {
+    const shared = await new CreatePosting(repo).execute(account("boss", true), job(1), "catalog");
+    repo.attachScore(shared.id, score("fit"), USER);
+
+    const mine = await list.execute(USER, { page: 1, pageSize: 20 });
+    const theirs = await list.execute("user-b", { page: 1, pageSize: 20 });
+    expect(mine.items[0]?.latestScore?.verdict).toBe("fit");
+    expect(theirs.items[0]?.latestScore).toBeNull();
+    expect((await list.execute("user-b", { page: 1, pageSize: 20, verdict: "unscored" })).total).toBe(1);
+    expect((await list.execute("user-b", { page: 1, pageSize: 20, verdict: "fit" })).total).toBe(0);
   });
 });

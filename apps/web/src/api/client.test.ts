@@ -12,6 +12,7 @@ const POSTING = {
   description: "",
   publishedAt: null,
   createdAt: "2026-11-04T10:00:00.000Z",
+  scope: "mine",
   latestScore: null,
 };
 
@@ -124,7 +125,7 @@ describe("api client", () => {
   });
 
   describe("accounts", () => {
-    const USER = { id: "0b0b6b8e-0000-4000-8000-000000000001", email: "jane@example.com", hasPassword: true, googleLinked: false, emailVerified: false };
+    const USER = { id: "0b0b6b8e-0000-4000-8000-000000000001", email: "jane@example.com", hasPassword: true, googleLinked: false, emailVerified: false, isAdmin: false };
     const TOKEN = {
       id: "0b0b6b8e-0000-4000-8000-000000000002",
       name: "n8n",

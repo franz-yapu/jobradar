@@ -1,3 +1,4 @@
+import { NO_ADMINS, type AdminPolicy } from "../domain/admin-policy.js";
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { IdentityVerificationError, type IdentityProvider } from "../domain/identity-provider.js";
 import { OAUTH_FLOW_TTL_MS, safeReturnTo, type GoogleFailure, type OAuthIntent } from "../domain/oauth-flow.js";
@@ -94,6 +95,7 @@ export class CompleteGoogleFlow {
     private readonly limiter: AttemptLimiter,
     private readonly clock: Clock,
     private readonly options: { signupAllowed: boolean },
+    private readonly admins: AdminPolicy = NO_ADMINS,
   ) {}
 
   /**
@@ -185,7 +187,7 @@ export class CompleteGoogleFlow {
     const sessionToken = this.tokens.generate();
     const expiresAt = new Date(now.getTime() + SESSION_TTL_MS);
     await this.sessions.create({ id: randomUUID(), userId: user.id, tokenHash: this.tokens.hash(sessionToken), expiresAt, createdAt: now });
-    return { user: toAccount(user), sessionToken, expiresAt };
+    return { user: toAccount(user, this.admins), sessionToken, expiresAt };
   }
 }
 

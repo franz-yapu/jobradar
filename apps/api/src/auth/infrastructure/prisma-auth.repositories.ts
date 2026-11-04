@@ -13,7 +13,7 @@ export class PrismaUserRepository implements UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Creates the account. The very first account ever created also adopts the rows that predate accounts
+   * Creates the account. The very first account ever created also adopts the profile, scores and AI calls that predate accounts
    * (no owner yet) in the same transaction, so the data of the single-user days is not lost (ADR-0002).
    */
   async create(user: User): Promise<void> {
@@ -24,7 +24,7 @@ export class PrismaUserRepository implements UserRepository {
         await tx.user.create({ data: user });
         if (existing > 0) return;
         const orphan = { where: { userId: null }, data: { userId: user.id } };
-        await tx.posting.updateMany(orphan);
+        // Postings without an owner are catalog postings (ADR-0004), not orphans: they are never adopted.
         await tx.candidateProfile.updateMany(orphan);
         await tx.postingScore.updateMany(orphan);
         await tx.aiCall.updateMany(orphan);

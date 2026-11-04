@@ -1,4 +1,5 @@
 import { SESSION_RENEW_AFTER_MS, SESSION_TTL_MS } from "../domain/session.js";
+import { NO_ADMINS, type AdminPolicy } from "../domain/admin-policy.js";
 import { UnauthenticatedError, type AuthenticatedUser } from "../domain/user.js";
 import type { Clock, SecureTokenGenerator, SessionRepository, UserRepository } from "../domain/ports.js";
 
@@ -9,6 +10,7 @@ export class AuthenticateSession {
     private readonly sessions: SessionRepository,
     private readonly tokens: SecureTokenGenerator,
     private readonly clock: Clock,
+    private readonly admins: AdminPolicy = NO_ADMINS,
   ) {}
 
   async execute(sessionToken: string): Promise<AuthenticatedUser> {
@@ -25,6 +27,6 @@ export class AuthenticateSession {
     if (lifetimeUsed >= SESSION_RENEW_AFTER_MS) {
       await this.sessions.updateExpiry(session.id, new Date(now.getTime() + SESSION_TTL_MS));
     }
-    return { id: user.id, email: user.email };
+    return { id: user.id, email: user.email, isAdmin: this.admins.isAdmin(user) };
   }
 }

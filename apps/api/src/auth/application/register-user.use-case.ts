@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { NO_ADMINS, type AdminPolicy } from "../domain/admin-policy.js";
 import { SESSION_TTL_MS, type Session } from "../domain/session.js";
 import {
   EmailTakenError,
@@ -38,6 +39,7 @@ export class RegisterUser {
     private readonly limiter: AttemptLimiter,
     private readonly clock: Clock,
     private readonly options: { signupAllowed: boolean },
+    private readonly admins: AdminPolicy = NO_ADMINS,
   ) {}
 
   async execute(input: { email: string; password: string }, context: { ip: string }): Promise<SessionGrant> {
@@ -72,7 +74,7 @@ export class RegisterUser {
       createdAt: now,
     };
     await this.sessions.create(session);
-    return { user: toAccount(user), sessionToken, expiresAt: session.expiresAt };
+    return { user: toAccount(user, this.admins), sessionToken, expiresAt: session.expiresAt };
   }
 }
 

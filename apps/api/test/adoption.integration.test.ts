@@ -99,7 +99,8 @@ describe("adoption of legacy data", () => {
     expect((await http(`/postings/${postingId}/score`)).status).toBe(200);
     expect((await http("/ai/usage")).body).toMatchObject({ calls: expect.any(Number) });
 
-    expect(await prisma.posting.count({ where: { userId: null } })).toBe(0);
+    // Postings without an owner are catalog postings (ADR-0004): they are shared, never adopted.
+    expect(await prisma.posting.count({ where: { userId: null } })).toBe(1);
     expect(await prisma.candidateProfile.count({ where: { userId: null } })).toBe(0);
     expect(await prisma.postingScore.count({ where: { userId: null } })).toBe(0);
     expect(await prisma.aiCall.count({ where: { userId: null } })).toBe(0);
@@ -113,7 +114,7 @@ describe("adoption of legacy data", () => {
     const cookie = (second.headers["set-cookie"] as unknown as string[])[0]?.split(";")[0] ?? "";
     const http = (path: string) => request(app.getHttpServer()).get(path).set("Cookie", cookie);
 
-    expect((await http("/postings")).body.total).toBe(0);
+    expect((await http("/postings")).body.total).toBe(1); // the ownerless posting is a catalog posting, visible to all
     expect((await http("/profile")).status).toBe(404);
     expect(await prisma.posting.count({ where: { userId: null } })).toBe(1);
   });
@@ -124,8 +125,9 @@ describe("adoption of legacy data", () => {
     expect(await prisma.posting.count({ where: { userId: null } })).toBe(1);
 
     const first = await register().expect(201);
-    const owner = await prisma.posting.findFirstOrThrow();
+    const owner = await prisma.candidateProfile.findFirstOrThrow();
     expect(owner.userId).toBe(first.body.id);
+    expect(await prisma.posting.count({ where: { userId: null } })).toBe(1); // never adopted: it is the catalog
   });
 
   it("with no legacy data the first account simply starts empty", async () => {
@@ -139,12 +141,13 @@ describe("adoption of legacy data", () => {
     const results = await Promise.all(Array.from({ length: 5 }, () => register()));
     expect(results.map((r) => r.status)).toEqual([201, 201, 201, 201, 201]);
 
-    const owners = await prisma.posting.findMany({ select: { userId: true } });
+    const owners = await prisma.candidateProfile.findMany({ select: { userId: true } });
     expect(owners).toHaveLength(1);
+    expect(await prisma.posting.count({ where: { userId: null } })).toBe(1);
     expect(owners[0]?.userId).not.toBeNull();
     expect(results.map((r) => r.body.id as string)).toContain(owners[0]?.userId);
     // the profile moved with it, and nothing was duplicated
-    expect(await prisma.candidateProfile.count({ where: { userId: owners[0]?.userId ?? "" } })).toBe(1);
+    expect(await prisma.postingScore.count({ where: { userId: owners[0]?.userId ?? "" } })).toBe(1);
     expect(await prisma.candidateProfile.count()).toBe(1);
   });
 });

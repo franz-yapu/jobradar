@@ -63,7 +63,7 @@ describe("ListPostingsQuerySchema verdict and createdSince", () => {
 describe("PostingListItemSchema", () => {
   const item = {
     id: "00000000-0000-4000-8000-000000000001", title: "t", company: "c", url: "https://x.test", source: "s",
-    location: null, remoteScope: "unknown", description: "", publishedAt: null, createdAt: "2026-11-03T08:00:00Z",
+    location: null, remoteScope: "unknown", description: "", publishedAt: null, createdAt: "2026-11-03T08:00:00Z", scope: "mine",
   };
   it("allows a null or a full latestScore", () => {
     expect(PostingListItemSchema.safeParse({ ...item, latestScore: null }).success).toBe(true);
@@ -76,5 +76,19 @@ describe("PostingListItemSchema", () => {
   });
   it("requires the latestScore key", () => {
     expect(PostingListItemSchema.safeParse(item).success).toBe(false);
+  });
+});
+
+describe("posting scope", () => {
+  it("defaults to a private posting and only knows mine and catalog", () => {
+    expect(CreatePostingSchema.parse(valid).scope).toBe("mine");
+    expect(CreatePostingSchema.parse({ ...valid, scope: "catalog" }).scope).toBe("catalog");
+    expect(CreatePostingSchema.safeParse({ ...valid, scope: "everyone" }).success).toBe(false);
+  });
+
+  it("can filter the list by scope", () => {
+    expect(ListPostingsQuerySchema.parse({ scope: "catalog" }).scope).toBe("catalog");
+    expect(ListPostingsQuerySchema.parse({}).scope).toBeUndefined();
+    expect(ListPostingsQuerySchema.safeParse({ scope: "other" }).success).toBe(false);
   });
 });

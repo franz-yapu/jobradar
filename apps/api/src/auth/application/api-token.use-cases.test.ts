@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { API_TOKEN_PREFIX, ApiTokenNotFoundError, LAST_USED_RESOLUTION_MS, MAX_ACTIVE_API_TOKENS, TooManyTokensError } from "../domain/api-token.js";
+import { EmailAdminPolicy } from "../domain/admin-policy.js";
 import { UnauthenticatedError, type User } from "../domain/user.js";
 import { CryptoTokenGenerator } from "../infrastructure/crypto-token-generator.js";
 import { InMemoryApiTokenRepository, InMemoryUserRepository } from "../infrastructure/in-memory-auth.repositories.js";
@@ -21,6 +22,20 @@ beforeEach(async () => {
   users = new InMemoryUserRepository();
   await users.create(user("user-a"));
   await users.create(user("user-b"));
+});
+
+describe("AuthenticateApiToken and the administrator role", () => {
+  it("a token carries the role of its owner, only when the owner's email is verified", async () => {
+    const admins = new EmailAdminPolicy(["boss@example.com"]);
+    await users.create({ ...user("boss"), email: "boss@example.com", emailVerifiedAt: now });
+    await users.create({ ...user("fake"), email: "boss@example.com".replace("boss", "fake"), emailVerifiedAt: null });
+    const boss = await create().execute("boss", "n8n");
+    const other = await create().execute("user-a", "n8n");
+    const asAdmin = new AuthenticateApiToken(tokens, users, generator, clock, admins);
+    await expect(asAdmin.execute(boss.token)).resolves.toMatchObject({ id: "boss", isAdmin: true });
+    await expect(asAdmin.execute(other.token)).resolves.toMatchObject({ id: "user-a", isAdmin: false });
+    await expect(authenticate().execute(boss.token)).resolves.toMatchObject({ isAdmin: false });
+  });
 });
 
 describe("CreateApiToken", () => {
@@ -90,7 +105,7 @@ describe("RevokeApiToken", () => {
 describe("AuthenticateApiToken", () => {
   it("returns the owner of a valid token", async () => {
     const { token } = await create().execute("user-a", "n8n");
-    await expect(authenticate().execute(token)).resolves.toEqual({ id: "user-a", email: "user-a@example.com" });
+    await expect(authenticate().execute(token)).resolves.toEqual({ id: "user-a", email: "user-a@example.com", isAdmin: false });
   });
 
   it("rejects unknown, foreign-format, tampered and revoked tokens", async () => {

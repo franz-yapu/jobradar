@@ -3,6 +3,7 @@ import { FAST_SCRYPT_FOR_TESTS, ScryptPasswordHasher } from "../infrastructure/s
 import { CryptoTokenGenerator } from "../infrastructure/crypto-token-generator.js";
 import { InMemoryAttemptLimiter } from "../infrastructure/in-memory-attempt-limiter.js";
 import { InMemorySessionRepository, InMemoryUserRepository } from "../infrastructure/in-memory-auth.repositories.js";
+import { EmailAdminPolicy } from "../domain/admin-policy.js";
 import { SESSION_TTL_MS } from "../domain/session.js";
 import {
   EmailTakenError,
@@ -162,7 +163,7 @@ describe("AuthenticateSession", () => {
   it("returns the user for a valid session token", async () => {
     const { register, authenticate } = build();
     const grant = await register.execute({ email: "jane@example.com", password: PASSWORD }, IP);
-    await expect(authenticate.execute(grant.sessionToken)).resolves.toEqual({ id: grant.user.id, email: grant.user.email });
+    await expect(authenticate.execute(grant.sessionToken)).resolves.toEqual({ id: grant.user.id, email: grant.user.email, isAdmin: false });
   });
 
   it("GetAccount reports how the account signs in, without hashes or provider ids", async () => {
@@ -175,12 +176,34 @@ describe("AuthenticateSession", () => {
       hasPassword: true,
       googleLinked: false,
       emailVerified: false,
+      isAdmin: false,
     });
 
     const id = "00000000-0000-4000-8000-0000000000b2";
     users.users.set(id, { id, email: "g@example.com", passwordHash: null, googleSub: "sub-2", emailVerifiedAt: now, createdAt: now });
     await expect(getAccount.execute(id)).resolves.toMatchObject({ hasPassword: false, googleLinked: true, emailVerified: true });
     await expect(getAccount.execute("00000000-0000-4000-8000-0000000000ff")).rejects.toBeInstanceOf(UnauthenticatedError);
+  });
+
+  it("marks only a verified, listed email as administrator, in the session user and in the account", async () => {
+    const admins = new EmailAdminPolicy(["boss@example.com"]);
+    const id = "00000000-0000-4000-8000-0000000000c3";
+    users.users.set(id, { id, email: "boss@example.com", passwordHash: null, googleSub: "sub-3", emailVerifiedAt: now, createdAt: now });
+    const lookalike = await build().register.execute({ email: "other@example.com", password: PASSWORD }, IP);
+    const session = tokens.generate();
+    sessions.sessions.set(tokens.hash(session), { id: "s1", userId: id, tokenHash: tokens.hash(session), expiresAt: new Date(now.getTime() + SESSION_TTL_MS), createdAt: now });
+
+    await expect(new AuthenticateSession(users, sessions, tokens, clock, admins).execute(session)).resolves.toMatchObject({ isAdmin: true });
+    await expect(new GetAccount(users, admins).execute(id)).resolves.toMatchObject({ isAdmin: true });
+    await expect(new GetAccount(users, admins).execute(lookalike.user.id)).resolves.toMatchObject({ isAdmin: false });
+    await expect(new GetAccount(users).execute(id)).resolves.toMatchObject({ isAdmin: false });
+
+    // registering with a password under the administrator's address never makes an administrator
+    const squatter = await new RegisterUser(users, sessions, hasher, tokens, limiter, clock, { signupAllowed: true }, new EmailAdminPolicy(["squat@example.com"])).execute(
+      { email: "squat@example.com", password: PASSWORD },
+      IP,
+    );
+    expect(squatter.user.isAdmin).toBe(false);
   });
 
   it("rejects an unknown token", async () => {
