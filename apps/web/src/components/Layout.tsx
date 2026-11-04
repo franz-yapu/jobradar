@@ -13,7 +13,7 @@ const LINKS = [
   { to: "/postings/new", key: "nav.add", end: false, Icon: PlusIcon },
   { to: "/profile", key: "nav.profile", end: false, Icon: UserIcon },
   { to: "/settings/account", key: "nav.account", end: false, Icon: ShieldIcon },
-  { to: "/settings/tokens", key: "nav.tokens", end: false, Icon: KeyIcon },
+  { to: "/settings/tokens", key: "nav.tokens", end: false, Icon: KeyIcon, adminOnly: true },
 ] as const;
 
 /** Title of the current page for the breadcrumb. */
@@ -105,7 +105,7 @@ export function Layout() {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto overscroll-contain px-3 py-4" aria-label={t("layout.main")}>
-          {LINKS.map(({ to, key, end, Icon }) => (
+          {LINKS.filter((link) => !("adminOnly" in link) || user?.isAdmin).map(({ to, key, end, Icon }) => (
             <NavLink
               key={to}
               to={to}

@@ -5,10 +5,10 @@ import type * as ClientModule from "../api/client";
 import { ApiError } from "../api/client";
 import { renderApp } from "../test/render";
 
-const { listPostings, scorePosting } = vi.hoisted(() => ({ listPostings: vi.fn(), scorePosting: vi.fn() }));
+const { listPostings, scorePosting, getProfile } = vi.hoisted(() => ({ listPostings: vi.fn(), scorePosting: vi.fn(), getProfile: vi.fn() }));
 vi.mock("../api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof ClientModule>()),
-  api: { listPostings, scorePosting },
+  api: { listPostings, scorePosting, getProfile },
 }));
 
 const base = {
@@ -62,6 +62,8 @@ describe("Postings page", () => {
   beforeEach(() => {
     listPostings.mockReset();
     scorePosting.mockReset();
+    getProfile.mockReset();
+    getProfile.mockResolvedValue({ version: 1 });
     listPostings.mockResolvedValue(page([FIT, REJECT, UNSCORED]));
   });
 
@@ -136,5 +138,51 @@ describe("Postings page", () => {
     const row = await rowAt(2);
     await userEvent.click(within(row).getByRole("button", { name: "Evaluar ahora" }));
     expect(await within(row).findByRole("alert")).toHaveTextContent("Se agotó el presupuesto diario de IA");
+  });
+
+  describe("first use", () => {
+    it("without a profile the shared list is still shown, with a banner that leads to the profile", async () => {
+      getProfile.mockResolvedValue(null);
+      renderApp();
+      expect(await screen.findByText("Fill in your profile to see which jobs fit you.")).toBeInTheDocument();
+      expect(await screen.findAllByTestId("posting-row")).toHaveLength(3);
+      expect(screen.getByRole("link", { name: "Fill in my profile" })).toHaveAttribute("href", "/profile");
+      const row = await rowAt(2);
+      expect(within(row).getByRole("link", { name: "Complete your profile" })).toHaveAttribute("href", "/profile");
+      expect(within(row).queryByRole("button", { name: "Score now" })).toBeNull();
+      expect(screen.queryByRole("button", { name: "Score the newest jobs" })).toBeNull();
+    });
+
+    it("with a profile there is no banner, and the newest unscored jobs can be scored in one go", async () => {
+      listPostings.mockImplementation((params?: { verdict?: string }) =>
+        Promise.resolve(params?.verdict === "unscored" ? page([UNSCORED, { ...UNSCORED, id: "44444444-4444-4444-8444-444444444444" }]) : page([FIT, REJECT, UNSCORED])),
+      );
+      scorePosting.mockResolvedValue({});
+      renderApp();
+      await screen.findAllByTestId("posting-row");
+      expect(screen.queryByText("Fill in your profile to see which jobs fit you.")).toBeNull();
+
+      await userEvent.click(await screen.findByRole("button", { name: "Score the newest jobs" }));
+      expect(await screen.findByText("Scored 2 jobs.")).toBeInTheDocument();
+      expect(scorePosting.mock.calls.map((call) => call[0])).toEqual([UNSCORED.id, "44444444-4444-4444-8444-444444444444"]);
+      expect(listPostings).toHaveBeenCalledWith(expect.objectContaining({ verdict: "unscored", pageSize: 10 }));
+    });
+
+    it("stops and explains when the daily budget runs out in the middle", async () => {
+      listPostings.mockImplementation((params?: { verdict?: string }) => Promise.resolve(params?.verdict === "unscored" ? page([UNSCORED, FIT]) : page([FIT, REJECT, UNSCORED])));
+      scorePosting.mockResolvedValueOnce({}).mockRejectedValueOnce(new ApiError(429, "ai_budget_exceeded", "budget"));
+      renderApp();
+      await userEvent.click(await screen.findByRole("button", { name: "Score the newest jobs" }));
+      expect(await screen.findByText(/The daily AI budget is used up/)).toBeInTheDocument();
+      expect(scorePosting).toHaveBeenCalledTimes(2);
+    });
+
+    it("marks the postings you added yourself and not the shared ones", async () => {
+      listPostings.mockResolvedValue(page([{ ...FIT, scope: "catalog" }, { ...REJECT, scope: "mine" }]));
+      renderApp();
+      const [shared, own] = [await rowAt(0), await rowAt(1)];
+      expect(within(shared).queryByText(/Added by you/)).toBeNull();
+      expect(within(own).getByText(/Added by you/)).toBeInTheDocument();
+    });
   });
 });

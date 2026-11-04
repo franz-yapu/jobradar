@@ -31,7 +31,15 @@
     "previous": "Anterior",
     "next": "Siguiente",
     "paste": "Pegar una oferta",
-    "pagination": "Paginación"
+    "pagination": "Paginación",
+    "profileBanner": "Llena tu perfil para ver qué empleos te encajan.",
+    "profileBannerHint": "La lista de abajo es común para todos. Cuando guardes tu perfil, cada empleo tendrá tu propio veredicto: encaja, quizá o descartar.",
+    "profileButton": "Llenar mi perfil",
+    "scoreNewest": "Evaluar los más recientes",
+    "scoreNewestHint": "Evalúa hasta 10 empleos que aún no has evaluado.",
+    "scoringProgress": "Evaluando {{done}} de {{total}}…",
+    "scoredCount": "{{count}} empleos evaluados.",
+    "nothingToScore": "No hay nada nuevo por evaluar."
   },
   "errors": {
     "network_error": "No se puede conectar con la API. ¿Está en marcha?",
@@ -81,7 +89,8 @@
     "blockers": "Bloqueos",
     "noReasons": "Todavía sin evaluar.",
     "stored": "Guardada el {{date}}",
-    "published": "Publicada el {{date}}"
+    "published": "Publicada el {{date}}",
+    "private": "Añadido por ti"
   },
   "scope": {
     "worldwide": "Remoto en todo el mundo",
@@ -102,7 +111,8 @@
     "now": "Evaluar ahora",
     "again": "Evaluar de nuevo",
     "scoring": "Evaluando…",
-    "done": "Evaluada."
+    "done": "Evaluada.",
+    "needProfile": "Completa tu perfil"
   },
   "add": {
     "title": "Añadir una oferta",
@@ -140,7 +150,11 @@
     "save": "Guardar perfil",
     "saving": "Guardando…",
     "saved": "Perfil guardado (versión {{version}}).",
-    "problems": {"stack": "Añade al menos una tecnología a tu stack.", "allowedLocations": "Añade al menos una ubicación permitida (un país, «LATAM» o «Worldwide»).", "other": "{{path}}: {{message}}"},
+    "problems": {
+      "stack": "Añade al menos una tecnología a tu stack.",
+      "allowedLocations": "Añade al menos una ubicación permitida (un país, «LATAM» o «Worldwide»).",
+      "other": "{{path}}: {{message}}"
+    },
     "invalid": "Revisa el perfil: {{message}}",
     "invalidLocation": "Usa un código de país como BO, o latam / worldwide.",
     "seniorities": {
@@ -224,7 +238,9 @@
     "year": "Año",
     "choose": "Elegir…",
     "searchHint": "Escribe para buscar…",
-    "noneExcluded": "Ninguno excluido"
+    "noneExcluded": "Ninguno excluido",
+    "next": "Perfil guardado. Ahora mira qué empleos te encajan.",
+    "goToJobs": "Ver los empleos"
   },
   "layout": {
     "skip": "Saltar al contenido",

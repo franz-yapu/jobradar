@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import type { SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { EducationEditor, ExperienceEditor, LanguagesEditor } from "../components/BackgroundEditors";
 import { ChipInput } from "../components/ChipInput";
@@ -13,7 +14,7 @@ import { ErrorMessage } from "../components/ErrorMessage";
 import { MultiSelect } from "../components/MultiSelect";
 import { Select } from "../components/Select";
 import { UserIcon } from "../components/icons";
-import { Alert, Button, Card, FIELD, PageHeader } from "../components/ui";
+import { Alert, Button, buttonClass, Card, FIELD, PageHeader } from "../components/ui";
 import { locationOptions } from "../lib/catalog/countries";
 import { STACK_OPTIONS } from "../lib/catalog/stack";
 import { EMPTY_FORM, formFromProfile, toSaveBody } from "../lib/profile-form";
@@ -182,6 +183,10 @@ export function ProfilePage() {
         {save.isSuccess ? (
           <Alert tone="success" role="status">
             {t("profile.saved", { version: save.data.version })}
+            <span className="mt-1 block">{t("profile.next")}</span>
+            <Link to="/" className={buttonClass("primary", "sm", "mt-3")}>
+              {t("profile.goToJobs")}
+            </Link>
           </Alert>
         ) : null}
         <Button type="submit" disabled={save.isPending}>

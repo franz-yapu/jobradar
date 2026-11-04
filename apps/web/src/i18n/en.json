@@ -31,7 +31,15 @@
     "previous": "Previous",
     "next": "Next",
     "paste": "Paste a posting",
-    "pagination": "Pagination"
+    "pagination": "Pagination",
+    "profileBanner": "Fill in your profile to see which jobs fit you.",
+    "profileBannerHint": "The list below is shared with everyone. Once your profile is saved, each job gets your own verdict: fit, maybe or reject.",
+    "profileButton": "Fill in my profile",
+    "scoreNewest": "Score the newest jobs",
+    "scoreNewestHint": "Scores up to 10 jobs you have not scored yet.",
+    "scoringProgress": "Scoring {{done}} of {{total}}…",
+    "scoredCount": "Scored {{count}} jobs.",
+    "nothingToScore": "There is nothing new to score."
   },
   "errors": {
     "network_error": "The API is unreachable. Is it running?",
@@ -81,7 +89,8 @@
     "blockers": "Blockers",
     "noReasons": "Not scored yet.",
     "stored": "Stored {{date}}",
-    "published": "Published {{date}}"
+    "published": "Published {{date}}",
+    "private": "Added by you"
   },
   "scope": {
     "worldwide": "Worldwide remote",
@@ -102,7 +111,8 @@
     "now": "Score now",
     "again": "Score again",
     "scoring": "Scoring…",
-    "done": "Scored."
+    "done": "Scored.",
+    "needProfile": "Complete your profile"
   },
   "add": {
     "title": "Add a posting",
@@ -140,7 +150,11 @@
     "save": "Save profile",
     "saving": "Saving…",
     "saved": "Profile saved (version {{version}}).",
-    "problems": {"stack": "Add at least one technology to your stack.", "allowedLocations": "Add at least one allowed location (a country, “LATAM” or “Worldwide”).", "other": "{{path}}: {{message}}"},
+    "problems": {
+      "stack": "Add at least one technology to your stack.",
+      "allowedLocations": "Add at least one allowed location (a country, “LATAM” or “Worldwide”).",
+      "other": "{{path}}: {{message}}"
+    },
     "invalid": "Check the profile: {{message}}",
     "invalidLocation": "Use a country code like BO, or latam / worldwide.",
     "seniorities": {
@@ -224,7 +238,9 @@
     "year": "Year",
     "choose": "Choose…",
     "searchHint": "Type to search…",
-    "noneExcluded": "None excluded"
+    "noneExcluded": "None excluded",
+    "next": "Profile saved. Now see which jobs fit you.",
+    "goToJobs": "See the jobs"
   },
   "layout": {
     "skip": "Skip to content",

@@ -3,7 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as ClientModule from "../api/client";
 import { ApiError } from "../api/client";
-import { renderApp } from "../test/render";
+import { renderApp, TEST_USER } from "../test/render";
+
+const ADMIN = { ...TEST_USER, isAdmin: true };
 
 const { listApiTokens, createApiToken, revokeApiToken } = vi.hoisted(() => ({
   listApiTokens: vi.fn(),
@@ -34,7 +36,7 @@ describe("API tokens screen", () => {
   });
 
   it("lists the tokens with prefix, dates and status, and never a secret", async () => {
-    renderApp({ route: "/settings/tokens" });
+    renderApp({ route: "/settings/tokens", user: ADMIN });
     const rows = await screen.findAllByTestId("token-row");
     expect(rows).toHaveLength(2);
     expect(within(rows[0] as HTMLElement).getByText("n8n")).toBeInTheDocument();
@@ -50,13 +52,13 @@ describe("API tokens screen", () => {
 
   it("shows the empty state", async () => {
     listApiTokens.mockResolvedValue([]);
-    renderApp({ route: "/settings/tokens" });
+    renderApp({ route: "/settings/tokens", user: ADMIN });
     expect(await screen.findByText("No tokens yet.")).toBeInTheDocument();
   });
 
   it("creates a token, shows its secret once with a warning, and hides it when dismissed", async () => {
     const user = userEvent.setup();
-    renderApp({ route: "/settings/tokens" });
+    renderApp({ route: "/settings/tokens", user: ADMIN });
     await screen.findAllByTestId("token-row");
 
     await user.clear(screen.getByLabelText("Name"));
@@ -79,7 +81,7 @@ describe("API tokens screen", () => {
   it("walks through connecting n8n in four steps, with a placeholder until a token is created", async () => {
     const user = userEvent.setup();
     const writeText = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue();
-    renderApp({ route: "/settings/tokens" });
+    renderApp({ route: "/settings/tokens", user: ADMIN });
     await screen.findAllByTestId("token-row");
 
     expect(screen.getByRole("heading", { name: "Connect n8n in 4 steps" })).toBeInTheDocument();
@@ -93,7 +95,7 @@ describe("API tokens screen", () => {
   });
 
   it("explains the steps in Spanish", async () => {
-    renderApp({ route: "/settings/tokens", language: "es" });
+    renderApp({ route: "/settings/tokens", language: "es", user: ADMIN });
     expect(await screen.findByRole("heading", { name: "Conecta n8n en 4 pasos" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Reinicia n8n" })).toBeInTheDocument();
   });
@@ -101,7 +103,7 @@ describe("API tokens screen", () => {
   it("copies the secret to the clipboard", async () => {
     const user = userEvent.setup();
     const writeText = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue();
-    renderApp({ route: "/settings/tokens" });
+    renderApp({ route: "/settings/tokens", user: ADMIN });
     await screen.findAllByTestId("token-row");
     await user.click(screen.getByRole("button", { name: "Create token" }));
     await screen.findByTestId("new-token");
@@ -112,7 +114,7 @@ describe("API tokens screen", () => {
 
   it("does not create a token without a name", async () => {
     const user = userEvent.setup();
-    renderApp({ route: "/settings/tokens" });
+    renderApp({ route: "/settings/tokens", user: ADMIN });
     await screen.findAllByTestId("token-row");
     await user.clear(screen.getByLabelText("Name"));
     expect(screen.getByRole("button", { name: "Create token" })).toBeDisabled();
@@ -121,7 +123,7 @@ describe("API tokens screen", () => {
 
   it("explains the limit of active tokens", async () => {
     createApiToken.mockRejectedValue(new ApiError(409, "too_many_tokens", "limit"));
-    renderApp({ route: "/settings/tokens", language: "es" });
+    renderApp({ route: "/settings/tokens", language: "es", user: ADMIN });
     await screen.findAllByTestId("token-row");
     await userEvent.click(screen.getByRole("button", { name: "Crear token" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Ya tienes 10 tokens activos");
@@ -129,7 +131,7 @@ describe("API tokens screen", () => {
 
   it("asks for confirmation before revoking, and can be cancelled", async () => {
     const user = userEvent.setup();
-    renderApp({ route: "/settings/tokens" });
+    renderApp({ route: "/settings/tokens", user: ADMIN });
     await screen.findAllByTestId("token-row");
 
     await user.click(screen.getByRole("button", { name: "Revoke n8n" }));
@@ -141,7 +143,7 @@ describe("API tokens screen", () => {
 
   it("revokes a token after confirming and reloads the list", async () => {
     const user = userEvent.setup();
-    renderApp({ route: "/settings/tokens" });
+    renderApp({ route: "/settings/tokens", user: ADMIN });
     await screen.findAllByTestId("token-row");
     const callsBefore = listApiTokens.mock.calls.length;
 
@@ -153,7 +155,7 @@ describe("API tokens screen", () => {
   });
 
   it("is reachable from the sidebar", async () => {
-    renderApp({ route: "/" });
+    renderApp({ route: "/", user: ADMIN });
     await userEvent.click(await screen.findByRole("link", { name: "API tokens" }));
     expect(await screen.findByRole("heading", { name: "API tokens" })).toBeInTheDocument();
   });

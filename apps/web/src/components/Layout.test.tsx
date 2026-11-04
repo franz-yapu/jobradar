@@ -2,7 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as ClientModule from "../api/client";
-import { renderApp } from "../test/render";
+import { renderApp, TEST_USER } from "../test/render";
 
 const { listPostings, getProfile } = vi.hoisted(() => ({ listPostings: vi.fn(), getProfile: vi.fn() }));
 vi.mock("../api/client", async (importOriginal) => ({
@@ -17,12 +17,23 @@ describe("Layout", () => {
     getProfile.mockReset().mockResolvedValue(null);
   });
 
-  it("offers the screens in the sidebar and marks the current one", async () => {
-    renderApp({ route: "/profile" });
+  it("offers the everyday screens in the sidebar and marks the current one; API tokens are for administrators only", async () => {
+    const view = renderApp({ route: "/profile" });
     const nav = within(screen.getByRole("navigation", { name: "Main" }));
-    expect(nav.getAllByRole("link").map((link) => link.textContent)).toEqual(["Postings", "Add posting", "Profile", "Account", "API tokens"]);
+    expect(nav.getAllByRole("link").map((link) => link.textContent)).toEqual(["Postings", "Add posting", "Profile", "Account"]);
+    view.unmount();
+
+    renderApp({ route: "/profile", user: { ...TEST_USER, isAdmin: true } });
+    const adminNav = within(screen.getByRole("navigation", { name: "Main" }));
+    expect(adminNav.getAllByRole("link").map((link) => link.textContent)).toEqual(["Postings", "Add posting", "Profile", "Account", "API tokens"]);
     expect(nav.getByRole("link", { name: "Profile" })).toHaveAttribute("aria-current", "page");
     expect(nav.getByRole("link", { name: "Postings" })).not.toHaveAttribute("aria-current");
+  });
+
+  it("sends a non-administrator who opens the tokens address back to the list", async () => {
+    renderApp({ route: "/settings/tokens" });
+    await waitFor(() => expect(screen.getByTestId("location")).toHaveTextContent(/^\/$/));
+    expect(screen.queryByRole("heading", { name: "API tokens" })).toBeNull();
   });
 
   it("shows where you are in the breadcrumb, in the current language", async () => {

@@ -1,20 +1,23 @@
 import type { PostingListItemResponse } from "@jobradar/shared";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { isWebUrl } from "../lib/manual-posting";
 import { ChevronDownIcon } from "./icons";
 import { ErrorMessage } from "./ErrorMessage";
-import { Button } from "./ui";
+import { Button, buttonClass } from "./ui";
 import { VerdictBadge } from "./VerdictBadge";
 
 interface Props {
   posting: PostingListItemResponse;
   scoring: boolean;
+  /** False until the account has saved a profile: scoring needs one, so the button leads there. */
+  profileReady?: boolean;
   scoreError: unknown;
   onScore: (postingId: string) => void;
 }
 
-export function PostingRow({ posting, scoring, scoreError, onScore }: Props) {
+export function PostingRow({ posting, scoring, profileReady = true, scoreError, onScore }: Props) {
   const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const score = posting.latestScore;
@@ -40,6 +43,7 @@ export function PostingRow({ posting, scoring, scoreError, onScore }: Props) {
             {posting.company}
             {posting.location ? ` · ${posting.location}` : ""} · {t(`scope.${posting.remoteScope}`)}
             {web ? "" : ` · ${t("row.manualEntry")}`}
+            {posting.scope === "catalog" ? "" : ` · ${t("row.private")}`}
           </p>
           <p className="mt-0.5 text-xs text-muted">
             {posting.publishedAt
@@ -51,9 +55,15 @@ export function PostingRow({ posting, scoring, scoreError, onScore }: Props) {
         <div className="flex flex-row-reverse items-center justify-between gap-2 sm:flex-col sm:items-end">
           <VerdictBadge verdict={score?.verdict ?? null} />
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" disabled={scoring} onClick={() => onScore(posting.id)}>
-              {scoring ? t("score.scoring") : score ? t("score.again") : t("score.now")}
-            </Button>
+            {profileReady ? (
+              <Button variant="outline" size="sm" disabled={scoring} onClick={() => onScore(posting.id)}>
+                {scoring ? t("score.scoring") : score ? t("score.again") : t("score.now")}
+              </Button>
+            ) : (
+              <Link to="/profile" className={buttonClass("outline", "sm")}>
+                {t("score.needProfile")}
+              </Link>
+            )}
             <Button
               variant="ghost"
               size="sm"

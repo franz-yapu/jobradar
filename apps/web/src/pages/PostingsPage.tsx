@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
@@ -6,9 +7,11 @@ import { ErrorMessage } from "../components/ErrorMessage";
 import { ListIcon, PlusIcon } from "../components/icons";
 import { PostingFiltersBar } from "../components/PostingFiltersBar";
 import { PostingRow } from "../components/PostingRow";
-import { Button, buttonClass, Card, PageHeader } from "../components/ui";
+import { Alert, Button, buttonClass, Card, PageHeader } from "../components/ui";
 import { PAGE_SIZE, parseFilters, serializeFilters, sinceToCreatedSince } from "../lib/filters";
 import type { PostingFilters } from "../lib/filters";
+
+const NEWEST_BATCH = 10;
 
 export function PostingsPage() {
   const { t } = useTranslation();
@@ -29,6 +32,34 @@ export function PostingsPage() {
         pageSize: PAGE_SIZE,
       }),
     placeholderData: (previous) => previous,
+  });
+
+  // Scoring needs a profile. Without one the list is still shown (the catalog is shared) and the page asks for it.
+  const profile = useQuery({ queryKey: ["profile"], queryFn: () => api.getProfile() });
+  const profileReady = Boolean(profile.data);
+  const needsProfile = profile.isSuccess && profile.data === null;
+
+  const [batch, setBatch] = useState<{ done: number; total: number } | null>(null);
+  const [batchResult, setBatchResult] = useState<number | null>(null);
+  const scoreNewest = useMutation({
+    mutationFn: async () => {
+      const unscored = await api.listPostings({ verdict: "unscored", page: 1, pageSize: NEWEST_BATCH });
+      let done = 0;
+      setBatchResult(null);
+      setBatch({ done, total: unscored.items.length });
+      try {
+        for (const posting of unscored.items) {
+          await api.scorePosting(posting.id);
+          done += 1;
+          setBatch({ done, total: unscored.items.length });
+        }
+      } finally {
+        setBatchResult(done);
+        setBatch(null);
+        await queryClient.invalidateQueries({ queryKey: ["postings"] });
+      }
+      return done;
+    },
   });
 
   const score = useMutation({
@@ -53,6 +84,30 @@ export function PostingsPage() {
         }
       />
 
+      {needsProfile ? (
+        <Alert tone="info" role="status">
+          <p className="font-medium">{t("postings.profileBanner")}</p>
+          <p className="mt-1">{t("postings.profileBannerHint")}</p>
+          <Link to="/profile" className={buttonClass("primary", "sm", "mt-3")}>
+            {t("postings.profileButton")}
+          </Link>
+        </Alert>
+      ) : null}
+
+      {profileReady ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="outline" onClick={() => scoreNewest.mutate()} disabled={scoreNewest.isPending} title={t("postings.scoreNewestHint")}>
+            {batch ? t("postings.scoringProgress", { done: batch.done, total: batch.total }) : t("postings.scoreNewest")}
+          </Button>
+          {batchResult !== null && !scoreNewest.isPending && !scoreNewest.isError ? (
+            <span role="status" className="text-sm text-muted">
+              {batchResult > 0 ? t("postings.scoredCount", { count: batchResult }) : t("postings.nothingToScore")}
+            </span>
+          ) : null}
+        </div>
+      ) : null}
+      {scoreNewest.isError ? <ErrorMessage error={scoreNewest.error} /> : null}
+
       <Card>
         <PostingFiltersBar key={filters.q} filters={filters} onChange={change} />
       </Card>
@@ -73,6 +128,7 @@ export function PostingsPage() {
                     key={posting.id}
                     posting={posting}
                     scoring={score.isPending && score.variables === posting.id}
+                    profileReady={profileReady || profile.isPending}
                     scoreError={score.isError && score.variables === posting.id ? score.error : null}
                     onScore={(postingId) => score.mutate(postingId)}
                   />

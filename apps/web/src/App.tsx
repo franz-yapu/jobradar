@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router-dom";
+import { RequireAdmin } from "./auth/RequireAdmin";
 import { RequireAuth } from "./auth/RequireAuth";
 import { Layout } from "./components/Layout";
 import { AccountPage } from "./pages/AccountPage";
@@ -20,7 +21,9 @@ export function App() {
           <Route path="postings/new" element={<NewPostingPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings/account" element={<AccountPage />} />
-          <Route path="settings/tokens" element={<TokensPage />} />
+          <Route element={<RequireAdmin />}>
+            <Route path="settings/tokens" element={<TokensPage />} />
+          </Route>
           <Route path="*" element={<PostingsPage />} />
         </Route>
       </Route>
