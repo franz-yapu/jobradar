@@ -2,7 +2,7 @@ import type { z } from "zod";
 
 export const AI_PROVIDER = Symbol("AI_PROVIDER");
 
-export type AiPurpose = "scoring";
+export type AiPurpose = "scoring" | "cv_extraction";
 
 export interface AiUsage {
   inputTokens: number;

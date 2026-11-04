@@ -89,3 +89,12 @@
 - **Safety:** the E2E API empties its database, so `apps/api/e2e/server.ts` refuses to start unless the database name ends in `_test` or `_e2e`.
 - **CI:** a separate `e2e` job (Postgres service, Chromium installed) so `pnpm quality` needs no browser download.
 - **Stable test hook:** the verdict badge has `data-testid="verdict"` because its text is mixed with an icon and exact-text locators did not match.
+
+## 2026-11-04 – SDD-005 T1: CV import backend
+- **Draft, not save:** `POST /profile/import-cv` returns a `CvDraft` (profile shape plus `warnings`) and stores nothing; the candidate completes it and saves through `PUT /profile`. The draft schema is lenient (empty stack / locations allowed) because a CV may not say them.
+- **Warnings are codes** (`no_stack`, `location_missing`, `seniority_estimated`, `seniority_missing`, `english_level_missing`, `no_experience`, `no_education`, `text_truncated`), not sentences, so the UI can translate them. Amends the SDD wording (`string[]`). A test keeps the domain list equal to the shared one.
+- **Extraction is deliberately simple for the model:** nullable fields, no length limits, no field for name, email or phone. The use case does the strictness: clamps lengths and years, drops incomplete entries, derives seniority from years (<2 junior, <5 mid, <9 senior, else lead), takes the country as the only allowed location, defaults English to B1 with a warning, and scrubs emails, phone numbers (9+ digits, so year ranges survive) and LinkedIn/GitHub links from free text.
+- **PDF reading:** `pdf-parse` behind the `CvTextExtractor` port; the type is checked by content (`%PDF-`), pages are joined by us (the library's own joiner adds "-- 1 of 2 --" markers), more than 15 pages or no text layer are refused before any AI call. Text sent to the model is capped at 30 000 characters.
+- **Storage:** `candidate_profiles` gets `education`, `experience`, `languages` (Json, default `[]`) and `certifications` (text[]); the existing dev profile migrated untouched. The Prisma adapter validates the JSON with the shared Zod schemas when reading.
+- **Web safety net:** the profile screen carries the imported background along when saving, so editing the criteria never wipes it (its own editor arrives in T3).
+- **Tests:** PDFs are generated in the tests (`test/helpers/make-pdf.ts`); no real AI call.

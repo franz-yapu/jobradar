@@ -19,6 +19,35 @@ export const LocationSchema = z.string().regex(/^([A-Z]{2}|worldwide|latam)$/, {
 
 const trimmed = (max: number) => z.string().trim().min(1).max(max);
 
+const optionalYear = z.number().int().min(1950).max(2100).optional();
+
+export const EducationSchema = z.object({
+  institution: trimmed(200),
+  degree: trimmed(200),
+  field: trimmed(200).optional(),
+  startYear: optionalYear,
+  endYear: optionalYear,
+});
+export type Education = z.infer<typeof EducationSchema>;
+
+export const ExperienceSchema = z.object({
+  company: trimmed(200),
+  role: trimmed(200),
+  startYear: optionalYear,
+  /** Absent while `current` is true. */
+  endYear: optionalYear,
+  current: z.boolean().default(false),
+  highlights: z.array(trimmed(300)).max(5).default([]),
+});
+export type Experience = z.infer<typeof ExperienceSchema>;
+
+export const LanguageSkillSchema = z.object({
+  language: trimmed(60),
+  /** CEFR level (A1-C2) when stated; free text such as "native" otherwise. */
+  level: trimmed(60),
+});
+export type LanguageSkill = z.infer<typeof LanguageSkillSchema>;
+
 export const SaveProfileSchema = z.object({
   stack: z.array(trimmed(50)).min(1).max(50),
   seniority: SenioritySchema,
@@ -26,6 +55,11 @@ export const SaveProfileSchema = z.object({
   maxEnglishLevel: EnglishLevelSchema,
   excludedContractTypes: z.array(ContractTypeSchema).max(CONTRACT_TYPES.length).default([]),
   summary: z.string().trim().max(2000).default(""),
+  /** Academic and professional background; filled by the CV import or by hand. All optional. */
+  education: z.array(EducationSchema).max(10).default([]),
+  experience: z.array(ExperienceSchema).max(15).default([]),
+  languages: z.array(LanguageSkillSchema).max(10).default([]),
+  certifications: z.array(trimmed(200)).max(20).default([]),
 });
 export type SaveProfileInput = z.input<typeof SaveProfileSchema>;
 export type SaveProfileBody = z.output<typeof SaveProfileSchema>;
@@ -33,7 +67,37 @@ export type SaveProfileBody = z.output<typeof SaveProfileSchema>;
 export const ProfileSchema = SaveProfileSchema.extend({
   excludedContractTypes: z.array(ContractTypeSchema),
   summary: z.string(),
+  education: z.array(EducationSchema),
+  experience: z.array(ExperienceSchema),
+  languages: z.array(LanguageSkillSchema),
+  certifications: z.array(z.string()),
   version: z.number().int().min(1),
   updatedAt: z.iso.datetime({ offset: true }),
 });
 export type ProfileResponse = z.infer<typeof ProfileSchema>;
+
+/** Things the import could not find or had to guess; the UI translates each code. */
+export const CV_WARNINGS = [
+  "no_stack",
+  "location_missing",
+  "seniority_estimated",
+  "seniority_missing",
+  "english_level_missing",
+  "no_experience",
+  "no_education",
+  "text_truncated",
+] as const;
+export const CvWarningSchema = z.enum(CV_WARNINGS);
+export type CvWarning = z.infer<typeof CvWarningSchema>;
+
+/**
+ * Result of importing a CV: the same shape as what the profile form saves, plus warning codes. It is a draft:
+ * nothing is stored until the candidate completes it and saves the profile, so unlike `SaveProfileSchema`
+ * the stack and locations may still be empty.
+ */
+export const CvDraftSchema = SaveProfileSchema.extend({
+  stack: z.array(trimmed(50)).max(50),
+  allowedLocations: z.array(LocationSchema).max(30),
+  warnings: z.array(CvWarningSchema).default([]),
+});
+export type CvDraft = z.output<typeof CvDraftSchema>;

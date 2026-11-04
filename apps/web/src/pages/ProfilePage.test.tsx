@@ -18,6 +18,10 @@ const SAVED = {
   maxEnglishLevel: "B1",
   excludedContractTypes: ["temporary"],
   summary: "Full stack developer",
+  education: [{ institution: "UMSA", degree: "BSc" }],
+  experience: [{ company: "Acme", role: "Backend", current: true, highlights: ["Built an API"] }],
+  languages: [{ language: "English", level: "B1" }],
+  certifications: ["AWS Cloud Practitioner"],
   version: 3,
   updatedAt: "2026-11-04T10:00:00.000Z",
 };
@@ -57,6 +61,11 @@ describe("Profile page", () => {
       maxEnglishLevel: "B1",
       excludedContractTypes: ["temporary", "freelance"],
       summary: "Full stack developer",
+      // the imported background is sent back untouched, so saving here never wipes it
+      education: SAVED.education,
+      experience: SAVED.experience,
+      languages: SAVED.languages,
+      certifications: SAVED.certifications,
     });
     expect(await screen.findByRole("status")).toHaveTextContent("Profile saved (version 4).");
   });

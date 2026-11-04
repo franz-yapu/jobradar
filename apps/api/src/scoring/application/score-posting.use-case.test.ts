@@ -39,6 +39,7 @@ const saveProfile = () =>
   profiles.save({
     stack: ["TypeScript"], seniority: "senior", allowedLocations: ["BO"], maxEnglishLevel: "B2",
     excludedContractTypes: [], summary: "",
+    education: [], experience: [], languages: [], certifications: [],
   });
 
 describe("ScorePosting", () => {

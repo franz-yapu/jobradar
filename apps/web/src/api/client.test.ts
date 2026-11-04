@@ -73,6 +73,10 @@ describe("api client", () => {
       maxEnglishLevel: "B1",
       excludedContractTypes: [],
       summary: "",
+      education: [],
+      experience: [],
+      languages: [],
+      certifications: [],
       version: 1,
       updatedAt: "2026-11-04T10:00:00.000Z",
     };

@@ -7,6 +7,30 @@ export type EnglishLevel = (typeof ENGLISH_LEVELS)[number];
 export const CONTRACT_TYPES = ["temporary", "freelance", "internship", "part_time"] as const;
 export type ContractType = (typeof CONTRACT_TYPES)[number];
 
+export interface Education {
+  institution: string;
+  degree: string;
+  field?: string | undefined;
+  startYear?: number | undefined;
+  endYear?: number | undefined;
+}
+
+export interface Experience {
+  company: string;
+  role: string;
+  startYear?: number | undefined;
+  /** Absent while `current` is true. */
+  endYear?: number | undefined;
+  current: boolean;
+  highlights: string[];
+}
+
+export interface LanguageSkill {
+  language: string;
+  /** CEFR level when stated (A1-C2), free text such as "native" otherwise. */
+  level: string;
+}
+
 /** What the candidate edits. */
 export interface CandidateProfileData {
   /** Technologies, in the candidate's preferred order. Unique, case-insensitive. */
@@ -18,6 +42,11 @@ export interface CandidateProfileData {
   maxEnglishLevel: EnglishLevel;
   excludedContractTypes: ContractType[];
   summary: string;
+  /** Background used by the scoring prompt; empty until the candidate fills it in or imports a CV. */
+  education: Education[];
+  experience: Experience[];
+  languages: LanguageSkill[];
+  certifications: string[];
 }
 
 export interface CandidateProfile extends CandidateProfileData {
@@ -47,5 +76,9 @@ export function normalizeProfileData(data: CandidateProfileData): CandidateProfi
     allowedLocations: uniqueBy(data.allowedLocations, (l) => l),
     excludedContractTypes: uniqueBy(data.excludedContractTypes, (c) => c),
     summary: data.summary.trim(),
+    certifications: uniqueBy(
+      data.certifications.map((c) => c.trim()).filter(Boolean),
+      (c) => c.toLowerCase(),
+    ),
   };
 }

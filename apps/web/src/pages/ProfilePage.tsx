@@ -1,5 +1,7 @@
 import { CONTRACT_TYPES, ENGLISH_LEVELS, SaveProfileSchema, SENIORITIES } from "@jobradar/shared";
 import type { ContractType, EnglishLevel, ProfileResponse, SaveProfileInput, Seniority } from "@jobradar/shared";
+
+type Background = Pick<ProfileResponse, "education" | "experience" | "languages" | "certifications">;
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
@@ -18,6 +20,8 @@ interface FormState {
   maxEnglishLevel: EnglishLevel;
   excludedContractTypes: ContractType[];
   summary: string;
+  /** Not editable on this screen yet (the CV import fills it); carried along so saving never wipes it. */
+  background: Background;
 }
 
 const EMPTY: FormState = {
@@ -27,6 +31,7 @@ const EMPTY: FormState = {
   maxEnglishLevel: "B2",
   excludedContractTypes: [],
   summary: "",
+  background: { education: [], experience: [], languages: [], certifications: [] },
 };
 
 function fromProfile(profile: ProfileResponse): FormState {
@@ -37,6 +42,12 @@ function fromProfile(profile: ProfileResponse): FormState {
     maxEnglishLevel: profile.maxEnglishLevel,
     excludedContractTypes: profile.excludedContractTypes,
     summary: profile.summary,
+    background: {
+      education: profile.education,
+      experience: profile.experience,
+      languages: profile.languages,
+      certifications: profile.certifications,
+    },
   };
 }
 
@@ -61,12 +72,14 @@ export function ProfilePage() {
   function submit(event: FormEvent) {
     event.preventDefault();
     setProblem(null);
-    const checked = SaveProfileSchema.safeParse(form);
+    const { background, ...editable } = form;
+    const body: SaveProfileInput = { ...editable, ...background };
+    const checked = SaveProfileSchema.safeParse(body);
     if (!checked.success) {
       setProblem(checked.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "));
       return;
     }
-    save.mutate(form);
+    save.mutate(body);
   }
 
   if (query.isPending) return <p>{t("postings.loading")}</p>;

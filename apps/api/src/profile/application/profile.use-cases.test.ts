@@ -12,6 +12,10 @@ const data: CandidateProfileData = {
   maxEnglishLevel: "B2",
   excludedContractTypes: ["temporary"],
   summary: "Full stack developer",
+  education: [{ institution: "UMSA", degree: "BSc", field: "Informatics", endYear: 2013 }],
+  experience: [{ company: "Acme", role: "Backend", startYear: 2020, current: true, highlights: ["Built an API"] }],
+  languages: [{ language: "English", level: "B1" }],
+  certifications: ["AWS Cloud Practitioner"],
 };
 
 let repo: InMemoryProfileRepository;

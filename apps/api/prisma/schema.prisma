@@ -65,6 +65,11 @@ model CandidateProfile {
   maxEnglishLevel       EnglishLevel
   excludedContractTypes ContractType[]
   summary               String
+  /// Arrays of Education / Experience / LanguageSkill objects (validated by Zod in packages/shared).
+  education             Json           @default("[]")
+  experience            Json           @default("[]")
+  languages             Json           @default("[]")
+  certifications        String[]       @default([])
   version               Int
   updatedAt             DateTime       @updatedAt
 
