@@ -97,6 +97,24 @@ pnpm quality              # lint + typecheck + test (needs Postgres running)
 Integration tests use `TEST_DATABASE_URL` (falls back to `DATABASE_URL`), apply migrations themselves and **delete data** in that database,
 so point it at a throwaway database such as `jobradar_test` (created by `docker compose`).
 
+## Sign in with Google (optional)
+
+Off by default: the button only appears when the three `GOOGLE_*` variables are set. Setup takes about five minutes and costs nothing.
+
+1. Open <https://console.cloud.google.com>, create a project (e.g. `JobRadar`).
+2. **Google Auth Platform** (search for it in the top bar) → **Get started**: app name `JobRadar`, your email as support and contact email, audience **External**.
+3. **Audience** → leave it in *Testing* and add your own Gmail (and anyone who will try it) under **Test users**. Only they can sign in until you publish the app. `openid` and `email` are not sensitive scopes, so publishing later needs no Google review.
+4. **Clients** → **Create client** → type **Web application** → under **Authorized redirect URIs** add `http://localhost:3000/auth/google/callback` (add the production URL later; it must match `GOOGLE_REDIRECT_URI` exactly). **Create**, then copy the client ID and the client secret.
+5. Put them in `.env` (never in chat, never in git):
+   ```
+   GOOGLE_CLIENT_ID=<client id>
+   GOOGLE_CLIENT_SECRET=<client secret>
+   GOOGLE_REDIRECT_URI=http://localhost:3000/auth/google/callback
+   ```
+6. Restart the API. The login screen now shows **Continue with Google**.
+
+How it is secured is in `docs/adr/ADR-0003-google-sign-in.md` and `docs/security-review.md`.
+
 ## Project structure
 ```
 apps/api        NestJS API (domain / application / infrastructure)
