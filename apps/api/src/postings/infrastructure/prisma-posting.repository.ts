@@ -10,8 +10,9 @@ import {
   type VerdictFilter,
 } from "../domain/posting.repository.js";
 
-function toDomain(row: PostingRow): Posting {
-  return { ...row };
+/** Rows are always read through a `userId` filter, so the owner is known to be `userId`. */
+function toDomain(row: PostingRow, userId: string): Posting {
+  return { ...row, userId };
 }
 
 export class PrismaPostingRepository implements PostingRepository {
@@ -28,19 +29,20 @@ export class PrismaPostingRepository implements PostingRepository {
     }
   }
 
-  async findByUrl(url: string): Promise<Posting | null> {
-    const row = await this.prisma.posting.findUnique({ where: { url } });
-    return row ? toDomain(row) : null;
+  async findByUrl(userId: string, url: string): Promise<Posting | null> {
+    const row = await this.prisma.posting.findUnique({ where: { userId_url: { userId, url } } });
+    return row ? toDomain(row, userId) : null;
   }
 
-  async findById(id: string): Promise<Posting | null> {
-    const row = await this.prisma.posting.findUnique({ where: { id } });
-    return row ? toDomain(row) : null;
+  async findById(userId: string, id: string): Promise<Posting | null> {
+    const row = await this.prisma.posting.findFirst({ where: { id, userId } });
+    return row ? toDomain(row, userId) : null;
   }
 
-  async list(filter: PostingFilter): Promise<PostingPage> {
-    const verdictIds = filter.verdict === undefined ? undefined : await this.idsWithLatestVerdict(filter.verdict);
+  async list(userId: string, filter: PostingFilter): Promise<PostingPage> {
+    const verdictIds = filter.verdict === undefined ? undefined : await this.idsWithLatestVerdict(userId, filter.verdict);
     const where: Prisma.PostingWhereInput = {
+      userId,
       ...(filter.source !== undefined && { source: filter.source }),
       ...(filter.createdSince !== undefined && { createdAt: { gte: filter.createdSince } }),
       ...(verdictIds !== undefined && { id: { in: verdictIds } }),
@@ -62,32 +64,32 @@ export class PrismaPostingRepository implements PostingRepository {
       this.prisma.posting.count({ where }),
     ]);
 
-    const latest = await this.latestScores(rows.map((row) => row.id));
-    return { items: rows.map((row) => ({ ...toDomain(row), latestScore: latest.get(row.id) ?? null })), total };
+    const latest = await this.latestScores(userId, rows.map((row) => row.id));
+    return { items: rows.map((row) => ({ ...toDomain(row, userId), latestScore: latest.get(row.id) ?? null })), total };
   }
 
   /**
    * Ids whose NEWEST score has the verdict (or that have no score, for `unscored`).
    * Single-user volumes: the id list is small; revisit with a keyset query if postings reach the millions.
    */
-  private async idsWithLatestVerdict(verdict: VerdictFilter): Promise<string[]> {
+  private async idsWithLatestVerdict(userId: string, verdict: VerdictFilter): Promise<string[]> {
     const condition = verdict === "unscored" ? Prisma.sql`ls.verdict IS NULL` : Prisma.sql`ls.verdict = ${verdict}::"Verdict"`;
     const rows = await this.prisma.$queryRaw<{ id: string }[]>`
       SELECT p.id FROM postings p
       LEFT JOIN LATERAL (
         SELECT s.verdict FROM posting_scores s
-        WHERE s."postingId" = p.id
+        WHERE s."postingId" = p.id AND s."userId" = ${userId}::uuid
         ORDER BY s."createdAt" DESC, s.id DESC
         LIMIT 1
       ) ls ON true
-      WHERE ${condition}`;
+      WHERE p."userId" = ${userId}::uuid AND ${condition}`;
     return rows.map((row) => row.id);
   }
 
-  private async latestScores(postingIds: string[]): Promise<Map<string, LatestScore>> {
+  private async latestScores(userId: string, postingIds: string[]): Promise<Map<string, LatestScore>> {
     if (postingIds.length === 0) return new Map();
     const rows = await this.prisma.postingScore.findMany({
-      where: { postingId: { in: postingIds } },
+      where: { userId, postingId: { in: postingIds } },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       distinct: ["postingId"],
     });

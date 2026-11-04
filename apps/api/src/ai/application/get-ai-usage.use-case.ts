@@ -13,9 +13,9 @@ export class GetAiUsage {
     private readonly now: () => Date = () => new Date(),
   ) {}
 
-  async execute(): Promise<AiUsageReport> {
+  async execute(userId: string): Promise<AiUsageReport> {
     const dayStart = utcDayStart(this.now());
-    const totals = await this.calls.totalsSince(dayStart);
+    const totals = await this.calls.totalsSince(userId, dayStart);
     return {
       date: dayStart.toISOString().slice(0, 10),
       budgetUsd: this.dailyBudgetUsd,

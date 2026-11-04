@@ -8,11 +8,11 @@ export class CreatePosting {
     private readonly now: () => Date = () => new Date(),
   ) {}
 
-  async execute(input: NewPosting): Promise<Posting> {
+  async execute(userId: string, input: NewPosting): Promise<Posting> {
     const url = normalizeUrl(input.url);
-    if (await this.postings.findByUrl(url)) throw new DuplicatePostingError(url);
+    if (await this.postings.findByUrl(userId, url)) throw new DuplicatePostingError(url);
 
-    const posting = createPosting({ ...input, url }, this.now());
+    const posting = createPosting(userId, { ...input, url }, this.now());
     await this.postings.save(posting);
     return posting;
   }

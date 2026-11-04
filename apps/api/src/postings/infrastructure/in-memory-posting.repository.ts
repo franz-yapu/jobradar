@@ -9,12 +9,14 @@ import {
 } from "../domain/posting.repository.js";
 
 export class InMemoryPostingRepository implements PostingRepository {
+  /** Keyed by `userId|url`: the same URL may exist once per account. */
   private readonly store = new Map<string, Posting>();
   private readonly scores = new Map<string, LatestScore>();
 
   async save(posting: Posting): Promise<void> {
-    if (this.store.has(posting.url)) throw new DuplicatePostingError(posting.url);
-    this.store.set(posting.url, posting);
+    const key = `${posting.userId}|${posting.url}`;
+    if (this.store.has(key)) throw new DuplicatePostingError(posting.url);
+    this.store.set(key, posting);
   }
 
   /** Test helper: records a score; the newest `scoredAt` wins, like the real latest-score lookup. */
@@ -23,17 +25,18 @@ export class InMemoryPostingRepository implements PostingRepository {
     if (!current || score.scoredAt.getTime() >= current.scoredAt.getTime()) this.scores.set(postingId, score);
   }
 
-  async findByUrl(url: string): Promise<Posting | null> {
-    return this.store.get(url) ?? null;
+  async findByUrl(userId: string, url: string): Promise<Posting | null> {
+    return this.store.get(`${userId}|${url}`) ?? null;
   }
 
-  async findById(id: string): Promise<Posting | null> {
-    return [...this.store.values()].find((p) => p.id === id) ?? null;
+  async findById(userId: string, id: string): Promise<Posting | null> {
+    return [...this.store.values()].find((p) => p.userId === userId && p.id === id) ?? null;
   }
 
-  async list(filter: PostingFilter): Promise<PostingPage> {
+  async list(userId: string, filter: PostingFilter): Promise<PostingPage> {
     const q = filter.q?.toLowerCase();
     const matches = [...this.store.values()]
+      .filter((p) => p.userId === userId)
       .filter((p) => (filter.source === undefined ? true : p.source === filter.source))
       .filter((p) => (filter.createdSince === undefined ? true : p.createdAt >= filter.createdSince))
       .filter((p) => matchesVerdict(this.scores.get(p.id), filter.verdict))

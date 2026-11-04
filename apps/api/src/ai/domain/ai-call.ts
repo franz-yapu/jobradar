@@ -6,6 +6,7 @@ export type AiCallStatus = "ok" | "error" | "refused" | "budget_blocked";
 
 export interface AiCall {
   readonly id: string;
+  readonly userId: string;
   readonly purpose: AiPurpose;
   readonly model: string;
   readonly status: AiCallStatus;
@@ -30,7 +31,8 @@ export interface AiUsageTotals {
 
 export interface AiCallRepository {
   save(call: AiCall): Promise<void>;
-  totalsSince(since: Date): Promise<AiUsageTotals>;
+  /** Spend and tokens of ONE account since the instant (the budget is per account). */
+  totalsSince(userId: string, since: Date): Promise<AiUsageTotals>;
 }
 
 /** Start (00:00 UTC) of the day containing `date`; the budget window. */

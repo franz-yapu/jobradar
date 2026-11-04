@@ -39,7 +39,7 @@ export class MeteredAiProvider implements AiProvider {
 
   async generateStructured<T>(request: GenerateStructuredRequest<T>): Promise<AiResult<T>> {
     const startedAt = this.now();
-    const { spentUsd } = await this.calls.totalsSince(utcDayStart(startedAt));
+    const { spentUsd } = await this.calls.totalsSince(request.userId, utcDayStart(startedAt));
     if (spentUsd >= this.options.dailyBudgetUsd) {
       await this.record(request, this.inner.model, "budget_blocked", ZERO_USAGE, startedAt, "daily budget spent");
       throw new BudgetExceededError(spentUsd, this.options.dailyBudgetUsd);
@@ -73,6 +73,7 @@ export class MeteredAiProvider implements AiProvider {
     const id = randomUUID();
     await this.calls.save({
       id,
+      userId: request.userId,
       purpose: request.purpose,
       model,
       status,

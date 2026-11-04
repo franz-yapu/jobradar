@@ -10,8 +10,8 @@ export interface ListPostingsResult {
 export class ListPostings {
   constructor(private readonly postings: PostingRepository) {}
 
-  async execute(filter: PostingFilter): Promise<ListPostingsResult> {
-    const { items, total } = await this.postings.list(filter);
+  async execute(userId: string, filter: PostingFilter): Promise<ListPostingsResult> {
+    const { items, total } = await this.postings.list(userId, filter);
     return { items, page: filter.page, pageSize: filter.pageSize, total };
   }
 }

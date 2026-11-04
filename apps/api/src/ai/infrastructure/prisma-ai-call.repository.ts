@@ -8,9 +8,9 @@ export class PrismaAiCallRepository implements AiCallRepository {
     await this.prisma.aiCall.create({ data: call });
   }
 
-  async totalsSince(since: Date): Promise<AiUsageTotals> {
+  async totalsSince(userId: string, since: Date): Promise<AiUsageTotals> {
     const result = await this.prisma.aiCall.aggregate({
-      where: { createdAt: { gte: since }, status: { not: "budget_blocked" } },
+      where: { userId, createdAt: { gte: since }, status: { not: "budget_blocked" } },
       _sum: { costUsd: true, inputTokens: true, outputTokens: true },
       _count: { _all: true },
     });

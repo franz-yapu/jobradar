@@ -19,7 +19,7 @@ model Posting {
   id          String         @id @default(uuid()) @db.Uuid
   title       String
   company     String
-  url         String         @unique
+  url         String
   source      String
   location    String?
   remoteScope RemoteScope
@@ -27,7 +27,13 @@ model Posting {
   publishedAt DateTime?
   createdAt   DateTime       @default(now())
   scores      PostingScore[]
+  /// Owner (ADR-0002). Null only for rows that predate accounts; the first account adopts them.
+  userId      String?        @db.Uuid
+  user        User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  /// A posting is unique per account, not globally: two accounts may track the same URL.
+  @@unique([userId, url])
+  @@index([userId, createdAt])
   @@index([source])
   @@index([createdAt])
   @@map("postings")
@@ -72,6 +78,9 @@ model CandidateProfile {
   certifications        String[]       @default([])
   version               Int
   updatedAt             DateTime       @updatedAt
+  /// Owner (one profile per account). Null only for the legacy row, adopted by the first account.
+  userId                String?        @unique @db.Uuid
+  user                  User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("candidate_profiles")
 }
@@ -98,7 +107,11 @@ model AiCall {
   detail           String?
   createdAt        DateTime       @default(now())
   scores           PostingScore[]
+  /// Who spent it: the budget is per account. Null only for rows that predate accounts.
+  userId           String?        @db.Uuid
+  user             User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId, createdAt])
   @@index([createdAt])
   @@map("ai_calls")
 }
@@ -124,18 +137,26 @@ model PostingScore {
   aiCallId       String?  @db.Uuid
   aiCall         AiCall?  @relation(fields: [aiCallId], references: [id], onDelete: SetNull)
   createdAt      DateTime @default(now())
+  /// Owner, same as the posting's. Null only for rows that predate accounts.
+  userId         String?  @db.Uuid
+  user           User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([postingId, createdAt])
+  @@index([userId])
   @@map("posting_scores")
 }
 
 /// A person with an account (ADR-0002). Email is stored lowercase.
 model User {
-  id           String    @id @default(uuid()) @db.Uuid
-  email        String    @unique
-  passwordHash String
-  createdAt    DateTime  @default(now())
-  sessions     Session[]
+  id            String            @id @default(uuid()) @db.Uuid
+  email         String            @unique
+  passwordHash  String
+  createdAt     DateTime          @default(now())
+  sessions      Session[]
+  postings      Posting[]
+  profile       CandidateProfile?
+  postingScores PostingScore[]
+  aiCalls       AiCall[]
 
   @@map("users")
 }

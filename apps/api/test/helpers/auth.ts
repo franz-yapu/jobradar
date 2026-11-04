@@ -15,6 +15,12 @@ export async function loginAgent(app: INestApplication, email = `user-${randomUU
   return agent;
 }
 
+/** The id of the account the agent is logged in as. */
+export async function currentUserId(agent: Agent): Promise<string> {
+  const res = await agent.get("/auth/me").expect(200);
+  return (res.body as { id: string }).id;
+}
+
 /** Removes the accounts the tests created (their sessions go with them). */
 export async function removeTestUsers(app: INestApplication): Promise<void> {
   await app.get(PrismaService).user.deleteMany({ where: { email: { endsWith: TEST_DOMAIN } } });

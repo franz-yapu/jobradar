@@ -17,6 +17,8 @@ import {
   AiRefusalError,
   BudgetExceededError,
 } from "../../ai/domain/ai-provider.js";
+import type { AuthenticatedUser } from "../../auth/domain/user.js";
+import { CurrentUser } from "../../auth/infrastructure/current-user.decorator.js";
 import { toSwaggerSchema } from "../../shared/infrastructure/swagger-schema.js";
 import { ImportCv } from "../application/import-cv.use-case.js";
 import { NoTextError, NotAPdfError, TooManyPagesError } from "../domain/cv-text-extractor.js";
@@ -53,10 +55,10 @@ export class CvImportController {
   @ApiResponse({ status: 429, description: "ai_budget_exceeded" })
   @ApiResponse({ status: 502, description: "ai_provider_error" })
   @ApiResponse({ status: 503, description: "ai_not_configured" })
-  async import(@UploadedFile() file: UploadedCv | undefined): Promise<CvDraftResponse> {
+  async import(@CurrentUser() user: AuthenticatedUser, @UploadedFile() file: UploadedCv | undefined): Promise<CvDraftResponse> {
     if (!file) throw new BadRequestException('Send the CV as multipart/form-data in the "file" field');
     try {
-      return await this.importCv.execute(file.buffer);
+      return await this.importCv.execute(user.id, file.buffer);
     } catch (error) {
       throw mapImportError(error);
     }

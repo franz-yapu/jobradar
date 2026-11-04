@@ -46,11 +46,14 @@ export interface PostingPage {
   total: number;
 }
 
+/**
+ * Every read is scoped to one account (ADR-0002): a posting of another account behaves as if it did not exist.
+ */
 export interface PostingRepository {
-  /** Throws DuplicatePostingError if the URL is already stored. */
+  /** Throws DuplicatePostingError if THIS account already stored the URL. */
   save(posting: Posting): Promise<void>;
-  findByUrl(url: string): Promise<Posting | null>;
-  findById(id: string): Promise<Posting | null>;
+  findByUrl(userId: string, url: string): Promise<Posting | null>;
+  findById(userId: string, id: string): Promise<Posting | null>;
   /** Newest first (createdAt desc, id desc). */
-  list(filter: PostingFilter): Promise<PostingPage>;
+  list(userId: string, filter: PostingFilter): Promise<PostingPage>;
 }

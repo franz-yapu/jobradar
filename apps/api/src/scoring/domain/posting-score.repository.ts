@@ -11,6 +11,6 @@ export class ScoreNotFoundError extends Error {
 
 export interface PostingScoreRepository {
   save(score: PostingScore): Promise<void>;
-  /** Most recent score of the posting, or null. */
-  findLatest(postingId: string): Promise<PostingScore | null>;
+  /** Most recent score of the posting among this account's scores, or null. */
+  findLatest(userId: string, postingId: string): Promise<PostingScore | null>;
 }

@@ -48,6 +48,9 @@ function resolveProfile(profile: CaseVars["profile"]): CandidateProfileData {
   return SaveProfileSchema.parse(raw);
 }
 
+/** The evals call the raw provider (no metering, no database): the owner is a placeholder. */
+const EVAL_USER = "eval";
+
 export default class ScoringEvalProvider {
   id(): string {
     return "jobradar-scoring";
@@ -66,10 +69,12 @@ export default class ScoringEvalProvider {
     const startedAt = Date.now();
     try {
       const result = await ai.generateStructured({
+        userId: EVAL_USER,
         purpose: "scoring",
         system: buildScoringSystem({ ...profile, version: 1, updatedAt: now }),
         content: buildScoringContent({
           id: "eval",
+          userId: EVAL_USER,
           url: "https://eval.invalid",
           source: "eval",
           location: posting.location ?? null,

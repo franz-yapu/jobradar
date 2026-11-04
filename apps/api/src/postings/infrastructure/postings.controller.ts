@@ -24,6 +24,8 @@ import { CreatePosting } from "../application/create-posting.use-case.js";
 import { ListPostings } from "../application/list-postings.use-case.js";
 import { DuplicatePostingError } from "../domain/posting.repository.js";
 import { toPostingListItemResponse, toPostingResponse } from "./postings.presenter.js";
+import type { AuthenticatedUser } from "../../auth/domain/user.js";
+import { CurrentUser } from "../../auth/infrastructure/current-user.decorator.js";
 
 @ApiTags("postings")
 @Controller("postings")
@@ -40,10 +42,11 @@ export class PostingsController {
   @ApiBadRequestResponse({ description: "Invalid body" })
   @ApiConflictResponse({ description: "A posting with the same (normalized) URL already exists" })
   async create(
+    @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(CreatePostingSchema)) body: CreatePostingBody,
   ): Promise<PostingResponse> {
     try {
-      const posting = await this.createPosting.execute({
+      const posting = await this.createPosting.execute(user.id, {
         ...body,
         publishedAt: body.publishedAt ? new Date(body.publishedAt) : undefined,
       });
@@ -69,10 +72,11 @@ export class PostingsController {
   @ApiOkResponse({ schema: toSwaggerSchema(PaginatedPostingsSchema) })
   @ApiBadRequestResponse({ description: "Invalid query (e.g. unknown verdict, createdSince not ISO 8601)" })
   async list(
+    @CurrentUser() user: AuthenticatedUser,
     @Query(new ZodValidationPipe(ListPostingsQuerySchema)) query: ListPostingsQuery,
   ): Promise<PaginatedPostingsResponse> {
     const { createdSince, ...rest } = query;
-    const result = await this.listPostings.execute({
+    const result = await this.listPostings.execute(user.id, {
       ...rest,
       createdSince: createdSince ? new Date(createdSince) : undefined,
     });

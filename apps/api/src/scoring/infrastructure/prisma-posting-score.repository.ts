@@ -13,8 +13,9 @@ function toBlockers(json: unknown): Blocker[] {
   });
 }
 
-function toDomain(row: ScoreRow): PostingScore {
-  return { ...row, blockers: toBlockers(row.blockers) };
+/** Rows are always read through a `userId` filter, so the owner is known to be `userId`. */
+function toDomain(row: ScoreRow, userId: string): PostingScore {
+  return { ...row, userId, blockers: toBlockers(row.blockers) };
 }
 
 export class PrismaPostingScoreRepository implements PostingScoreRepository {
@@ -30,11 +31,11 @@ export class PrismaPostingScoreRepository implements PostingScoreRepository {
     });
   }
 
-  async findLatest(postingId: string): Promise<PostingScore | null> {
+  async findLatest(userId: string, postingId: string): Promise<PostingScore | null> {
     const row = await this.prisma.postingScore.findFirst({
-      where: { postingId },
+      where: { userId, postingId },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     });
-    return row ? toDomain(row) : null;
+    return row ? toDomain(row, userId) : null;
   }
 }

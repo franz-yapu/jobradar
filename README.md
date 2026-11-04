@@ -47,6 +47,8 @@ pnpm e2e                  # Playwright end-to-end test of the dashboard (disposa
 
 Every endpoint except `/health`, `/docs` and `/auth/register|login|logout` needs the session cookie (`jr_session`: `httpOnly`, `SameSite=Lax`, `Secure` in production, 14 days). Writes that carry an `Origin` header must come from `WEB_ORIGIN` (`403 bad_origin`). Set `ALLOW_SIGNUP=false` to close registration.
 
+Data belongs to the account that created it: postings (unique per account and URL), the profile, scores and the AI spend and daily budget. Another account's resource answers `404`, never `403`. The first account ever created adopts the rows that predate accounts.
+
 | Method | Path | Description |
 |---|---|---|
 | `POST` | `/postings` | Create a posting. `201`, `400` invalid body, `409` URL already exists (tracking params and fragments are ignored) |

@@ -98,12 +98,13 @@ export class ImportCv {
     private readonly ai: AiProvider,
   ) {}
 
-  async execute(file: Buffer): Promise<CvDraft> {
+  async execute(userId: string, file: Buffer): Promise<CvDraft> {
     const fullText = await this.extractor.extract(file);
     const truncated = fullText.length > MAX_CV_CHARS;
     const text = truncated ? fullText.slice(0, MAX_CV_CHARS) : fullText;
 
     const result = await this.ai.generateStructured({
+      userId,
       purpose: "cv_extraction",
       system: buildCvSystem(),
       content: buildCvContent(text),

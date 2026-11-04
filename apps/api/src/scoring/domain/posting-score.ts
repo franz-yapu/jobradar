@@ -12,6 +12,8 @@ export interface Blocker {
 
 export interface PostingScore {
   readonly id: string;
+  /** Same owner as the posting it scores. */
+  readonly userId: string;
   readonly postingId: string;
   readonly verdict: Verdict;
   readonly reasons: readonly string[];

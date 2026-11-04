@@ -5,6 +5,8 @@ import { InMemoryProfileRepository } from "../infrastructure/in-memory-profile.r
 import { GetProfile } from "./get-profile.use-case.js";
 import { SaveProfile } from "./save-profile.use-case.js";
 
+const USER = "user-a";
+
 const data: CandidateProfileData = {
   stack: ["TypeScript", "NestJS"],
   seniority: "senior",
@@ -30,31 +32,31 @@ beforeEach(() => {
 
 describe("GetProfile", () => {
   it("throws ProfileNotFoundError when nothing was saved", async () => {
-    await expect(get.execute()).rejects.toBeInstanceOf(ProfileNotFoundError);
+    await expect(get.execute(USER)).rejects.toBeInstanceOf(ProfileNotFoundError);
   });
 
   it("returns the saved profile", async () => {
-    await save.execute(data);
-    await expect(get.execute()).resolves.toMatchObject({ ...data, version: 1 });
+    await save.execute(USER, data);
+    await expect(get.execute(USER)).resolves.toMatchObject({ ...data, version: 1 });
   });
 });
 
 describe("SaveProfile", () => {
   it("creates the profile with version 1", async () => {
-    const profile = await save.execute(data);
+    const profile = await save.execute(USER, data);
     expect(profile).toMatchObject({ version: 1, updatedAt: new Date("2026-01-01T00:00:00Z") });
   });
 
   it("replaces the profile and increments the version on every save", async () => {
-    await save.execute(data);
-    const second = await save.execute({ ...data, seniority: "lead", stack: ["Go"] });
-    const third = await save.execute({ ...data, maxEnglishLevel: "C1" });
+    await save.execute(USER, data);
+    const second = await save.execute(USER, { ...data, seniority: "lead", stack: ["Go"] });
+    const third = await save.execute(USER, { ...data, maxEnglishLevel: "C1" });
     expect(second).toMatchObject({ version: 2, seniority: "lead", stack: ["Go"] });
     expect(third).toMatchObject({ version: 3, maxEnglishLevel: "C1", stack: data.stack });
   });
 
   it("trims and de-duplicates stack, locations and contract types", async () => {
-    const profile = await save.execute({
+    const profile = await save.execute(USER, {
       ...data,
       stack: [" TypeScript ", "typescript", "NestJS", "  "],
       allowedLocations: ["BO", "BO", "latam"],
@@ -67,5 +69,21 @@ describe("SaveProfile", () => {
       excludedContractTypes: ["temporary"],
       summary: "hello",
     });
+  });
+});
+
+describe("profiles are per account", () => {
+  it("keeps each account's profile and version apart", async () => {
+    await save.execute(USER, data);
+    await save.execute(USER, { ...data, seniority: "lead" });
+    await save.execute("user-b", { ...data, stack: ["Go"] });
+
+    await expect(get.execute(USER)).resolves.toMatchObject({ version: 2, seniority: "lead", stack: data.stack });
+    await expect(get.execute("user-b")).resolves.toMatchObject({ version: 1, stack: ["Go"] });
+  });
+
+  it("an account without a profile does not see another one's", async () => {
+    await save.execute(USER, data);
+    await expect(get.execute("user-b")).rejects.toBeInstanceOf(ProfileNotFoundError);
   });
 });

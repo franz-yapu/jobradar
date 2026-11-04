@@ -4,8 +4,8 @@ import { ProfileNotFoundError, type ProfileRepository } from "../domain/profile.
 export class GetProfile {
   constructor(private readonly profiles: ProfileRepository) {}
 
-  async execute(): Promise<CandidateProfile> {
-    const profile = await this.profiles.get();
+  async execute(userId: string): Promise<CandidateProfile> {
+    const profile = await this.profiles.get(userId);
     if (!profile) throw new ProfileNotFoundError();
     return profile;
   }

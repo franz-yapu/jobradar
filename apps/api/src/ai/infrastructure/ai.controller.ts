@@ -1,6 +1,8 @@
 import { Controller, Get, Inject } from "@nestjs/common";
 import { ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { AiUsageSchema, type AiUsageResponse } from "@jobradar/shared";
+import type { AuthenticatedUser } from "../../auth/domain/user.js";
+import { CurrentUser } from "../../auth/infrastructure/current-user.decorator.js";
 import { toSwaggerSchema } from "../../shared/infrastructure/swagger-schema.js";
 import { GetAiUsage } from "../application/get-ai-usage.use-case.js";
 
@@ -11,7 +13,7 @@ export class AiController {
 
   @Get("usage")
   @ApiOkResponse({ schema: toSwaggerSchema(AiUsageSchema), description: "AI spend and tokens for the current UTC day" })
-  usage(): Promise<AiUsageResponse> {
-    return this.getUsage.execute();
+  usage(@CurrentUser() user: AuthenticatedUser): Promise<AiUsageResponse> {
+    return this.getUsage.execute(user.id);
   }
 }

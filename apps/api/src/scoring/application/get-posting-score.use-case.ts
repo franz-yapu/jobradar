@@ -8,9 +8,9 @@ export class GetPostingScore {
     private readonly scores: PostingScoreRepository,
   ) {}
 
-  async execute(postingId: string): Promise<PostingScore> {
-    if (!(await this.postings.findById(postingId))) throw new PostingNotFoundError(postingId);
-    const score = await this.scores.findLatest(postingId);
+  async execute(userId: string, postingId: string): Promise<PostingScore> {
+    if (!(await this.postings.findById(userId, postingId))) throw new PostingNotFoundError(postingId);
+    const score = await this.scores.findLatest(userId, postingId);
     if (!score) throw new ScoreNotFoundError(postingId);
     return score;
   }

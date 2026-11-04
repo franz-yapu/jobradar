@@ -6,6 +6,8 @@ import {
   type ProfileResponse,
   type SaveProfileBody,
 } from "@jobradar/shared";
+import type { AuthenticatedUser } from "../../auth/domain/user.js";
+import { CurrentUser } from "../../auth/infrastructure/current-user.decorator.js";
 import { toSwaggerSchema } from "../../shared/infrastructure/swagger-schema.js";
 import { ZodValidationPipe } from "../../shared/infrastructure/zod-validation.pipe.js";
 import { GetProfile } from "../application/get-profile.use-case.js";
@@ -24,9 +26,9 @@ export class ProfileController {
   @Get()
   @ApiOkResponse({ schema: toSwaggerSchema(ProfileSchema) })
   @ApiNotFoundResponse({ description: "The profile has not been configured yet" })
-  async get(): Promise<ProfileResponse> {
+  async get(@CurrentUser() user: AuthenticatedUser): Promise<ProfileResponse> {
     try {
-      return toProfileResponse(await this.getProfile.execute());
+      return toProfileResponse(await this.getProfile.execute(user.id));
     } catch (error) {
       if (error instanceof ProfileNotFoundError) throw new NotFoundException(error.message);
       throw error;
@@ -38,7 +40,10 @@ export class ProfileController {
   @ApiBody({ schema: toSwaggerSchema(SaveProfileSchema, "input") })
   @ApiOkResponse({ schema: toSwaggerSchema(ProfileSchema), description: "Created or replaced; version increments" })
   @ApiBadRequestResponse({ description: "Invalid body" })
-  async put(@Body(new ZodValidationPipe(SaveProfileSchema)) body: SaveProfileBody): Promise<ProfileResponse> {
-    return toProfileResponse(await this.saveProfile.execute(body));
+  async put(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body(new ZodValidationPipe(SaveProfileSchema)) body: SaveProfileBody,
+  ): Promise<ProfileResponse> {
+    return toProfileResponse(await this.saveProfile.execute(user.id, body));
   }
 }

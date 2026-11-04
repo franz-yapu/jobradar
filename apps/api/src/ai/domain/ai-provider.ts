@@ -21,6 +21,8 @@ export const ZERO_USAGE: AiUsage = {
 };
 
 export interface GenerateStructuredRequest<T> {
+  /** Whose call this is: the daily budget and the call log are per account. */
+  userId: string;
   purpose: AiPurpose;
   /** Stable instructions (and profile). Providers may cache this part. */
   system: string;

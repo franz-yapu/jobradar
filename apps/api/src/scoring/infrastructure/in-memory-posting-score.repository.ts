@@ -8,10 +8,10 @@ export class InMemoryPostingScoreRepository implements PostingScoreRepository {
     this.scores.push(score);
   }
 
-  async findLatest(postingId: string): Promise<PostingScore | null> {
+  async findLatest(userId: string, postingId: string): Promise<PostingScore | null> {
     return (
       this.scores
-        .filter((s) => s.postingId === postingId)
+        .filter((s) => s.userId === userId && s.postingId === postingId)
         .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0] ?? null
     );
   }

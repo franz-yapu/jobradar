@@ -8,6 +8,7 @@ describe.skipIf(process.env["RUN_LIVE_AI"] !== "1")("live Anthropic call", () =>
   it("returns a schema-valid answer with tokens and cost", async () => {
     const provider = createAiProvider(loadEnv());
     const result = await provider.generateStructured({
+      userId: "live",
       purpose: "scoring",
       system: "You answer with a short JSON object.",
       content: "Is 7 an odd number?",

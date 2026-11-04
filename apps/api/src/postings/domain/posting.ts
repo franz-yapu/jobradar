@@ -5,9 +5,11 @@ export type RemoteScope = (typeof REMOTE_SCOPES)[number];
 
 export interface Posting {
   readonly id: string;
+  /** The account that owns it. Every query is scoped by this. */
+  readonly userId: string;
   readonly title: string;
   readonly company: string;
-  /** Normalized URL, unique across postings. */
+  /** Normalized URL, unique per account. */
   readonly url: string;
   readonly source: string;
   readonly location: string | null;
@@ -28,9 +30,10 @@ export interface NewPosting {
   publishedAt?: Date | undefined;
 }
 
-export function createPosting(input: NewPosting, createdAt: Date): Posting {
+export function createPosting(userId: string, input: NewPosting, createdAt: Date): Posting {
   return {
     id: randomUUID(),
+    userId,
     title: input.title,
     company: input.company,
     url: input.url,

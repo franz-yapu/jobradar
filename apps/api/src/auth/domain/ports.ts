@@ -8,7 +8,10 @@ export const TOKEN_GENERATOR = Symbol("TOKEN_GENERATOR");
 export const ATTEMPT_LIMITER = Symbol("ATTEMPT_LIMITER");
 
 export interface UserRepository {
-  /** Throws EmailTakenError when the email exists. */
+  /**
+   * Throws EmailTakenError when the email exists. The first account ever created also adopts the data that
+   * predates accounts (rows without an owner); later accounts start empty.
+   */
   create(user: User): Promise<void>;
   findByEmail(email: string): Promise<User | null>;
   findById(id: string): Promise<User | null>;

@@ -11,6 +11,7 @@ import { AnthropicAiProvider } from "./anthropic-ai.provider.js";
 
 const schema = z.object({ verdict: z.enum(["fit", "maybe", "reject"]) });
 const request: GenerateStructuredRequest<z.infer<typeof schema>> = {
+  userId: "user-a",
   purpose: "scoring",
   system: "You score postings.",
   content: "<posting>Backend dev</posting>",

@@ -2,9 +2,11 @@ import type { PostingListItemResponse, PostingResponse } from "@jobradar/shared"
 import type { Posting } from "../domain/posting.js";
 import type { PostingListItem } from "../domain/posting.repository.js";
 
+/** The owner is internal: it is never part of the API response. */
 export function toPostingResponse(posting: Posting): PostingResponse {
+  const { userId: _userId, ...visible } = posting;
   return {
-    ...posting,
+    ...visible,
     publishedAt: posting.publishedAt?.toISOString() ?? null,
     createdAt: posting.createdAt.toISOString(),
   };

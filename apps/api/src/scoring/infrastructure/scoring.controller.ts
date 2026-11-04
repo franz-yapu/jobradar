@@ -25,6 +25,8 @@ import {
   AiRefusalError,
   BudgetExceededError,
 } from "../../ai/domain/ai-provider.js";
+import type { AuthenticatedUser } from "../../auth/domain/user.js";
+import { CurrentUser } from "../../auth/infrastructure/current-user.decorator.js";
 import { PostingNotFoundError } from "../../postings/domain/posting.repository.js";
 import { ProfileNotFoundError } from "../../profile/domain/profile.repository.js";
 import { toSwaggerSchema } from "../../shared/infrastructure/swagger-schema.js";
@@ -59,9 +61,9 @@ export class ScoringController {
   @ApiResponse({ status: 429, description: "ai_budget_exceeded" })
   @ApiResponse({ status: 502, description: "ai_provider_error" })
   @ApiResponse({ status: 503, description: "ai_not_configured" })
-  async score(@Param("id", IdPipe) id: string): Promise<PostingScoreResponse> {
+  async score(@CurrentUser() user: AuthenticatedUser, @Param("id", IdPipe) id: string): Promise<PostingScoreResponse> {
     try {
-      return toPostingScoreResponse(await this.scorePosting.execute(id));
+      return toPostingScoreResponse(await this.scorePosting.execute(user.id, id));
     } catch (error) {
       throw mapScoringError(error);
     }
@@ -72,9 +74,9 @@ export class ScoringController {
   @ApiOkResponse({ schema: toSwaggerSchema(PostingScoreSchema), description: "The latest score" })
   @ApiBadRequestResponse({ description: "Malformed posting id" })
   @ApiNotFoundResponse({ description: "Unknown posting or not scored yet" })
-  async latest(@Param("id", IdPipe) id: string): Promise<PostingScoreResponse> {
+  async latest(@CurrentUser() user: AuthenticatedUser, @Param("id", IdPipe) id: string): Promise<PostingScoreResponse> {
     try {
-      return toPostingScoreResponse(await this.getPostingScore.execute(id));
+      return toPostingScoreResponse(await this.getPostingScore.execute(user.id, id));
     } catch (error) {
       throw mapScoringError(error);
     }

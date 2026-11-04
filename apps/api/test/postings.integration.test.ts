@@ -128,10 +128,12 @@ describe("GET /postings with verdicts", () => {
     await prisma.posting.update({ where: { id: res.body.id as string }, data: { createdAt } });
     return res.body.id as string;
   }
-  const addScore = (postingId: string, verdict: "fit" | "maybe" | "reject", createdAt: Date, blockers: object[] = []) =>
-    prisma.postingScore.create({
-      data: { postingId, verdict, reasons: [`why ${verdict}`], blockers, profileVersion: 1, promptVersion: "t", model: "m", createdAt },
+  const addScore = async (postingId: string, verdict: "fit" | "maybe" | "reject", createdAt: Date, blockers: object[] = []) => {
+    const { userId } = await prisma.posting.findUniqueOrThrow({ where: { id: postingId } });
+    return prisma.postingScore.create({
+      data: { postingId, userId, verdict, reasons: [`why ${verdict}`], blockers, profileVersion: 1, promptVersion: "t", model: "m", createdAt },
     });
+  };
   const t = (hour: number) => new Date(Date.UTC(2026, 10, 3, hour));
   const titles = async (query: string) => ((await http().get(`/postings?${query}`)).body.items as { title: string }[]).map((p) => p.title);
 

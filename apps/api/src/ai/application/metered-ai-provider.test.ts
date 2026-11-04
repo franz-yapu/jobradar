@@ -13,7 +13,9 @@ import { FakeAiProvider } from "../infrastructure/fake-ai.provider.js";
 import { InMemoryAiCallRepository } from "../infrastructure/in-memory-ai-call.repository.js";
 import { MeteredAiProvider } from "./metered-ai-provider.js";
 
+const USER = "user-a";
 const request: GenerateStructuredRequest<{ ok: boolean }> = {
+  userId: USER,
   purpose: "scoring",
   system: "system",
   content: "content",
@@ -43,7 +45,7 @@ function metered(budget = 1): MeteredAiProvider {
 
 function seed(costUsd: number, createdAt = new Date(clock), status: AiCall["status"] = "ok"): void {
   calls.calls.push({
-    id: crypto.randomUUID(), purpose: "scoring", model: "m", status, inputTokens: 1, outputTokens: 1,
+    id: crypto.randomUUID(), userId: USER, purpose: "scoring", model: "m", status, inputTokens: 1, outputTokens: 1,
     cacheReadTokens: 0, cacheWriteTokens: 0, latencyMs: 1, costUsd, detail: null, createdAt,
   });
 }
@@ -136,6 +138,27 @@ describe("MeteredAiProvider budget", () => {
     const provider = metered(1);
     await expect(provider.generateStructured(request)).rejects.toBeInstanceOf(BudgetExceededError);
     await expect(provider.generateStructured(request)).rejects.toBeInstanceOf(BudgetExceededError);
-    await expect(calls.totalsSince(new Date("2026-03-10T00:00:00Z"))).resolves.toMatchObject({ calls: 1, spentUsd: 1 });
+    await expect(calls.totalsSince(USER, new Date("2026-03-10T00:00:00Z"))).resolves.toMatchObject({ calls: 1, spentUsd: 1 });
+  });
+
+  it("keeps the budget per account: one account spending it all does not block another", async () => {
+    seed(1); // user-a is at its limit
+    await expect(metered(1).generateStructured(request)).rejects.toBeInstanceOf(BudgetExceededError);
+
+    fake.willReturn({ ok: true }, usage);
+    await expect(metered(1).generateStructured({ ...request, userId: "user-b" })).resolves.toBeDefined();
+  });
+
+  it("logs every call under the account that made it", async () => {
+    fake.willReturn({ ok: true }, usage).willReturn({ ok: true }, usage);
+    await metered(1).generateStructured(request);
+    await metered(1).generateStructured({ ...request, userId: "user-b" });
+    expect(calls.calls.map((c) => c.userId)).toEqual([USER, "user-b"]);
+  });
+
+  it("logs a budget block under the account that was blocked", async () => {
+    seed(1);
+    await expect(metered(1).generateStructured(request)).rejects.toBeInstanceOf(BudgetExceededError);
+    expect(calls.calls.at(-1)).toMatchObject({ status: "budget_blocked", userId: USER });
   });
 });

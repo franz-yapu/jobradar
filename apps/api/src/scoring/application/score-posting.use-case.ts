@@ -24,13 +24,14 @@ export class ScorePosting {
     private readonly now: () => Date = () => new Date(),
   ) {}
 
-  async execute(postingId: string): Promise<PostingScore> {
-    const posting = await this.postings.findById(postingId);
+  async execute(userId: string, postingId: string): Promise<PostingScore> {
+    const posting = await this.postings.findById(userId, postingId);
     if (!posting) throw new PostingNotFoundError(postingId);
-    const profile = await this.profiles.get();
+    const profile = await this.profiles.get(userId);
     if (!profile) throw new ProfileNotFoundError();
 
     const result = await this.ai.generateStructured({
+      userId,
       purpose: "scoring",
       system: buildScoringSystem(profile),
       content: buildScoringContent(posting),
@@ -39,6 +40,7 @@ export class ScorePosting {
 
     const score: PostingScore = {
       id: randomUUID(),
+      userId,
       postingId: posting.id,
       verdict: enforceVerdictInvariant(result.data.verdict, result.data.blockers),
       reasons: result.data.reasons,

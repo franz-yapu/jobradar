@@ -6,8 +6,6 @@ import type { PrismaService } from "../../shared/infrastructure/prisma/prisma.se
 import type { CandidateProfile, CandidateProfileData } from "../domain/candidate-profile.js";
 import type { ProfileRepository } from "../domain/profile.repository.js";
 
-const PROFILE_ID = "default";
-
 /** Json columns store plain data: drops `undefined` fields and gives Prisma a JSON-typed value. */
 function toJson<T>(value: T[]): InputJsonValue {
   return JSON.parse(JSON.stringify(value)) as InputJsonValue;
@@ -23,7 +21,7 @@ function toRow(data: CandidateProfileData) {
 }
 
 function toDomain(row: ProfileRow): CandidateProfile {
-  const { id: _id, ...profile } = row;
+  const { id: _id, userId: _userId, ...profile } = row;
   return {
     ...profile,
     education: z.array(EducationSchema).parse(row.education),
@@ -36,15 +34,15 @@ function toDomain(row: ProfileRow): CandidateProfile {
 export class PrismaProfileRepository implements ProfileRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async get(): Promise<CandidateProfile | null> {
-    const row = await this.prisma.candidateProfile.findUnique({ where: { id: PROFILE_ID } });
+  async get(userId: string): Promise<CandidateProfile | null> {
+    const row = await this.prisma.candidateProfile.findUnique({ where: { userId } });
     return row ? toDomain(row) : null;
   }
 
-  async save(data: CandidateProfileData): Promise<CandidateProfile> {
+  async save(userId: string, data: CandidateProfileData): Promise<CandidateProfile> {
     const row = await this.prisma.candidateProfile.upsert({
-      where: { id: PROFILE_ID },
-      create: { id: PROFILE_ID, ...toRow(data), version: 1 },
+      where: { userId },
+      create: { id: userId, userId, ...toRow(data), version: 1 },
       update: { ...toRow(data), version: { increment: 1 } },
     });
     return toDomain(row);
