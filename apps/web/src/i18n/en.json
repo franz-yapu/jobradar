@@ -140,6 +140,7 @@
     "save": "Save profile",
     "saving": "Saving…",
     "saved": "Profile saved (version {{version}}).",
+    "problems": {"stack": "Add at least one technology to your stack.", "allowedLocations": "Add at least one allowed location (a country, “LATAM” or “Worldwide”).", "other": "{{path}}: {{message}}"},
     "invalid": "Check the profile: {{message}}",
     "invalidLocation": "Use a country code like BO, or latam / worldwide.",
     "seniorities": {

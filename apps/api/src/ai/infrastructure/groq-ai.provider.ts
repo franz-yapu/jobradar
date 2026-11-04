@@ -49,7 +49,7 @@ export class GroqAiProvider implements AiProvider {
         `No price known for model "${model}" (prices as of ${PRICES_AS_OF}); add it to ai/infrastructure/pricing.ts`,
       );
     }
-    this.maxTokens = options.maxTokens ?? 4000;
+    this.maxTokens = options.maxTokens ?? 8000;
     this.timeoutMs = options.timeoutMs ?? 60_000;
     this.fetchFn = options.fetch ?? fetch;
     this.url = options.url ?? GROQ_URL;

@@ -140,6 +140,7 @@
     "save": "Guardar perfil",
     "saving": "Guardando…",
     "saved": "Perfil guardado (versión {{version}}).",
+    "problems": {"stack": "Añade al menos una tecnología a tu stack.", "allowedLocations": "Añade al menos una ubicación permitida (un país, «LATAM» o «Worldwide»).", "other": "{{path}}: {{message}}"},
     "invalid": "Revisa el perfil: {{message}}",
     "invalidLocation": "Usa un código de país como BO, o latam / worldwide.",
     "seniorities": {

@@ -90,7 +90,7 @@ describe("Profile page", () => {
     renderApp({ route: "/profile", language: "es" });
     expect(await screen.findByText(/Todavía no hay perfil/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Guardar perfil" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Revisa el perfil");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Añade al menos una ubicación permitida");
     expect(saveProfile).not.toHaveBeenCalled();
   });
 

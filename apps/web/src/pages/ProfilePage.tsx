@@ -60,7 +60,12 @@ export function ProfilePage() {
     const body = toSaveBody(form);
     const checked = SaveProfileSchema.safeParse(body);
     if (!checked.success) {
-      setProblem(checked.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "));
+      setProblem(
+        [...new Set(checked.error.issues.map((issue) => {
+          const field = String(issue.path[0] ?? "");
+          return t([`profile.problems.${field}`, "profile.problems.other"], { path: issue.path.join("."), message: issue.message });
+        }))].join(" "),
+      );
       return;
     }
     save.mutate(body);
@@ -172,7 +177,7 @@ export function ProfilePage() {
           />
         </Card>
 
-        {problem ? <Alert tone="danger">{t("profile.invalid", { message: problem })}</Alert> : null}
+        {problem ? <Alert tone="danger">{problem}</Alert> : null}
         {save.isError ? <ErrorMessage error={save.error} /> : null}
         {save.isSuccess ? (
           <Alert tone="success" role="status">

@@ -106,7 +106,7 @@ describe("CV import on the profile screen", () => {
     await chooseAndRead(pdf(), user);
     await screen.findByText("TypeScript");
     await user.click(screen.getByRole("button", { name: "Save profile" }));
-    expect(await screen.findByText(/Check the profile/)).toBeInTheDocument();
+    expect(await screen.findByText(/Add at least one allowed location/)).toBeInTheDocument();
     expect(saveProfile).not.toHaveBeenCalled();
   });
 

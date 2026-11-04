@@ -21,8 +21,12 @@ let prisma: PrismaService;
 const http = () => request(configured.getHttpServer());
 
 beforeAll(async () => {
+  // A developer's real .env may have Google set up; this app must start without it.
+  const saved = ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI"].map((key) => [key, process.env[key]] as const);
+  for (const [key] of saved) Reflect.deleteProperty(process.env, key);
   unconfigured = (await Test.createTestingModule({ imports: [AppModule] }).compile()).createNestApplication();
   await unconfigured.init();
+  for (const [key, value] of saved) if (value !== undefined) process.env[key] = value;
   configured = (
     await Test.createTestingModule({ imports: [AppModule] })
       .overrideProvider(IDENTITY_PROVIDER)
