@@ -19,8 +19,8 @@ const EXTRACTION = {
   countryOfResidence: "BO",
   englishLevel: "B1",
   summary: "Full stack developer",
-  education: [{ institution: "UMSA", degree: "BSc", field: "Informatics", startYear: 2008, endYear: 2013 }],
-  experience: [{ company: "Acme", role: "Backend", startYear: 2020, endYear: null, current: true, highlights: ["Built an API"] }],
+  education: [{ institution: "UMSA", degree: "BSc", field: "Informatics", startYear: 2008, startMonth: null, endYear: 2013, endMonth: null }],
+  experience: [{ company: "Acme", role: "Backend", startYear: 2020, startMonth: 3, endYear: null, endMonth: null, current: true, highlights: ["Built an API"] }],
   languages: [{ language: "English", level: "B1" }],
   certifications: ["AWS Cloud Practitioner"],
 };
@@ -63,11 +63,11 @@ describe("POST /profile/import-cv", () => {
     expect(res.body).toMatchObject({
       stack: ["TypeScript", "NestJS"],
       seniority: "senior",
-      allowedLocations: ["BO"],
+      allowedLocations: ["BO", "latam"],
       maxEnglishLevel: "B1",
-      warnings: ["seniority_estimated"],
+      warnings: ["locations_suggested", "seniority_estimated"],
     });
-    expect(res.body.experience[0]).toMatchObject({ company: "Acme", current: true });
+    expect(res.body.experience[0]).toMatchObject({ company: "Acme", current: true, startYear: 2020, startMonth: 3 });
     expect(await prisma.candidateProfile.count()).toBe(0);
     // the text of the PDF reached the model, as content and not as instructions
     expect(fake.requests[0]?.content).toContain("TypeScript, NestJS");

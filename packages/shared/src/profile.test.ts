@@ -74,3 +74,32 @@ describe("CvDraftSchema", () => {
     expect(SaveProfileSchema.safeParse(incomplete).success).toBe(false);
   });
 });
+
+describe("months in experience and education", () => {
+  const job = { company: "Acme", role: "Dev", current: false, highlights: [] };
+  const parse = (experience: unknown[]) => SaveProfileSchema.safeParse({ ...valid, experience });
+
+  it("accepts a range with months and one without (older profiles)", () => {
+    expect(parse([{ ...job, startYear: 2020, startMonth: 3, endYear: 2022, endMonth: 6 }]).success).toBe(true);
+    expect(parse([{ ...job, startYear: 2020, endYear: 2022 }]).success).toBe(true);
+  });
+
+  it("rejects an end before the start, a month out of range, and a month without a year", () => {
+    expect(parse([{ ...job, startYear: 2022, startMonth: 5, endYear: 2022, endMonth: 4 }]).success).toBe(false);
+    expect(parse([{ ...job, startYear: 2022, endYear: 2020 }]).success).toBe(false);
+    expect(parse([{ ...job, startYear: 2020, startMonth: 13 }]).success).toBe(false);
+    expect(parse([{ ...job, startMonth: 5 }]).success).toBe(false);
+  });
+
+  it("allows the same month for start and end, and an open current job", () => {
+    expect(parse([{ ...job, startYear: 2022, startMonth: 5, endYear: 2022, endMonth: 5 }]).success).toBe(true);
+    expect(parse([{ ...job, current: true, startYear: 2023, startMonth: 1 }]).success).toBe(true);
+  });
+
+  it("applies the same rule to education", () => {
+    const study = { institution: "UMSA", degree: "BSc" };
+    const edu = (extra: object) => SaveProfileSchema.safeParse({ ...valid, education: [{ ...study, ...extra }] }).success;
+    expect(edu({ startYear: 2010, startMonth: 3, endYear: 2015, endMonth: 12 })).toBe(true);
+    expect(edu({ startYear: 2015, endYear: 2010 })).toBe(false);
+  });
+});

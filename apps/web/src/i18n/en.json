@@ -166,6 +166,8 @@
       "warnings": {
         "no_stack": "No technologies were found: add your stack.",
         "location_missing": "No country was found: add where you can work from.",
+        "locations_suggested": "The allowed locations were suggested from your country: review them.",
+        "dates_incomplete": "Some dates could not be read or were contradictory: check the dates of your jobs and studies.",
         "seniority_estimated": "Seniority was estimated from your years of experience.",
         "seniority_missing": "Your years of experience could not be worked out: choose your seniority.",
         "english_level_missing": "No English level was found: B1 was assumed, set the right one.",

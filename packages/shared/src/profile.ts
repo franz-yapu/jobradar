@@ -20,25 +20,48 @@ export const LocationSchema = z.string().regex(/^([A-Z]{2}|worldwide|latam)$/, {
 const trimmed = (max: number) => z.string().trim().min(1).max(max);
 
 const optionalYear = z.number().int().min(1950).max(2100).optional();
+const optionalMonth = z.number().int().min(1).max(12).optional();
+
+interface Span {
+  startYear?: number | undefined;
+  startMonth?: number | undefined;
+  endYear?: number | undefined;
+  endMonth?: number | undefined;
+}
+
+/** A month only makes sense with its year, and the end cannot come before the start. */
+function spanIsConsistent(span: Span): boolean {
+  if (span.startMonth !== undefined && span.startYear === undefined) return false;
+  if (span.endMonth !== undefined && span.endYear === undefined) return false;
+  if (span.startYear === undefined || span.endYear === undefined) return true;
+  const start = span.startYear * 12 + (span.startMonth ?? 1);
+  const end = span.endYear * 12 + (span.endMonth ?? 12);
+  return end >= start;
+}
+const SPAN_MESSAGE = { message: "The end date cannot be before the start date, and a month needs its year" };
 
 export const EducationSchema = z.object({
   institution: trimmed(200),
   degree: trimmed(200),
   field: trimmed(200).optional(),
   startYear: optionalYear,
+  startMonth: optionalMonth,
   endYear: optionalYear,
-});
+  endMonth: optionalMonth,
+}).refine(spanIsConsistent, SPAN_MESSAGE);
 export type Education = z.infer<typeof EducationSchema>;
 
 export const ExperienceSchema = z.object({
   company: trimmed(200),
   role: trimmed(200),
   startYear: optionalYear,
+  startMonth: optionalMonth,
   /** Absent while `current` is true. */
   endYear: optionalYear,
+  endMonth: optionalMonth,
   current: z.boolean().default(false),
   highlights: z.array(trimmed(300)).max(5).default([]),
-});
+}).refine((job) => (job.current ? true : spanIsConsistent(job)) && (!job.current || spanIsConsistent({ ...job, endYear: undefined, endMonth: undefined })), SPAN_MESSAGE);
 export type Experience = z.infer<typeof ExperienceSchema>;
 
 export const LanguageSkillSchema = z.object({
@@ -86,6 +109,8 @@ export const CV_WARNINGS = [
   "no_experience",
   "no_education",
   "text_truncated",
+  "locations_suggested",
+  "dates_incomplete",
 ] as const;
 export const CvWarningSchema = z.enum(CV_WARNINGS);
 export type CvWarning = z.infer<typeof CvWarningSchema>;

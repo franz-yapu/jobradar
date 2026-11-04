@@ -23,13 +23,15 @@ const COMPLETE = {
   countryOfResidence: "bo",
   englishLevel: "B1",
   summary: "Backend developer. Contact: jane@example.com, +591 70000000.",
-  education: [{ institution: "UMSA", degree: "BSc", field: "Informatics", startYear: 2008, endYear: 2013 }],
+  education: [{ institution: "UMSA", degree: "BSc", field: "Informatics", startYear: 2008, startMonth: null, endYear: 2013, endMonth: null }],
   experience: [
     {
       company: "Acme",
       role: "Backend Developer",
       startYear: 2020,
+      startMonth: 3,
       endYear: 2024,
+      endMonth: 6,
       current: true,
       highlights: ["Built an API", "Reach me at jane@example.com"],
     },
@@ -56,15 +58,52 @@ describe("ImportCv", () => {
     expect(draft.stack).toEqual(["Node.js", "TypeScript", "PostgreSQL"]);
     expect(draft).toMatchObject({
       seniority: "senior",
-      allowedLocations: ["BO"],
+      allowedLocations: ["BO", "latam"],
       maxEnglishLevel: "B1",
       excludedContractTypes: [],
       certifications: ["AWS Cloud Practitioner"],
     });
-    expect(draft.warnings).toEqual(["seniority_estimated"]);
+    expect(draft.warnings).toEqual(["locations_suggested", "seniority_estimated"]);
     expect(draft.education[0]).toMatchObject({ institution: "UMSA", degree: "BSc", field: "Informatics", endYear: 2013 });
     // a current role has no end year, even if the model gave one
-    expect(draft.experience[0]).toMatchObject({ company: "Acme", current: true, endYear: undefined });
+    expect(draft.experience[0]).toMatchObject({ company: "Acme", current: true, startYear: 2020, startMonth: 3, endYear: undefined, endMonth: undefined });
+  });
+
+  it("keeps months with their years and drops impossible ones or ranges", async () => {
+    const job = { company: "Acme", role: "Dev", current: false, highlights: [] };
+    ai.willReturn({
+      ...COMPLETE,
+      education: [],
+      experience: [
+        { ...job, startYear: 2019, startMonth: 11, endYear: 2021, endMonth: 2 },
+        { ...job, company: "Bad month", startYear: 2018, startMonth: 13, endYear: 2019, endMonth: null },
+        { ...job, company: "Month without year", startYear: null, startMonth: 5, endYear: null, endMonth: null },
+        { ...job, company: "Backwards", startYear: 2022, startMonth: 5, endYear: 2020, endMonth: 1 },
+      ],
+    });
+    const draft = await importCv.execute(USER, Buffer.from("pdf"));
+    expect(draft.experience[0]).toMatchObject({ startYear: 2019, startMonth: 11, endYear: 2021, endMonth: 2 });
+    expect(draft.experience[1]).toMatchObject({ startYear: 2018, startMonth: undefined, endYear: 2019 });
+    expect(draft.experience[2]).toMatchObject({ startYear: undefined, startMonth: undefined });
+    expect(draft.experience[3]).toMatchObject({ startYear: 2022, startMonth: 5, endYear: undefined, endMonth: undefined });
+    expect(draft.warnings).toContain("dates_incomplete");
+  });
+
+  it("proposes the country plus LatAm as suggested locations, and says nothing is invented without a country", async () => {
+    ai.willReturn(COMPLETE);
+    const withCountry = await importCv.execute(USER, Buffer.from("pdf"));
+    expect(withCountry.allowedLocations).toEqual(["BO", "latam"]);
+    expect(withCountry.warnings).toContain("locations_suggested");
+    expect(withCountry.warnings).not.toContain("location_missing");
+  });
+
+  it("asks the model for months, for every entry, and never for contact data", async () => {
+    ai.willReturn(COMPLETE);
+    await importCv.execute(USER, Buffer.from("pdf"));
+    const system = ai.requests[0]?.system ?? "";
+    expect(system).toContain("Months are integers 1-12");
+    expect(system).toContain("Fill every field the CV supports");
+    expect(system).toContain("Do NOT output the candidate's name");
   });
 
   it("removes contact data that slipped into free text", async () => {
@@ -139,10 +178,10 @@ describe("ImportCv", () => {
     ai.willReturn({
       ...COMPLETE,
       education: [
-        { institution: "", degree: "BSc", field: null, startYear: null, endYear: null },
-        { institution: "UMSA", degree: "BSc", field: null, startYear: 1800, endYear: 2013 },
+        { institution: "", degree: "BSc", field: null, startYear: null, startMonth: null, endYear: null, endMonth: null },
+        { institution: "UMSA", degree: "BSc", field: null, startYear: 1800, startMonth: null, endYear: 2013, endMonth: null },
       ],
-      experience: [{ company: "Acme", role: "", startYear: null, endYear: null, current: false, highlights: [] }],
+      experience: [{ company: "Acme", role: "", startYear: null, startMonth: null, endYear: null, endMonth: null, current: false, highlights: [] }],
     });
     const draft = await importCv.execute(USER, Buffer.from("pdf"));
     expect(draft.education).toHaveLength(1);

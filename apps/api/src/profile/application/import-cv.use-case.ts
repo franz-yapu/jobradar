@@ -31,6 +31,36 @@ function validYear(year: number | null): number | undefined {
   return year !== null && Number.isInteger(year) && year >= 1950 && year <= 2100 ? year : undefined;
 }
 
+function validMonth(month: number | null, year: number | undefined): number | undefined {
+  return year !== undefined && month !== null && Number.isInteger(month) && month >= 1 && month <= 12 ? month : undefined;
+}
+
+interface Span {
+  startYear: number | undefined;
+  startMonth: number | undefined;
+  endYear: number | undefined;
+  endMonth: number | undefined;
+}
+
+/** Years and months from the model, cleaned. An end before the start is dropped and reported. */
+function toSpan(item: { startYear: number | null; startMonth: number | null; endYear: number | null; endMonth: number | null }, open: boolean): { span: Span; incomplete: boolean } {
+  const startYear = validYear(item.startYear);
+  const startMonth = validMonth(item.startMonth, startYear);
+  let endYear = open ? undefined : validYear(item.endYear);
+  let endMonth = validMonth(item.endMonth, endYear);
+  let incomplete = startYear === undefined;
+  if (startYear !== undefined && endYear !== undefined) {
+    const start = startYear * 12 + (startMonth ?? 1);
+    const end = endYear * 12 + (endMonth ?? 12);
+    if (end < start) {
+      endYear = undefined;
+      endMonth = undefined;
+      incomplete = true;
+    }
+  }
+  return { span: { startYear, startMonth, endYear, endMonth }, incomplete };
+}
+
 function uniqueCaseInsensitive(values: string[]): string[] {
   const seen = new Set<string>();
   return values.filter((value) => {
@@ -48,35 +78,35 @@ function seniorityFromYears(years: number): Seniority {
   return "lead";
 }
 
-function toEducation(items: CvExtraction["education"]): Education[] {
+function toEducation(items: CvExtraction["education"], flags: { incomplete: boolean }): Education[] {
   return items
     .map((item): Education => {
       const field = clean(item.field ?? "", 200);
-      return {
-        institution: clean(item.institution, 200),
-        degree: clean(item.degree, 200),
-        ...(field ? { field } : {}),
-        startYear: validYear(item.startYear),
-        endYear: validYear(item.endYear),
-      };
+      const { span, incomplete } = toSpan(item, false);
+      // a study with no start date is common; only a contradictory range counts as a problem
+      if (incomplete && span.startYear !== undefined) flags.incomplete = true;
+      return { institution: clean(item.institution, 200), degree: clean(item.degree, 200), ...(field ? { field } : {}), ...span };
     })
     .filter((item) => item.institution && item.degree)
     .slice(0, 10);
 }
 
-function toExperience(items: CvExtraction["experience"]): Experience[] {
+function toExperience(items: CvExtraction["experience"], flags: { incomplete: boolean }): Experience[] {
   return items
-    .map((item): Experience => ({
-      company: clean(item.company, 200),
-      role: clean(item.role, 200),
-      startYear: validYear(item.startYear),
-      endYear: item.current ? undefined : validYear(item.endYear),
-      current: item.current,
-      highlights: item.highlights
-        .map((highlight) => clean(highlight, 300))
-        .filter(Boolean)
-        .slice(0, 5),
-    }))
+    .map((item): Experience => {
+      const { span, incomplete } = toSpan(item, item.current);
+      if (incomplete) flags.incomplete = true;
+      return {
+        company: clean(item.company, 200),
+        role: clean(item.role, 200),
+        ...span,
+        current: item.current,
+        highlights: item.highlights
+          .map((highlight) => clean(highlight, 300))
+          .filter(Boolean)
+          .slice(0, 5),
+      };
+    })
     .filter((item) => item.company && item.role)
     .slice(0, 15);
 }
@@ -120,8 +150,10 @@ export class ImportCv {
     if (stack.length === 0) warnings.push("no_stack");
 
     const country = data.countryOfResidence?.trim().toUpperCase() ?? "";
-    const allowedLocations = /^[A-Z]{2}$/.test(country) ? [country] : [];
-    if (allowedLocations.length === 0) warnings.push("location_missing");
+    // Where the candidate may work is a preference, not a CV fact: with a country we propose it plus LatAm
+    // and say so, so the candidate reviews it.
+    const allowedLocations = /^[A-Z]{2}$/.test(country) ? [country, "latam"] : [];
+    warnings.push(allowedLocations.length === 0 ? "location_missing" : "locations_suggested");
 
     let seniority: Seniority = "mid";
     if (data.yearsOfExperience !== null && data.yearsOfExperience >= 0) {
@@ -133,8 +165,10 @@ export class ImportCv {
 
     if (data.englishLevel === null) warnings.push("english_level_missing");
 
-    const education = toEducation(data.education);
-    const experience = toExperience(data.experience);
+    const flags = { incomplete: false };
+    const education = toEducation(data.education, flags);
+    const experience = toExperience(data.experience, flags);
+    if (flags.incomplete) warnings.push("dates_incomplete");
     if (experience.length === 0) warnings.push("no_experience");
     if (education.length === 0) warnings.push("no_education");
     if (truncated) warnings.push("text_truncated");

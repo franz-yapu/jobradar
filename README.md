@@ -118,7 +118,8 @@ architecture decisions live in `docs/adr/`, and Claude Code follows the rules an
 - [x] Week 4a – Web dashboard (list, filters, scoring, manual paste, profile, EN/ES, Playwright E2E)
 - [x] Week 4b – CV import from a PDF and admin-style interface (SDD-005)
 - [x] Week 4c – Accounts / SaaS: per-account data, login/register, API tokens, two-account E2E (SDD-006, see `docs/security-review.md`)
-- [ ] Week 4d – AWS deploy with Terraform, Grafana (SDD-007), live demo
+- [ ] Week 4d – Profile assist and token guide (SDD-007), Google sign-in (SDD-008)
+- [ ] Week 4e – AWS deploy with Terraform, Grafana (SDD-009), live demo
 
 ## Author
 Franz Yapu – Full Stack Developer · [Portfolio](https://franz-yapu.github.io) · [LinkedIn](https://linkedin.com/in/franz-jhonny-yapu-mamani-bab89018a)

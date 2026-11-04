@@ -10,6 +10,8 @@ export const CV_WARNINGS = [
   "no_experience",
   "no_education",
   "text_truncated",
+  "locations_suggested",
+  "dates_incomplete",
 ] as const;
 export type CvWarning = (typeof CV_WARNINGS)[number];
 

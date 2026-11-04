@@ -166,6 +166,8 @@
       "warnings": {
         "no_stack": "No se encontraron tecnologías: añade tu stack.",
         "location_missing": "No se encontró el país: añade desde dónde puedes trabajar.",
+        "locations_suggested": "Las ubicaciones permitidas se sugirieron a partir de tu país: revísalas.",
+        "dates_incomplete": "Algunas fechas no se pudieron leer o eran contradictorias: revisa las fechas de tus trabajos y estudios.",
         "seniority_estimated": "El seniority se estimó con tus años de experiencia.",
         "seniority_missing": "No se pudieron calcular tus años de experiencia: elige tu seniority.",
         "english_level_missing": "No se encontró el nivel de inglés: se asumió B1, indica el correcto.",

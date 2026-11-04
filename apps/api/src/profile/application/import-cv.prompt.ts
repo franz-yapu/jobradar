@@ -2,9 +2,10 @@ import { z } from "zod";
 import { ENGLISH_LEVELS } from "../domain/candidate-profile.js";
 
 /** Bump on every change to the instructions below. */
-export const CV_PROMPT_VERSION = "cv-v1";
+export const CV_PROMPT_VERSION = "cv-v2";
 
 const year = z.number().int().nullable();
+const month = z.number().int().nullable();
 
 /**
  * Closed schema for the model's answer. It is deliberately plain (nullable instead of optional, no length
@@ -23,7 +24,9 @@ export const CvExtractionSchema = z.object({
       degree: z.string(),
       field: z.string().nullable(),
       startYear: year,
+      startMonth: month,
       endYear: year,
+      endMonth: month,
     }),
   ),
   experience: z.array(
@@ -31,7 +34,9 @@ export const CvExtractionSchema = z.object({
       company: z.string(),
       role: z.string(),
       startYear: year,
+      startMonth: month,
       endYear: year,
+      endMonth: month,
       current: z.boolean(),
       highlights: z.array(z.string()),
     }),
@@ -66,7 +71,10 @@ export function buildCvSystem(): string {
     "  present role (then endYear is null), up to 5 short factual `highlights` each.",
     "- languages: every spoken language with its stated level, as written in the CV.",
     "- certifications: named certifications and courses.",
-    "- Years are 4-digit integers or null.",
+    "- Years are 4-digit integers or null. Months are integers 1-12 (January = 1) or null: give the month",
+    "  only when the CV states it (\"Mar 2021\", \"03/2021\"); never guess it from a bare year.",
+    "- Fill every field the CV supports: every job and study with its dates, every language, every",
+    "  certification. Do not stop at the most recent entries.",
   ].join("\n");
 }
 

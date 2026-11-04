@@ -12,15 +12,20 @@ export interface Education {
   degree: string;
   field?: string | undefined;
   startYear?: number | undefined;
+  startMonth?: number | undefined;
   endYear?: number | undefined;
+  endMonth?: number | undefined;
 }
 
 export interface Experience {
   company: string;
   role: string;
   startYear?: number | undefined;
+  /** 1-12; only with `startYear`. */
+  startMonth?: number | undefined;
   /** Absent while `current` is true. */
   endYear?: number | undefined;
+  endMonth?: number | undefined;
   current: boolean;
   highlights: string[];
 }
