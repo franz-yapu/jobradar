@@ -9,3 +9,8 @@ export function setupSwagger(app: INestApplication): void {
     .build();
   SwaggerModule.setup("docs", app, SwaggerModule.createDocument(app, config));
 }
+
+/** Browsers may call the API only from the configured origins (never a wildcard). */
+export function setupCors(app: INestApplication, allowedOrigins: string[]): void {
+  app.enableCors({ origin: allowedOrigins, methods: ["GET", "POST", "PUT", "OPTIONS"], maxAge: 600 });
+}

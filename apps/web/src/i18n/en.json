@@ -1,0 +1,19 @@
+{
+  "app": { "name": "JobRadar", "tagline": "Job postings scored against your profile" },
+  "nav": { "postings": "Postings", "add": "Add posting", "profile": "Profile" },
+  "language": { "label": "Language", "en": "English", "es": "Español" },
+  "verdict": { "fit": "Fit", "maybe": "Maybe", "reject": "Reject", "unscored": "Not scored" },
+  "postings": {
+    "title": "Postings",
+    "empty": "No postings yet.",
+    "total": "{{count}} postings",
+    "loading": "Loading…"
+  },
+  "comingSoon": "This screen is coming next.",
+  "errors": {
+    "network_error": "The API is unreachable. Is it running?",
+    "contract": "The API answered with an unexpected format.",
+    "generic": "Something went wrong.",
+    "retry": "Retry"
+  }
+}

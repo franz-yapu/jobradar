@@ -36,7 +36,7 @@ cp .env.example .env
 docker compose up -d      # postgres, n8n, grafana
 pnpm install
 pnpm db:deploy            # apply Prisma migrations to the dev database
-pnpm dev                  # API on http://localhost:3000 (web dashboard arrives in SDD-004)
+pnpm dev                  # API on http://localhost:3000 and web dashboard on http://localhost:5173
 ```
 - Swagger UI: <http://localhost:3000/docs> · Health: <http://localhost:3000/health>
 - If a host port is already taken, change `POSTGRES_PORT`, `N8N_PORT` or `GRAFANA_PORT` in `.env`

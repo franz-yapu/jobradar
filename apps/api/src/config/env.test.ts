@@ -15,3 +15,14 @@ describe("loadEnv AI settings", () => {
     expect(() => loadEnv({ ...base, AI_PROVIDER: "other" })).toThrow();
   });
 });
+
+describe("WEB_ORIGIN", () => {
+  it("defaults to the dashboard dev server", () => {
+    expect(loadEnv({ DATABASE_URL: "postgresql://x" }).WEB_ORIGIN).toEqual(["http://localhost:5173"]);
+  });
+
+  it("accepts several comma separated origins", () => {
+    const env = loadEnv({ DATABASE_URL: "postgresql://x", WEB_ORIGIN: "https://a.example, https://b.example" });
+    expect(env.WEB_ORIGIN).toEqual(["https://a.example", "https://b.example"]);
+  });
+});

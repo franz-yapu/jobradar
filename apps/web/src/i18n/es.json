@@ -1,0 +1,19 @@
+{
+  "app": { "name": "JobRadar", "tagline": "Ofertas de empleo evaluadas contra tu perfil" },
+  "nav": { "postings": "Ofertas", "add": "Añadir oferta", "profile": "Perfil" },
+  "language": { "label": "Idioma", "en": "English", "es": "Español" },
+  "verdict": { "fit": "Encaja", "maybe": "Quizá", "reject": "Descartar", "unscored": "Sin evaluar" },
+  "postings": {
+    "title": "Ofertas",
+    "empty": "Todavía no hay ofertas.",
+    "total": "{{count}} ofertas",
+    "loading": "Cargando…"
+  },
+  "comingSoon": "Esta pantalla llega a continuación.",
+  "errors": {
+    "network_error": "No se puede conectar con la API. ¿Está en marcha?",
+    "contract": "La API respondió con un formato inesperado.",
+    "generic": "Algo salió mal.",
+    "retry": "Reintentar"
+  }
+}

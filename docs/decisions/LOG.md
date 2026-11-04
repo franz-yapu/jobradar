@@ -69,3 +69,10 @@
 - **Telegram:** the daily summary was delivered to the owner's chat from n8n (credential `JobRadar Telegram bot` created from the token in `.env`, chat id in `TELEGRAM_CHAT_ID`). The token stays in `.env` (git-ignored) and in n8n's encrypted credential store.
 - **First real collect against the dev DB:** 29 postings stored, only 3 scored. Groq's free tier allows 8000 tokens per minute for `openai/gpt-oss-20b`; 17 of 20 calls failed with a rate-limit error (logged in `ai_calls`, ~0.001 USD).
 - **Known gap:** workflow 1 only scores postings it just created, so the unscored ones are not retried, and it keeps calling the API after a rate-limit `502`. Accepted for now by the owner; fix = retry unscored postings and pause on provider rate limits (small follow-up, not scheduled).
+
+## 2026-11-04 – SDD-004 T1: web skeleton
+- **Stack:** React 19, Vite 8, TanStack Query, React Router, Tailwind 4, `react-i18next`; Vitest + Testing Library in jsdom. Shared Zod schemas are imported straight from `@jobradar/shared`.
+- **Single API module:** `apps/web/src/api/client.ts` validates every response and maps errors to `ApiError` (status + machine code) / `ContractError`; this is where the auth token will go (SDD-006).
+- **Dev without CORS:** the Vite dev server proxies `/api` to the API. CORS is still configured in the API (`WEB_ORIGIN`, comma separated, no wildcard) for deployed builds, with an integration test.
+- **"Translator":** UI translation through two dictionaries, switched live, saved in `localStorage` (blocked storage is tolerated); a test enforces identical keys. Translating posting text with AI is out of scope.
+- **Scope split:** CV import (PDF to profile, SDD-005) and accounts / SaaS (SDD-006, needs a PRD update and an ADR because the PRD excludes multi-user) are separate SDDs; AWS deploy becomes SDD-007.

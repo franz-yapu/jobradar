@@ -19,6 +19,17 @@ const EnvSchema = z.object({
   /** Defaults to the provider's recommended model. */
   AI_MODEL: z.string().trim().optional(),
   AI_DAILY_BUDGET_USD: z.coerce.number().min(0).default(1),
+  /** Origins allowed to call the API from a browser (comma separated). The dashboard's dev server by default. */
+  WEB_ORIGIN: z
+    .string()
+    .trim()
+    .default("http://localhost:5173")
+    .transform((value) =>
+      value
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    ),
 });
 
 const DEFAULT_MODELS = { anthropic: "claude-sonnet-5-5", groq: "openai/gpt-oss-20b" } as const;
