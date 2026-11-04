@@ -21,4 +21,13 @@ describe("normalizeUrl", () => {
     expect(() => normalizeUrl("not a url")).toThrow(InvalidUrlError);
     expect(() => normalizeUrl("ftp://a.com/x")).toThrow(InvalidUrlError);
   });
+
+  it("keeps a manual identity (pasted text without a URL) as it is, lowercased", () => {
+    const hash = "ab".repeat(32);
+    expect(normalizeUrl(`  manual:${hash.toUpperCase()} `)).toBe(`manual:${hash}`);
+  });
+
+  it("rejects a malformed manual identity", () => {
+    expect(() => normalizeUrl("manual:short")).toThrow(InvalidUrlError);
+  });
 });

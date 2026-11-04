@@ -76,3 +76,9 @@
 - **Dev without CORS:** the Vite dev server proxies `/api` to the API. CORS is still configured in the API (`WEB_ORIGIN`, comma separated, no wildcard) for deployed builds, with an integration test.
 - **"Translator":** UI translation through two dictionaries, switched live, saved in `localStorage` (blocked storage is tolerated); a test enforces identical keys. Translating posting text with AI is out of scope.
 - **Scope split:** CV import (PDF to profile, SDD-005) and accounts / SaaS (SDD-006, needs a PRD update and an ADR because the PRD excludes multi-user) are separate SDDs; AWS deploy becomes SDD-007.
+
+## 2026-11-04 – SDD-004 T2: postings screen and manual paste
+- **Filters in the URL** (`verdict`, `q`, `source`, `since`, `page`), parsed defensively (unknown values ignored); "stored since" is relative (24 h / 7 d) and converted to `createdSince` at query time.
+- **Manual paste:** only the text is required. Without a link the identity is `manual:<sha-256 of the text, whitespace-collapsed and lowercased>`; the API accepts that form (shared `ManualUrlSchema`, `normalizeUrl` keeps it as is), so pasting the same text twice gives `409`. Title defaults to the first line, company to `—`. Such postings show no external link and are labelled "pasted by hand".
+- **Scoring errors** are translated by machine code (`ai_budget_exceeded`, `ai_not_configured`, `profile_not_configured`, `ai_refused`, `ai_provider_error`).
+- **Not done yet (T3):** profile screen and the Playwright E2E.

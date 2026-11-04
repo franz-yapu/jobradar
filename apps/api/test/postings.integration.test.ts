@@ -59,6 +59,14 @@ describe("POST /postings", () => {
     await http().post("/postings").send(body).expect(409);
   });
 
+  it("stores a posting pasted without a URL under a manual identity and dedupes it", async () => {
+    const manual = { ...body, url: `manual:${"3c".repeat(32)}`, source: "manual" };
+    const created = await http().post("/postings").send(manual).expect(201);
+    expect(created.body.url).toBe(manual.url);
+    await http().post("/postings").send(manual).expect(409);
+    await http().post("/postings").send({ ...manual, url: manual.url.toUpperCase() }).expect(400);
+  });
+
   it("returns 409 for a url that only differs by tracking params", async () => {
     await http().post("/postings").send(body).expect(201);
     await http()

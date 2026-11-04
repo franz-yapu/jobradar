@@ -1,3 +1,5 @@
+/** Identity of a posting pasted by hand without a URL: `manual:` + sha-256 (hex) of its text, made by the client. */
+const MANUAL_IDENTITY = /^manual:[0-9a-f]{64}$/i;
 const TRACKING_PARAMS = new Set(["ref", "fbclid", "gclid"]);
 
 export class InvalidUrlError extends Error {
@@ -12,9 +14,11 @@ export class InvalidUrlError extends Error {
  * no tracking params (utm_*, ref, fbclid, gclid) and no trailing slash.
  */
 export function normalizeUrl(raw: string): string {
+  const trimmed = raw.trim();
+  if (MANUAL_IDENTITY.test(trimmed)) return trimmed.toLowerCase();
   let url: URL;
   try {
-    url = new URL(raw.trim());
+    url = new URL(trimmed);
   } catch {
     throw new InvalidUrlError(raw);
   }

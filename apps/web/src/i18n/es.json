@@ -1,19 +1,110 @@
 {
-  "app": { "name": "JobRadar", "tagline": "Ofertas de empleo evaluadas contra tu perfil" },
-  "nav": { "postings": "Ofertas", "add": "Añadir oferta", "profile": "Perfil" },
-  "language": { "label": "Idioma", "en": "English", "es": "Español" },
-  "verdict": { "fit": "Encaja", "maybe": "Quizá", "reject": "Descartar", "unscored": "Sin evaluar" },
+  "app": {
+    "name": "JobRadar",
+    "tagline": "Ofertas de empleo evaluadas contra tu perfil"
+  },
+  "nav": {
+    "postings": "Ofertas",
+    "add": "Añadir oferta",
+    "profile": "Perfil"
+  },
+  "language": {
+    "label": "Idioma",
+    "en": "English",
+    "es": "Español"
+  },
+  "verdict": {
+    "fit": "Encaja",
+    "maybe": "Quizá",
+    "reject": "Descartar",
+    "unscored": "Sin evaluar"
+  },
   "postings": {
     "title": "Ofertas",
     "empty": "Todavía no hay ofertas.",
     "total": "{{count}} ofertas",
-    "loading": "Cargando…"
+    "loading": "Cargando…",
+    "noMatches": "Ninguna oferta coincide con estos filtros.",
+    "page": "Página {{page}} de {{pages}}",
+    "previous": "Anterior",
+    "next": "Siguiente"
   },
   "comingSoon": "Esta pantalla llega a continuación.",
   "errors": {
     "network_error": "No se puede conectar con la API. ¿Está en marcha?",
     "contract": "La API respondió con un formato inesperado.",
     "generic": "Algo salió mal.",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "ai_budget_exceeded": "Se agotó el presupuesto diario de IA. Inténtalo mañana o sube AI_DAILY_BUDGET_USD.",
+    "ai_not_configured": "La API no tiene un proveedor de IA configurado.",
+    "profile_not_configured": "Guarda tu perfil antes de evaluar.",
+    "ai_refused": "La IA se negó a evaluar esta oferta.",
+    "ai_provider_error": "Falló el proveedor de IA. Inténtalo de nuevo en un momento.",
+    "not_found": "Esa oferta ya no existe."
+  },
+  "filters": {
+    "search": "Buscar",
+    "searchPlaceholder": "Título, empresa o texto",
+    "verdict": "Veredicto",
+    "allVerdicts": "Todos los veredictos",
+    "source": "Fuente",
+    "allSources": "Todas las fuentes",
+    "since": "Guardada",
+    "all": "Cualquier fecha",
+    "24h": "Últimas 24 horas",
+    "7d": "Últimos 7 días",
+    "clear": "Quitar filtros"
+  },
+  "row": {
+    "details": "Detalles",
+    "hideDetails": "Ocultar detalles",
+    "open": "Abrir oferta",
+    "manualEntry": "Pegada a mano",
+    "reasons": "Motivos",
+    "blockers": "Bloqueos",
+    "noReasons": "Todavía sin evaluar.",
+    "stored": "Guardada el {{date}}",
+    "published": "Publicada el {{date}}"
+  },
+  "scope": {
+    "worldwide": "Remoto en todo el mundo",
+    "latam": "Remoto LATAM",
+    "country": "Remoto (un país)",
+    "onsite": "Presencial / híbrido",
+    "unknown": "Modalidad desconocida"
+  },
+  "blocker": {
+    "location": "Ubicación",
+    "english": "Inglés",
+    "seniority": "Seniority",
+    "contract": "Contrato",
+    "stack": "Stack",
+    "other": "Otro"
+  },
+  "score": {
+    "now": "Evaluar ahora",
+    "again": "Evaluar de nuevo",
+    "scoring": "Evaluando…",
+    "done": "Evaluada."
+  },
+  "add": {
+    "title": "Añadir una oferta",
+    "intro": "Pega el texto de la oferta. Todo lo demás es opcional: si faltan título y empresa, se deducen.",
+    "text": "Texto de la oferta",
+    "textPlaceholder": "Pega aquí la oferta completa",
+    "title_field": "Título",
+    "company": "Empresa",
+    "url": "Enlace",
+    "location": "Ubicación",
+    "scope": "Modalidad remota",
+    "optional": "Opcional",
+    "scoreNow": "Evaluarla ahora mismo",
+    "submit": "Guardar oferta",
+    "saving": "Guardando…",
+    "duplicate": "Esta oferta ya estaba guardada.",
+    "saved": "Oferta guardada.",
+    "textRequired": "Primero pega el texto de la oferta.",
+    "invalid": "Revisa los campos: {{message}}",
+    "viewList": "Ir a la lista"
   }
 }

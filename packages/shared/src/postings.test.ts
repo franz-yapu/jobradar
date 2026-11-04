@@ -11,6 +11,13 @@ describe("CreatePostingSchema", () => {
     expect(parsed.location).toBeUndefined();
   });
 
+  it("accepts a manual identity instead of a URL, and rejects a malformed one", () => {
+    const hash = "0f".repeat(32);
+    expect(CreatePostingSchema.safeParse({ ...valid, url: `manual:${hash}` }).success).toBe(true);
+    expect(CreatePostingSchema.safeParse({ ...valid, url: "manual:abc" }).success).toBe(false);
+    expect(CreatePostingSchema.safeParse({ ...valid, url: `manual:${hash.toUpperCase()}` }).success).toBe(false);
+  });
+
   it("rejects non-http urls and empty titles", () => {
     expect(CreatePostingSchema.safeParse({ ...valid, url: "ftp://acme.com/x" }).success).toBe(false);
     expect(CreatePostingSchema.safeParse({ ...valid, title: "  " }).success).toBe(false);

@@ -7,10 +7,14 @@ export type RemoteScope = z.infer<typeof RemoteScopeSchema>;
 
 const HttpUrlSchema = z.url({ protocol: /^https?$/ });
 
+/** Identity of a posting pasted by hand without a URL: `manual:` + sha-256 hex of its text (made by the client). */
+export const MANUAL_URL_PATTERN = /^manual:[0-9a-f]{64}$/;
+export const ManualUrlSchema = z.string().regex(MANUAL_URL_PATTERN, "Expected manual:<64 hex characters>");
+
 export const CreatePostingSchema = z.object({
   title: z.string().trim().min(1).max(300),
   company: z.string().trim().min(1).max(300),
-  url: HttpUrlSchema,
+  url: z.union([HttpUrlSchema, ManualUrlSchema]),
   source: z.string().trim().min(1).max(100),
   location: z.string().trim().min(1).max(300).optional(),
   remoteScope: RemoteScopeSchema.default("unknown"),

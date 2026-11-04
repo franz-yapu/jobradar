@@ -1,19 +1,110 @@
 {
-  "app": { "name": "JobRadar", "tagline": "Job postings scored against your profile" },
-  "nav": { "postings": "Postings", "add": "Add posting", "profile": "Profile" },
-  "language": { "label": "Language", "en": "English", "es": "Español" },
-  "verdict": { "fit": "Fit", "maybe": "Maybe", "reject": "Reject", "unscored": "Not scored" },
+  "app": {
+    "name": "JobRadar",
+    "tagline": "Job postings scored against your profile"
+  },
+  "nav": {
+    "postings": "Postings",
+    "add": "Add posting",
+    "profile": "Profile"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "es": "Español"
+  },
+  "verdict": {
+    "fit": "Fit",
+    "maybe": "Maybe",
+    "reject": "Reject",
+    "unscored": "Not scored"
+  },
   "postings": {
     "title": "Postings",
     "empty": "No postings yet.",
     "total": "{{count}} postings",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "noMatches": "No postings match these filters.",
+    "page": "Page {{page}} of {{pages}}",
+    "previous": "Previous",
+    "next": "Next"
   },
   "comingSoon": "This screen is coming next.",
   "errors": {
     "network_error": "The API is unreachable. Is it running?",
     "contract": "The API answered with an unexpected format.",
     "generic": "Something went wrong.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "ai_budget_exceeded": "The daily AI budget is used up. Try again tomorrow or raise AI_DAILY_BUDGET_USD.",
+    "ai_not_configured": "No AI provider is configured on the API.",
+    "profile_not_configured": "Save your profile before scoring.",
+    "ai_refused": "The AI refused to score this posting.",
+    "ai_provider_error": "The AI provider failed. Try again in a moment.",
+    "not_found": "That posting no longer exists."
+  },
+  "filters": {
+    "search": "Search",
+    "searchPlaceholder": "Title, company or text",
+    "verdict": "Verdict",
+    "allVerdicts": "All verdicts",
+    "source": "Source",
+    "allSources": "All sources",
+    "since": "Stored",
+    "all": "Any time",
+    "24h": "Last 24 hours",
+    "7d": "Last 7 days",
+    "clear": "Clear filters"
+  },
+  "row": {
+    "details": "Details",
+    "hideDetails": "Hide details",
+    "open": "Open posting",
+    "manualEntry": "Pasted by hand",
+    "reasons": "Reasons",
+    "blockers": "Blockers",
+    "noReasons": "Not scored yet.",
+    "stored": "Stored {{date}}",
+    "published": "Published {{date}}"
+  },
+  "scope": {
+    "worldwide": "Worldwide remote",
+    "latam": "Remote LATAM",
+    "country": "Remote (one country)",
+    "onsite": "On-site / hybrid",
+    "unknown": "Scope unknown"
+  },
+  "blocker": {
+    "location": "Location",
+    "english": "English",
+    "seniority": "Seniority",
+    "contract": "Contract",
+    "stack": "Stack",
+    "other": "Other"
+  },
+  "score": {
+    "now": "Score now",
+    "again": "Score again",
+    "scoring": "Scoring…",
+    "done": "Scored."
+  },
+  "add": {
+    "title": "Add a posting",
+    "intro": "Paste the posting text. Everything else is optional: missing title and company are guessed.",
+    "text": "Posting text",
+    "textPlaceholder": "Paste the whole posting here",
+    "title_field": "Title",
+    "company": "Company",
+    "url": "Link",
+    "location": "Location",
+    "scope": "Remote scope",
+    "optional": "Optional",
+    "scoreNow": "Score it right away",
+    "submit": "Save posting",
+    "saving": "Saving…",
+    "duplicate": "This posting is already saved.",
+    "saved": "Posting saved.",
+    "textRequired": "Paste the posting text first.",
+    "invalid": "Check the fields: {{message}}",
+    "viewList": "Go to the list"
   }
 }
