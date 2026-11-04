@@ -64,3 +64,8 @@
 - **n8n quirks found while verifying:** imports need an `id`; `$(node).all()` inside a loop only returns the last iteration (the run summary walks every run); `n8n execute` inside the container needs `N8N_RUNNERS_BROKER_PORT` to avoid a port clash; n8n 2.x blocks `$env` unless `N8N_BLOCK_ENV_ACCESS_IN_NODE=false`.
 - **Verified live** (n8n 2.40.5, Groq `openai/gpt-oss-20b`, throwaway `jobradar_test` DB): 16 postings created, exactly 3 scored with the cap lowered to 3 (0.0009 USD); re-run created nothing and scored nothing; with the budget spent the first score answered `429`, scoring stopped and the run still succeeded; daily summary built the expected message and fails loudly when the API is down.
 - **Not verified:** the actual Telegram delivery (needs the owner's bot token and chat id) and a schedule firing on its own.
+
+## 2026-11-04 – SDD-003 verified live with the owner's Telegram bot
+- **Telegram:** the daily summary was delivered to the owner's chat from n8n (credential `JobRadar Telegram bot` created from the token in `.env`, chat id in `TELEGRAM_CHAT_ID`). The token stays in `.env` (git-ignored) and in n8n's encrypted credential store.
+- **First real collect against the dev DB:** 29 postings stored, only 3 scored. Groq's free tier allows 8000 tokens per minute for `openai/gpt-oss-20b`; 17 of 20 calls failed with a rate-limit error (logged in `ai_calls`, ~0.001 USD).
+- **Known gap:** workflow 1 only scores postings it just created, so the unscored ones are not retried, and it keeps calling the API after a rate-limit `502`. Accepted for now by the owner; fix = retry unscored postings and pause on provider rate limits (small follow-up, not scheduled).
