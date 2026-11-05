@@ -265,7 +265,8 @@ summary {
 @keyframes sweep {
   to { transform: rotate(360deg); }
 }
-.rise { animation: rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+/* "backwards", not "both": a filled animation keeps a stacking context on the card, and the next card would paint over a dropdown that opens from the one above. */
+.rise { animation: rise 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
 .pop { animation: pop 0.14s ease-out both; transform-origin: top right; }
 .sweep { animation: sweep 5s linear infinite; }
 
