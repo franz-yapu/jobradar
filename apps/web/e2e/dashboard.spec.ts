@@ -148,8 +148,8 @@ test.describe.serial("accounts", () => {
     await expect(page.getByText(/Draft from your CV/)).toBeVisible();
     await expect(page.getByText("No country was found")).toBeVisible();
     await expect(page.getByText("Seniority was estimated")).toBeVisible();
-    await expect(page.getByRole("textbox", { name: "Company" })).toHaveValue("Acme");
-    await expect(page.getByRole("textbox", { name: "Institution" })).toHaveValue("UMSA");
+    await expect(page.getByRole("combobox", { name: "Company" })).toHaveValue("Acme");
+    await expect(page.getByRole("combobox", { name: "Institution" })).toHaveValue("UMSA");
     // jobs keep their start month and year, picked with selects
     const jobStart = page.getByRole("group", { name: "Start" }).first();
     await expect(jobStart.getByLabel("Year")).toHaveValue("2020");
@@ -169,7 +169,7 @@ test.describe.serial("accounts", () => {
 
     // It is really stored: a reload shows the imported background.
     await page.reload();
-    await expect(page.getByRole("textbox", { name: "Company" })).toHaveValue("Acme");
+    await expect(page.getByRole("combobox", { name: "Company" })).toHaveValue("Acme");
     await expect(page.getByRole("combobox", { name: "Language" }).first()).toHaveValue("English");
 
     // And the preview of an unsaved draft can be discarded.

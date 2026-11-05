@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { EducationEditor, ExperienceEditor, LanguagesEditor } from "../components/BackgroundEditors";
-import { ChipInput } from "../components/ChipInput";
 import { Combobox } from "../components/Combobox";
 import { CvImportCard } from "../components/CvImportCard";
 import { ErrorMessage } from "../components/ErrorMessage";
@@ -17,7 +16,9 @@ import { UserIcon } from "../components/icons";
 import { Alert, Button, buttonClass, Card, FIELD, PageHeader } from "../components/ui";
 import { locationOptions } from "../lib/catalog/countries";
 import { STACK_OPTIONS } from "../lib/catalog/stack";
-import { EMPTY_FORM, formFromProfile, toSaveBody } from "../lib/profile-form";
+import { CERTIFICATION_OPTIONS } from "../lib/catalog/background";
+import { fieldErrors } from "../lib/profile-errors";
+import { EMPTY_FORM, formFromProfile, isFormDirty, toSaveBody } from "../lib/profile-form";
 import type { ProfileForm } from "../lib/profile-form";
 
 export function ProfilePage() {
@@ -33,6 +34,14 @@ export function ProfilePage() {
   /** Set while the form holds an unsaved CV draft; the warnings are what the import could not find. */
   const [draftWarnings, setDraftWarnings] = useState<CvWarning[] | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
+  /** Fields the user has left (or all, after a save attempt): only those show their error. */
+  const [touched, setTouched] = useState<ReadonlySet<string>>(new Set());
+  const errors = useMemo(() => fieldErrors(form), [form]);
+  const validation = {
+    errors,
+    shown: touched,
+    onTouch: (path: string) => setTouched((current) => new Set(current).add(path)),
+  };
 
   useEffect(() => {
     if (query.data) setForm(formFromProfile(query.data));
@@ -46,18 +55,26 @@ export function ProfilePage() {
     },
   });
 
-  // An imported CV draft only exists in this page: leaving without saving would silently lose it.
-  const hasUnsavedDraft = draftWarnings !== null;
+  // Unsaved edits (including an imported CV draft) only exist in this page: leaving would silently lose them.
+  const dirty = isFormDirty(form, query.data);
   useEffect(() => {
-    if (!hasUnsavedDraft) return;
+    if (!dirty) return;
     const warn = (event: BeforeUnloadEvent) => event.preventDefault();
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
-  }, [hasUnsavedDraft]);
+  }, [dirty]);
 
   function submit(event: SyntheticEvent) {
     event.preventDefault();
     setProblem(null);
+    const invalid = Object.keys(errors);
+    if (invalid.length > 0) {
+      setTouched(new Set(invalid));
+      setProblem(t("profile.errors.rowsIncomplete"));
+      // once the errors are on screen, put the cursor on the first one
+      setTimeout(() => document.querySelector<HTMLElement>('form [aria-invalid="true"]')?.focus(), 0);
+      return;
+    }
     const body = toSaveBody(form);
     const checked = SaveProfileSchema.safeParse(body);
     if (!checked.success) {
@@ -77,6 +94,15 @@ export function ProfilePage() {
     setProblem(null);
     setForm(formFromProfile(draft));
     setDraftWarnings(draft.warnings);
+  }
+
+  function cancelEdits() {
+    if (dirty && !window.confirm(t("profile.cancelConfirm"))) return;
+    save.reset();
+    setProblem(null);
+    setForm(query.data ? formFromProfile(query.data) : EMPTY_FORM);
+    setDraftWarnings(null);
+    setTouched(new Set());
   }
 
   function discardDraft() {
@@ -166,15 +192,17 @@ export function ProfilePage() {
           </label>
         </Card>
 
-        <ExperienceEditor items={form.experience} onChange={(experience) => setForm({ ...form, experience })} />
-        <EducationEditor items={form.education} onChange={(education) => setForm({ ...form, education })} />
-        <LanguagesEditor items={form.languages} onChange={(languages) => setForm({ ...form, languages })} />
+        <ExperienceEditor {...validation} items={form.experience} onChange={(experience) => setForm({ ...form, experience })} />
+        <EducationEditor {...validation} items={form.education} onChange={(education) => setForm({ ...form, education })} />
+        <LanguagesEditor {...validation} items={form.languages} onChange={(languages) => setForm({ ...form, languages })} />
         <Card title={t("profile.certifications.title")}>
-          <ChipInput
+          <Combobox
             label={t("profile.certifications.title")}
             hint={t("profile.certifications.hint")}
             values={form.certifications}
+            options={CERTIFICATION_OPTIONS}
             onChange={(certifications) => setForm({ ...form, certifications })}
+            normalizeCustom={(raw) => (raw.length <= 200 ? raw : null)}
           />
         </Card>
 
@@ -189,9 +217,19 @@ export function ProfilePage() {
             </Link>
           </Alert>
         ) : null}
-        <Button type="submit" disabled={save.isPending}>
-          {save.isPending ? t("profile.saving") : t("profile.save")}
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="submit" disabled={save.isPending || (Boolean(query.data) && !dirty)}>
+            {save.isPending ? t("profile.saving") : t("profile.save")}
+          </Button>
+          <Button variant="outline" disabled={!dirty || save.isPending} onClick={cancelEdits}>
+            {t("profile.cancel")}
+          </Button>
+          {dirty ? (
+            <span role="status" className="text-sm text-muted">
+              {t("profile.unsaved")}
+            </span>
+          ) : null}
+        </div>
       </form>
     </div>
   );

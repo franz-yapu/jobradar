@@ -7,6 +7,8 @@ import { createI18n } from "../i18n";
 import { locationLabel, locationOptions } from "../lib/catalog/countries";
 import { searchKey, searchOptions } from "../lib/catalog/search";
 import { STACK_CATALOG, STACK_OPTIONS } from "../lib/catalog/stack";
+import { ROLE_OPTIONS } from "../lib/catalog/background";
+import { Autocomplete } from "./Autocomplete";
 import { Combobox } from "./Combobox";
 import { MonthYearInput } from "./MonthYearInput";
 import { MultiSelect } from "./MultiSelect";
@@ -199,5 +201,39 @@ describe("MonthYearInput", () => {
     await user.selectOptions(year as HTMLElement, "");
     expect(screen.getByTestId("out")).toHaveTextContent("-");
     expect(month).toBeDisabled();
+  });
+});
+
+describe("Autocomplete", () => {
+  function Harness({ own = [] }: { own?: string[] }) {
+    const [value, setValue] = useState("");
+    return <Autocomplete label="Role" value={value} onChange={setValue} options={ROLE_OPTIONS} own={own} />;
+  }
+
+  it("suggests curated values as you type and fills the field on click", async () => {
+    const user = userEvent.setup();
+    wrap(<Harness />);
+    await user.type(screen.getByRole("combobox", { name: "Role" }), "devops");
+    await user.click(screen.getByRole("option", { name: "DevOps Engineer" }));
+    expect(screen.getByRole("combobox", { name: "Role" })).toHaveValue("DevOps Engineer");
+  });
+
+  it("offers the user's own earlier values and keeps free text valid", async () => {
+    const user = userEvent.setup();
+    wrap(<Harness own={["Zeta Labs Lead"]} />);
+    const input = screen.getByRole("combobox", { name: "Role" });
+    await user.type(input, "zeta");
+    expect(screen.getByRole("option", { name: "Zeta Labs Lead" })).toBeInTheDocument();
+    await user.clear(input);
+    await user.type(input, "Something unusual");
+    expect(input).toHaveValue("Something unusual");
+  });
+});
+
+describe("technology suggestions", () => {
+  it("'gi' lists Git, GitHub and GitLab among the first five", () => {
+    const labels = searchOptions(STACK_OPTIONS, "gi").map((option) => option.label);
+    expect(labels).toEqual(expect.arrayContaining(["Git", "GitHub", "GitLab"]));
+    expect(labels.slice(0, 5)).toEqual(expect.arrayContaining(["Git", "GitHub", "GitLab"]));
   });
 });

@@ -221,9 +221,10 @@ describe("background editors", () => {
     const user = userEvent.setup();
     renderApp({ route: "/profile" });
     await screen.findByText("COBOL");
-    await user.type(screen.getByRole("textbox", { name: "Certifications" }), "CKA{Enter}");
-    expect(screen.getByText("CKA")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Remove CKA" }));
-    expect(screen.queryByText("CKA")).toBeNull();
+    await user.type(screen.getByRole("combobox", { name: /^Certifications/ }), "CKA{Enter}");
+    // Enter picks the best suggestion; the curated list knows this certification by its full name
+    expect(screen.getByText("Certified Kubernetes Administrator (CKA)")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Remove Certified Kubernetes Administrator (CKA)" }));
+    expect(screen.queryByText("Certified Kubernetes Administrator (CKA)")).toBeNull();
   });
 });

@@ -148,6 +148,13 @@
     "summary": "Summary",
     "remove": "Remove {{item}}",
     "save": "Save profile",
+    "cancel": "Cancel",
+    "cancelConfirm": "Discard all unsaved changes and go back to the last saved profile?",
+    "errors": {
+      "required": "Required",
+      "rowsIncomplete": "Some rows are incomplete: fill in the marked fields or remove the row."
+    },
+    "unsaved": "You have unsaved changes",
     "saving": "Saving…",
     "saved": "Profile saved (version {{version}}).",
     "problems": {

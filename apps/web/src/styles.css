@@ -173,6 +173,22 @@ option {
   color: var(--ink);
 }
 
+/* The list popup is drawn by the OS: give each row room and keep the chosen row on the brand tint. */
+option {
+  padding: 0.5rem 0.75rem;
+}
+
+option:checked {
+  background-color: var(--primary-soft);
+  color: var(--primary-ink);
+}
+
+/* Selects must not inherit a browser arrow on top of ours (Firefox, old Edge). */
+select {
+  background-image: none;
+  text-overflow: ellipsis;
+}
+
 /* No double-tap zoom delay; the tap flash is a soft green instead of the browser's grey. */
 a,
 button,

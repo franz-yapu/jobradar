@@ -5,19 +5,28 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { PlusIcon, CloseIcon } from "./icons";
 import { MonthYearInput } from "./MonthYearInput";
+import { Autocomplete } from "./Autocomplete";
 import { Select } from "./Select";
 import { Button, Card, FIELD, FieldLabel } from "./ui";
+import { DEGREE_OPTIONS, FIELD_OF_STUDY_OPTIONS, ROLE_OPTIONS } from "../lib/catalog/background";
 import { languageNameOptions } from "../lib/catalog/languages";
+import type { Option } from "../lib/catalog/search";
+import type { FieldErrors } from "../lib/profile-errors";
 
 const GRID = "grid gap-3 sm:grid-cols-2";
 
-function TextInput({ label, value, onChange, required }: { label: string; value: string; onChange: (value: string) => void; required?: boolean }) {
-  return (
-    <label className="block">
-      <FieldLabel>{label}</FieldLabel>
-      <input className={FIELD} value={value} required={required} maxLength={200} onChange={(event) => onChange(event.target.value)} />
-    </label>
-  );
+interface Validation {
+  errors?: FieldErrors;
+  /** Called when a field loses focus, so its error can start showing. */
+  onTouch?: (path: string) => void;
+  /** Paths whose errors may be shown (blurred, or the form was submitted). */
+  shown?: ReadonlySet<string>;
+}
+
+function TextInput({ label, value, onChange, required, options, own, path, validation }: { label: string; value: string; onChange: (value: string) => void; required?: boolean; options?: readonly Option[]; own?: readonly string[]; path: string; validation: Validation }) {
+  const { t } = useTranslation();
+  const error = validation.errors?.[path] && validation.shown?.has(path) ? t(`profile.errors.${validation.errors[path]}`) : undefined;
+  return <Autocomplete label={label} value={value} onChange={onChange} required={required} options={options} own={own} error={error} onBlur={() => validation.onTouch?.(path)} />;
 }
 
 function ItemBox({ label, onRemove, children }: { label: string; onRemove: () => void; children: ReactNode }) {
@@ -40,12 +49,12 @@ function removeAt<T>(items: T[], index: number): T[] {
   return items.filter((_, position) => position !== index);
 }
 
-interface ListProps<T> {
+interface ListProps<T> extends Validation {
   items: T[];
   onChange: (items: T[]) => void;
 }
 
-export function EducationEditor({ items, onChange }: ListProps<Education>) {
+export function EducationEditor({ items, onChange, ...validation }: ListProps<Education>) {
   const { t } = useTranslation();
   const add = () => onChange([...items, { institution: "", degree: "" }]);
   return (
@@ -63,9 +72,9 @@ export function EducationEditor({ items, onChange }: ListProps<Education>) {
         {items.map((item, index) => (
           <ItemBox key={index} label={item.institution || t("profile.education.title")} onRemove={() => onChange(removeAt(items, index))}>
             <div className={GRID}>
-              <TextInput label={t("profile.education.institution")} value={item.institution} onChange={(institution) => onChange(replaceAt(items, index, { ...item, institution }))} />
-              <TextInput label={t("profile.education.degree")} value={item.degree} onChange={(degree) => onChange(replaceAt(items, index, { ...item, degree }))} />
-              <TextInput label={t("profile.education.field")} value={item.field ?? ""} onChange={(field) => onChange(replaceAt(items, index, { ...item, field }))} />
+              <TextInput path={`education.${index}.institution`} validation={validation} label={t("profile.education.institution")} own={items.map((entry) => entry.institution)} value={item.institution} onChange={(institution) => onChange(replaceAt(items, index, { ...item, institution }))} />
+              <TextInput path={`education.${index}.degree`} validation={validation} label={t("profile.education.degree")} options={DEGREE_OPTIONS} own={items.map((entry) => entry.degree)} value={item.degree} onChange={(degree) => onChange(replaceAt(items, index, { ...item, degree }))} />
+              <TextInput path={`education.${index}.field`} validation={validation} label={t("profile.education.field")} options={FIELD_OF_STUDY_OPTIONS} own={items.map((entry) => entry.field ?? "")} value={item.field ?? ""} onChange={(field) => onChange(replaceAt(items, index, { ...item, field }))} />
               <MonthYearInput label={t("profile.start")} year={item.startYear} month={item.startMonth} onChange={({ year, month }) => onChange(replaceAt(items, index, { ...item, startYear: year, startMonth: month }))} />
               <MonthYearInput label={t("profile.end")} year={item.endYear} month={item.endMonth} onChange={({ year, month }) => onChange(replaceAt(items, index, { ...item, endYear: year, endMonth: month }))} />
             </div>
@@ -76,7 +85,7 @@ export function EducationEditor({ items, onChange }: ListProps<Education>) {
   );
 }
 
-export function ExperienceEditor({ items, onChange }: ListProps<Experience>) {
+export function ExperienceEditor({ items, onChange, ...validation }: ListProps<Experience>) {
   const { t } = useTranslation();
   const add = () => onChange([...items, { company: "", role: "", current: false, highlights: [] }]);
   return (
@@ -96,8 +105,8 @@ export function ExperienceEditor({ items, onChange }: ListProps<Experience>) {
           return (
             <ItemBox key={index} label={item.company || t("profile.experience.title")} onRemove={() => onChange(removeAt(items, index))}>
               <div className={GRID}>
-                <TextInput label={t("profile.experience.company")} value={item.company} onChange={(company) => update({ company })} />
-                <TextInput label={t("profile.experience.role")} value={item.role} onChange={(role) => update({ role })} />
+                <TextInput path={`experience.${index}.company`} validation={validation} label={t("profile.experience.company")} own={items.map((entry) => entry.company)} value={item.company} onChange={(company) => update({ company })} />
+                <TextInput path={`experience.${index}.role`} validation={validation} label={t("profile.experience.role")} options={ROLE_OPTIONS} own={items.map((entry) => entry.role)} value={item.role} onChange={(role) => update({ role })} />
                 <MonthYearInput label={t("profile.start")} year={item.startYear} month={item.startMonth} onChange={({ year, month }) => update({ startYear: year, startMonth: month })} />
                 <MonthYearInput label={t("profile.end")} year={item.current ? undefined : item.endYear} month={item.current ? undefined : item.endMonth} disabled={item.current} onChange={({ year, month }) => update({ endYear: year, endMonth: month })} />
                 <label className="flex items-center gap-2 text-sm sm:col-span-2">
@@ -126,7 +135,7 @@ export function ExperienceEditor({ items, onChange }: ListProps<Experience>) {
   );
 }
 
-export function LanguagesEditor({ items, onChange }: ListProps<LanguageSkill>) {
+export function LanguagesEditor({ items, onChange, ...validation }: ListProps<LanguageSkill>) {
   const { t, i18n } = useTranslation();
   const language = i18n.resolvedLanguage ?? "en";
   const languageOptions = useMemo(() => languageNameOptions(language), [language]);
@@ -149,6 +158,8 @@ export function LanguagesEditor({ items, onChange }: ListProps<LanguageSkill>) {
             <div className={GRID}>
               <Select
                 label={t("profile.languages.language")}
+                error={validation.errors?.[`languages.${index}.language`] && validation.shown?.has(`languages.${index}.language`) ? t("profile.errors.required") : undefined}
+                onBlur={() => validation.onTouch?.(`languages.${index}.language`)}
                 placeholder="—"
                 value={item.language}
                 options={languageOptions}
@@ -156,6 +167,8 @@ export function LanguagesEditor({ items, onChange }: ListProps<LanguageSkill>) {
               />
               <Select
                 label={t("profile.languages.level")}
+                error={validation.errors?.[`languages.${index}.level`] && validation.shown?.has(`languages.${index}.level`) ? t("profile.errors.required") : undefined}
+                onBlur={() => validation.onTouch?.(`languages.${index}.level`)}
                 placeholder="—"
                 value={item.level}
                 options={levelOptions}

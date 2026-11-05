@@ -1,3 +1,4 @@
+import { fieldErrors } from "./profile-errors";
 import type {
   ContractType,
   CvDraft,
@@ -71,4 +72,26 @@ export function toSaveBody(form: ProfileForm): SaveProfileInput {
       })),
     languages: form.languages.filter((item) => item.language.trim() && item.level.trim()),
   };
+}
+
+/** JSON with sorted keys and without undefined values, so two equal forms always give the same text. */
+function stable(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, item]) => item !== undefined)
+      .sort(([a], [b]) => a.localeCompare(b));
+    return `{${entries.map(([key, item]) => `${JSON.stringify(key)}:${stable(item)}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+/**
+ * True when the form holds edits that were not saved. Both sides go through `toSaveBody`, so blank rows,
+ * trimmed text and key order do not count as edits. A half-filled row is an edit, though: it would be dropped on
+ * save, so it must keep Save enabled and show its error.
+ */
+export function isFormDirty(form: ProfileForm, saved: ProfileResponse | null | undefined): boolean {
+  const baseline = saved ? formFromProfile(saved) : EMPTY_FORM;
+  return stable(toSaveBody(form)) !== stable(toSaveBody(baseline)) || Object.keys(fieldErrors(form)).length > 0;
 }

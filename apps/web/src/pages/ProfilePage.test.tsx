@@ -98,7 +98,59 @@ describe("Profile page", () => {
     saveProfile.mockRejectedValue(new ApiError(0, "network_error", "down"));
     renderApp({ route: "/profile" });
     await screen.findByText("NestJS");
+    await userEvent.click(screen.getByRole("button", { name: "Remove NestJS" })); // an unchanged profile cannot be saved
     await userEvent.click(screen.getByRole("button", { name: "Save profile" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("The API is unreachable");
+  });
+});
+
+describe("Profile page unsaved changes", () => {
+  it("disables Save and Cancel until something changes, and Cancel restores the saved profile after confirming", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+    renderApp({ route: "/profile" });
+    await screen.findByText("NestJS");
+    expect(screen.getByRole("button", { name: "Save profile" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+
+    await userEvent.click(screen.getByRole("button", { name: "Remove NestJS" }));
+    expect(screen.getByRole("button", { name: "Save profile" })).toBeEnabled();
+    expect(screen.getByText("You have unsaved changes")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("NestJS")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save profile" })).toBeDisabled();
+    confirm.mockRestore();
+  });
+
+  it("keeps the edits when the confirmation is refused", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    renderApp({ route: "/profile" });
+    await screen.findByText("NestJS");
+    await userEvent.click(screen.getByRole("button", { name: "Remove NestJS" }));
+    await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByText("NestJS")).toBeNull();
+    confirm.mockRestore();
+  });
+});
+
+describe("Profile page inline validation", () => {
+  it("flags the missing half of a row after leaving the field and focuses it on a save attempt", async () => {
+    renderApp({ route: "/profile" });
+    await screen.findByText("NestJS");
+    await userEvent.click(screen.getByRole("button", { name: "Add job" }));
+    const company = screen.getAllByRole("combobox", { name: "Company" }).at(-1) as HTMLElement;
+    const role = () => screen.getAllByRole("combobox", { name: "Role" }).at(-1) as HTMLElement;
+    await userEvent.type(company, "Acme");
+    expect(screen.queryByText("Required")).toBeNull();
+    await userEvent.tab(); // leaving the field starts showing errors
+    await userEvent.click(role());
+    await userEvent.tab();
+    expect(await screen.findByText("Required")).toBeInTheDocument();
+    expect(role()).toHaveAttribute("aria-invalid", "true");
+
+    await userEvent.click(screen.getByRole("button", { name: "Save profile" }));
+    expect(saveProfile).not.toHaveBeenCalled();
+    await waitFor(() => expect(role()).toHaveFocus());
   });
 });

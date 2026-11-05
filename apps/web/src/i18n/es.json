@@ -148,6 +148,13 @@
     "summary": "Resumen",
     "remove": "Quitar {{item}}",
     "save": "Guardar perfil",
+    "cancel": "Cancelar",
+    "cancelConfirm": "¿Descartar todos los cambios sin guardar y volver al último perfil guardado?",
+    "errors": {
+      "required": "Obligatorio",
+      "rowsIncomplete": "Hay filas incompletas: completa los campos marcados o elimina la fila."
+    },
+    "unsaved": "Tienes cambios sin guardar",
     "saving": "Guardando…",
     "saved": "Perfil guardado (versión {{version}}).",
     "problems": {

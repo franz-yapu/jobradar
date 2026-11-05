@@ -1,6 +1,6 @@
 import { SaveProfileSchema } from "@jobradar/shared";
 import { describe, expect, it } from "vitest";
-import { EMPTY_FORM, toSaveBody } from "./profile-form";
+import { EMPTY_FORM, formFromProfile, isFormDirty, toSaveBody } from "./profile-form";
 import type { ProfileForm } from "./profile-form";
 
 const base: ProfileForm = { ...EMPTY_FORM, stack: ["TypeScript"], allowedLocations: ["BO"] };
@@ -34,5 +34,27 @@ describe("toSaveBody", () => {
     });
     expect(SaveProfileSchema.safeParse(body).success).toBe(true);
     expect(body.education?.[0]?.field).toBeUndefined();
+  });
+});
+
+describe("isFormDirty", () => {
+  const saved = { ...EMPTY_FORM, stack: ["Git"], updatedAt: "2026-11-05T00:00:00Z", version: 1 } as unknown as Parameters<typeof isFormDirty>[1];
+
+  it("is clean for the saved values, blank rows and trimmed text", () => {
+    const form = { ...formFromProfile(saved as NonNullable<typeof saved>), education: [{ institution: " ", degree: "" }] };
+    expect(isFormDirty(form, saved)).toBe(false);
+  });
+
+  it("is dirty after a real edit and for an empty profile that gained values", () => {
+    expect(isFormDirty({ ...EMPTY_FORM, stack: ["Git", "Go"] }, saved)).toBe(true);
+    expect(isFormDirty({ ...EMPTY_FORM, summary: "hi" }, null)).toBe(true);
+    expect(isFormDirty(EMPTY_FORM, null)).toBe(false);
+  });
+});
+
+describe("isFormDirty with half-filled rows", () => {
+  it("counts a row that would be dropped on save as an edit", () => {
+    const form = { ...EMPTY_FORM, experience: [{ company: "Acme", role: "", current: false, highlights: [] }] };
+    expect(isFormDirty(form, null)).toBe(true);
   });
 });
