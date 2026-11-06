@@ -43,3 +43,23 @@ describe("ADMIN_EMAILS", () => {
     expect(loadEnv({ DATABASE_URL: "x", ADMIN_EMAILS: " Boss@Example.com, ops@example.com ,," }).ADMIN_EMAILS).toEqual(["boss@example.com", "ops@example.com"]);
   });
 });
+
+describe("batch scoring queue", () => {
+  const secret = "w".repeat(32);
+  it("is in-process by default", () => {
+    const env = loadEnv({ DATABASE_URL: "postgresql://x" });
+    expect(env.SQS).toBeNull();
+    expect(env.WORKER_SECRET).toBeUndefined();
+  });
+  it("uses SQS when a queue URL is set, with its region and optional endpoint", () => {
+    const env = loadEnv({ DATABASE_URL: "x", SQS_QUEUE_URL: "http://q/1/jobs", WORKER_SECRET: secret, AWS_ENDPOINT_URL: "http://localhost:4566" });
+    expect(env.SQS).toEqual({ queueUrl: "http://q/1/jobs", region: "us-east-1", endpoint: "http://localhost:4566" });
+  });
+  it("requires a worker secret of 32+ characters whenever a queue URL is set", () => {
+    expect(() => loadEnv({ DATABASE_URL: "x", SQS_QUEUE_URL: "http://q/1/jobs" })).toThrow(/WORKER_SECRET/);
+    expect(() => loadEnv({ DATABASE_URL: "x", SQS_QUEUE_URL: "http://q/1/jobs", WORKER_SECRET: "short" })).toThrow();
+  });
+  it("treats empty values as unset", () => {
+    expect(loadEnv({ DATABASE_URL: "x", SQS_QUEUE_URL: "", WORKER_SECRET: "" }).SQS).toBeNull();
+  });
+});

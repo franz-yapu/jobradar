@@ -34,4 +34,11 @@ services:
     image: grafana/grafana:latest
     ports: ["${GRAFANA_PORT:-3001}:3000"]
     volumes: [grafanadata:/var/lib/grafana]
+  # Only for the SQS integration test (`docker compose --profile aws up -d localstack`); never started by default.
+  localstack:
+    profiles: ["aws"]
+    image: localstack/localstack:3.8
+    ports: ["${LOCALSTACK_PORT:-4566}:4566"]
+    environment:
+      SERVICES: sqs
 volumes: { pgdata: {}, n8ndata: {}, grafanadata: {} }

@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.4.0",
+    "@aws-sdk/client-sqs": "^3.1163.0",
     "@jobradar/shared": "workspace:^",
     "@nestjs/common": "12",
     "@nestjs/core": "12",

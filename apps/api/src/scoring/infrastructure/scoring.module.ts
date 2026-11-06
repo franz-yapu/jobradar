@@ -15,6 +15,11 @@ import { ProcessScoringJob } from "../application/process-scoring-job.use-case.j
 import { StartScoringBatch } from "../application/start-scoring-batch.use-case.js";
 import { SCORING_BATCH_REPOSITORY, type ScoringBatchRepository } from "../domain/scoring-batch.repository.js";
 import { SCORING_QUEUE, type ScoringQueue } from "../domain/scoring-queue.js";
+import { SQSClient } from "@aws-sdk/client-sqs";
+import { loadEnv } from "../../config/env.js";
+import { InternalScoringController } from "./internal-scoring.controller.js";
+import { SqsScoringQueue } from "./sqs-scoring-queue.js";
+import { WORKER_SECRET, WorkerSignatureGuard } from "./worker-signature.guard.js";
 import { InProcessScoringQueue } from "./in-process-scoring-queue.js";
 import { PrismaScoringBatchRepository } from "./prisma-scoring-batch.repository.js";
 import { ScoringBatchesController } from "./scoring-batches.controller.js";
@@ -22,7 +27,7 @@ import { ScoringController } from "./scoring.controller.js";
 
 @Module({
   imports: [PostingsModule, ProfileModule, AiModule],
-  controllers: [ScoringController, ScoringBatchesController],
+  controllers: [ScoringController, ScoringBatchesController, InternalScoringController],
   providers: [
     {
       provide: POSTING_SCORE_REPOSITORY,
@@ -46,11 +51,18 @@ import { ScoringController } from "./scoring.controller.js";
       inject: [SCORING_BATCH_REPOSITORY, ScorePosting],
     },
     {
-      // In-process by default; the SQS adapter replaces it in T2 when SQS_QUEUE_URL is set.
+      // In-process by default; SQS when SQS_QUEUE_URL is set (the worker then calls back the internal endpoint).
       provide: SCORING_QUEUE,
-      useFactory: (process: ProcessScoringJob) => new InProcessScoringQueue((jobId) => process.execute(jobId)),
+      useFactory: (process: ProcessScoringJob): ScoringQueue => {
+        const { SQS } = loadEnv();
+        if (!SQS) return new InProcessScoringQueue((jobId) => process.execute(jobId));
+        const client = new SQSClient({ region: SQS.region, ...(SQS.endpoint !== undefined && { endpoint: SQS.endpoint }) });
+        return new SqsScoringQueue(client, SQS.queueUrl);
+      },
       inject: [ProcessScoringJob],
     },
+    { provide: WORKER_SECRET, useFactory: () => loadEnv().WORKER_SECRET },
+    WorkerSignatureGuard,
     {
       provide: StartScoringBatch,
       useFactory: (p: PostingRepository, pr: ProfileRepository, b: ScoringBatchRepository, q: ScoringQueue) =>

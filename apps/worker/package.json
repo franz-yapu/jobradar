@@ -1,0 +1,12 @@
+{
+  "name": "@jobradar/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": { "@jobradar/shared": "workspace:^" },
+  "devDependencies": { "@types/node": "^22" }
+}
