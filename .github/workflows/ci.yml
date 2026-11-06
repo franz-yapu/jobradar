@@ -68,9 +68,12 @@ jobs:
       - run: terraform test
       - run: terraform -chdir=bootstrap init -backend=false -input=false && terraform -chdir=bootstrap validate
 
-  # The production image must build (SDD-012); nothing is pushed.
+  # The production images must build and the proxy must normalise client addresses (SDD-012); nothing is pushed.
   docker:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: docker build -f deploy/api.Dockerfile -t jobradar-api:ci .
+      - run: docker build -f deploy/web.Dockerfile -t jobradar-web:ci .
+      # What the API receives from the proxy: a client cannot choose its own IP.
+      - run: deploy/check-proxy.sh jobradar-web:ci

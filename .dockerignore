@@ -5,12 +5,10 @@
 **/node_modules
 **/dist
 **/coverage
+**/test-results
+**/playwright-report
 apps/api/src/generated
 apps/api/evals/results
-apps/web/*
-!apps/web/package.json
-apps/worker/*
-!apps/worker/package.json
 infra
 docs
 n8n
