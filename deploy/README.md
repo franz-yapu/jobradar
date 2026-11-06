@@ -5,8 +5,8 @@ AWS. This is the order that works. Steps marked **you** need accounts or credent
 change between versions: follow the intent if a button is named differently.
 
 ```
-Internet ─ Cloudflare ─ Coolify (Traefik) ─ web (Caddy) ─ /api ─► api ─► postgres
-                              └─ jobradar-n8n.vertexall.com ─► n8n ──► api (internal network)
+Internet ─ Coolify (Traefik) ─ web (Caddy) ─ jobradar.vertexall.com      ─ /api ─► api ─► postgres
+                                         └─ jobradar-n8n.vertexall.com ─ password ─► n8n ──► api (internal network)
 AWS: SQS ─► Lambda worker ──(signed HTTPS)──► https://jobradar.vertexall.com/api/internal/...
 ```
 
@@ -23,10 +23,8 @@ deploy/smoke.sh http://localhost:18095 --signup
 docker compose -p jr-local -f compose.prod.yml -f deploy/compose.local.yml --env-file /tmp/jobradar-test.env down -v
 ```
 
-## 1. DNS and Cloudflare (you)
-1. In Cloudflare DNS for `vertexall.com` add two **A** records, proxied (orange cloud), pointing at the VPS public IP: `jobradar` and `jobradar-n8n`. (One label under the domain, so the free universal certificate covers both.)
-2. SSL/TLS mode **Full (strict)**. If Traefik cannot obtain its certificate while proxied, set the two records to *DNS only*, deploy, wait for the certificate, then turn the proxy back on.
-3. **Protect n8n before anything else maps to it** (Zero Trust → Access → Applications → *Self-hosted*): application domain `jobradar-n8n.vertexall.com`, policy *Allow* for your e-mail only. A fresh n8n lets the first visitor create the owner account; Access must already be in front.
+## 1. DNS (you, nothing to do)
+`vertexall.com` already has a wildcard `*` A record pointing at the VPS (DNS only, like your other sites), so `jobradar.vertexall.com` and `jobradar-n8n.vertexall.com` resolve already, and the wildcard certificate on the VPS covers them. **Do not create records and do not turn the Cloudflare proxy on** for these two names: the client-address setting (`CLIENT_IP_HEADERS`, step 7) assumes Traefik is the first hop. Until step 4 maps the domains, both names show your main site (the catch-all).
 
 ## 2. Google sign-in (you)
 In Google Cloud Console → your OAuth client → *Authorized redirect URIs* add exactly
@@ -37,22 +35,23 @@ Generate on your machine, keep them in your password manager, never in git or in
 ```bash
 openssl rand -hex 32   # POSTGRES_PASSWORD
 openssl rand -hex 32   # N8N_ENCRYPTION_KEY  (keep it forever: n8n credentials are encrypted with it)
+openssl rand -hex 24   # N8N_BASIC_AUTH_PASSWORD  (the browser asks for it, user "admin", before n8n shows anything)
 openssl rand -hex 32   # WORKER_SECRET       (the same value goes to AWS in step 6)
 ```
 
 ## 4. Create the resource in Coolify (you)
 1. *New resource* → *Docker Compose* from the GitHub repository `franz-yapu/jobradar`, branch `main`, **compose file `/compose.prod.yml`** (build pack *Docker Compose*, base directory `/`).
-2. *Environment variables*: copy `.env.prod.example` and fill it in. Required: `POSTGRES_PASSWORD`, `WEB_ORIGIN=https://jobradar.vertexall.com`, `ADMIN_EMAILS` (your Google e-mail), `N8N_ENCRYPTION_KEY`. Also `GOOGLE_*`, `GROQ_API_KEY`, `WORKER_SECRET`. Keep `AI_GLOBAL_DAILY_BUDGET_USD` (default 2): it is what limits the spend of open registration.
-3. *Domains*: service **web** → `https://jobradar.vertexall.com` (port 80); service **n8n** → `https://jobradar-n8n.vertexall.com` (port 5678). Do not add a domain to `api`, `postgres` or `backup`.
+2. *Environment variables*: copy `.env.prod.example` and fill it in. Required: `POSTGRES_PASSWORD`, `WEB_ORIGIN=https://jobradar.vertexall.com`, `ADMIN_EMAILS` (your Google e-mail), `N8N_ENCRYPTION_KEY`, `N8N_BASIC_AUTH_PASSWORD`. Also `GOOGLE_*`, `GROQ_API_KEY`, `WORKER_SECRET`. Keep `AI_GLOBAL_DAILY_BUDGET_USD` (default 2): it is what limits the spend of open registration.
+3. *Domains*: put **both** hosts on the one service **web** (port 80): `https://jobradar.vertexall.com,https://jobradar-n8n.vertexall.com`. Caddy inside `web` tells them apart by name: the first is the app, the second goes to n8n after asking for the password. Do not add a domain to `n8n`, `api`, `postgres` or `backup`.
 4. Do **not** publish ports for any service. Deploy.
-5. Check: `deploy/smoke.sh https://jobradar.vertexall.com` (add `--signup` once to also check the session cookie; it leaves a throwaway account).
+5. Check: `deploy/smoke.sh https://jobradar.vertexall.com --n8n-url https://jobradar-n8n.vertexall.com` (add `--signup` once to also check the session cookie; it leaves a throwaway account). The n8n lines must say it asks for credentials.
 
 The first deploy applies the database migrations (the API container runs `prisma migrate deploy` before starting).
 
 ## 5. First administrator and n8n (you, then Claude can help)
 1. Open the site and **sign in with Google** using the e-mail in `ADMIN_EMAILS` (only a Google-verified e-mail is an administrator).
 2. *API tokens* → create one. Put it in Coolify as `JOBRADAR_API_TOKEN` (and `TELEGRAM_CHAT_ID` if you use the summary) and redeploy.
-3. Open `https://jobradar-n8n.vertexall.com` (Access login first), create the n8n owner, then import and activate the workflows from the Coolify terminal of the `n8n` service:
+3. Open `https://jobradar-n8n.vertexall.com`: the browser asks for the gate password first (user `admin`), then n8n shows its own first screen: create the owner right away. Then import and activate the workflows from the Coolify terminal of the `n8n` service:
    ```bash
    n8n import:workflow --input=/workflows/01-collect-getonboard.json
    n8n import:workflow --input=/workflows/02-daily-summary-telegram.json
@@ -71,8 +70,11 @@ terraform -chdir=infra/terraform init -backend-config=backend.hcl && terraform -
 Then let the API send jobs: create an IAM user, attach the `api_sender_policy_arn` output, create an access key and put `SQS_QUEUE_URL` (output `queue_url`), `AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in Coolify; redeploy.
 Prove the whole chain: `WORKER_SECRET=<secret> deploy/smoke.sh https://jobradar.vertexall.com` (the signed call must reach the API), then in the app press *Score the newest jobs* and watch the Lambda logs in CloudWatch. `terraform destroy` removes the AWS side when you are done.
 
-## 7. Optional hardening (you, think first)
-The API trusts `CF-Connecting-IP` as the client address when it comes through the proxy chain. Someone who reaches the VPS **without** Cloudflare could send their own. If every site on that VPS is proxied by Cloudflare, restrict ports 80/443 to [Cloudflare's IP ranges](https://www.cloudflare.com/ips/) in the VPS firewall. If other sites there are not proxied, do not: you would take them down. For a demo the residual risk is only a spoofable login rate limit.
+## 7. Client address and Cloudflare (read before changing DNS)
+The API rate-limits logins by client address. The default (`CLIENT_IP_HEADERS=X-Forwarded-For`) is right for your setup: Traefik is the first hop and overwrites whatever a client sends, and Caddy reads the header from the right and stops at the first address that is not a proxy. `CF-Connecting-IP` is ignored on purpose: with the VPS reachable directly (your other sites are not proxied) any client could send it and pick its own address.
+Only if you someday put the **app host** behind Cloudflare's proxy **and** make the VPS accept web traffic from Cloudflare alone, set `CLIENT_IP_HEADERS=CF-Connecting-IP X-Forwarded-For`. Without that second condition, leave it as it is. `deploy/check-proxy.sh` covers both settings.
+
+The n8n gate is a shared password at the proxy plus n8n's own login. The password is checked with bcrypt (slow on purpose), but there is no lock-out after failures: keep it long and random.
 
 ## Operating it
 | Task | How |

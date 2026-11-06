@@ -9,9 +9,9 @@ The app only ran locally. SDD-010 added an SQS queue and a worker Lambda that ca
 1. **Host the API, the web, Postgres and n8n on the VPS**, deployed by Coolify from one Docker Compose file. **No RDS:** a managed database adds cost and a second perimeter for no benefit at this scale. Postgres is reachable only inside the compose network.
 2. **AWS keeps only what SDD-010 built:** SQS, the worker Lambda, IAM and alarms.
 3. **One origin for the app** (`https://jobradar.vertexall.com`): a small Caddy container serves the static web build and forwards `/api` to the API. No CORS in production, cookies stay `SameSite=Lax` and `Secure`. Coolify's Traefik terminates TLS.
-4. **n8n has its own protected URL** (`jobradar-n8n.vertexall.com`) behind Cloudflare Access plus its own login; never a published port.
+4. **n8n has its own host** (`jobradar-n8n.vertexall.com`), mapped to the same `web` service as the app. Caddy asks that host for a shared password (bcrypt, generated from `N8N_BASIC_AUTH_PASSWORD` at start; closed for everybody if unset) before n8n's own login; n8n itself has no domain and no published port. Cloudflare Access was dropped: it needs the proxy, and the owner's sites (and this VPS's IP) are DNS-only behind a wildcard record.
 5. **The API ships as one esbuild bundle** (`dist/main.mjs`) with dependencies external and the workspace package `@jobradar/shared` inlined (it is TypeScript source). The image is multi-stage, runs as a non-root user, applies `prisma migrate deploy` before starting and must run as a single instance.
-6. **Behind proxies the API trusts exactly `TRUST_PROXY` hops** of `X-Forwarded-For`; Caddy normalises the header. Swagger is off when `NODE_ENV=production`.
+6. **Behind proxies the API trusts exactly `TRUST_PROXY` hops** of `X-Forwarded-For`; Caddy normalises the header, believing only `X-Forwarded-For` from a private peer (Traefik) and reading it from the right (`trusted_proxies_strict`). `CF-Connecting-IP` is opt-in (`CLIENT_IP_HEADERS`), because the VPS is reachable without Cloudflare and a client could forge it. Swagger is off when `NODE_ENV=production`.
 7. **Open registration is bounded by a global daily AI budget** (SDD-012 T2), on top of the per-account one.
 
 ## Alternatives considered

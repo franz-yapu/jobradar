@@ -1,13 +1,48 @@
-# Proxy of the app (SDD-012): static web build + /api to the API, plain HTTP on :80.
-# TLS is terminated in front (Cloudflare, Coolify's Traefik), never here.
+# Proxy of the app and the n8n gate (SDD-012): static web build + /api to the API for the app host, and a password
+# gate in front of n8n for the n8n host. Plain HTTP on :80: TLS is terminated in front (Coolify's Traefik).
+# Both public hosts are mapped to this one service in Coolify; the Host header decides.
 {
 	auto_https off
 	admin off
 	servers {
 		# Peers allowed to tell us the real client address. Default: any private address (Traefik on the Docker network).
-		# From anyone else CF-Connecting-IP / X-Forwarded-For are ignored, so a client cannot choose its own IP.
+		# From anyone else the headers below are ignored, so a client cannot choose its own IP.
 		trusted_proxies static {$TRUSTED_PROXIES:private_ranges}
-		client_ip_headers CF-Connecting-IP X-Forwarded-For
+		# Read X-Forwarded-For from the right and stop at the first address that is not a trusted proxy. By default Caddy
+		# takes the leftmost entry, which is the one a client can prepend itself.
+		trusted_proxies_strict
+		# Which header carries the client address, first match wins. Behind Coolify's Traefik alone (sites that are not
+		# proxied by Cloudflare) only X-Forwarded-For is trustworthy: Traefik overwrites what the client sent. Add
+		# CF-Connecting-IP in front of it ONLY if every request really arrives through Cloudflare's proxy.
+		client_ip_headers {$CLIENT_IP_HEADERS:X-Forwarded-For}
+	}
+}
+
+# n8n: nothing reaches the editor without the shared password (the generated hash is in N8N_BASIC_AUTH_HASH, see
+# web-entrypoint.sh). n8n has its own login behind this; the gate stops the world from even seeing it.
+http://{$N8N_HOST:jobradar-n8n.vertexall.com} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	handle {
+		basic_auth bcrypt "JobRadar n8n" {
+			{$N8N_BASIC_AUTH_USER:admin} {$N8N_BASIC_AUTH_HASH}
+		}
+		reverse_proxy {$N8N_UPSTREAM:n8n:5678} {
+			header_up X-Forwarded-For {client_ip}
+			header_up -CF-Connecting-IP
+			header_up -X-Real-IP
+		}
 	}
 }
 

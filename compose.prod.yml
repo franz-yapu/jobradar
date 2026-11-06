@@ -2,8 +2,8 @@
 # At the repository root so build contexts and paths mean the same whoever runs it.
 # No `ports:` anywhere: Coolify's proxy (Traefik) routes the two public hosts to the services named below:
 #   jobradar.vertexall.com       -> web:80
-#   jobradar-n8n.vertexall.com   -> n8n:5678   (put Cloudflare Access in front BEFORE the first visit)
-# Postgres and the API are reachable only inside this project's network. Values come from the environment (Coolify's
+#   jobradar-n8n.vertexall.com   -> web:80     (the SAME service: Caddy tells the hosts apart and asks the n8n host for a password)
+# n8n itself has no domain. Postgres and the API are reachable only inside this project's network. Values come from the environment (Coolify's
 # UI or an .env file); see .env.prod.example. `${VAR:?}` makes a missing required secret stop the deploy.
 name: jobradar
 
@@ -18,6 +18,13 @@ services:
     depends_on: { api: { condition: service_healthy } }
     environment:
       API_UPSTREAM: api:3000
+      N8N_UPSTREAM: n8n:5678
+      N8N_HOST: ${N8N_HOST:-jobradar-n8n.vertexall.com}
+      # The gate in front of n8n. The password is turned into a bcrypt hash when the container starts.
+      N8N_BASIC_AUTH_USER: ${N8N_BASIC_AUTH_USER:-admin}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD:?set N8N_BASIC_AUTH_PASSWORD (openssl rand -hex 24)}
+      # Where the real client address comes from. Behind Coolify's Traefik only: X-Forwarded-For (see Caddyfile).
+      CLIENT_IP_HEADERS: ${CLIENT_IP_HEADERS:-X-Forwarded-For}
     mem_limit: 128m
     logging: *logging
 
@@ -102,7 +109,7 @@ services:
       N8N_PORT: "5678"
       WEBHOOK_URL: https://${N8N_HOST:-jobradar-n8n.vertexall.com}/
       N8N_SECURE_COOKIE: "true"
-      # Cloudflare and Traefik sit in front: trust their two X-Forwarded-For hops.
+      # Traefik and the web container (Caddy) sit in front: trust their two X-Forwarded-For hops.
       N8N_PROXY_HOPS: "2"
       # Credentials in the volume are encrypted with this key: keep it, or they cannot be read after a rebuild.
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?set N8N_ENCRYPTION_KEY (openssl rand -hex 32)}

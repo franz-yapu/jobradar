@@ -79,7 +79,7 @@ jobs:
       - run: deploy/check-proxy.sh jobradar-web:ci
       # The production compose file must stay valid, publish no ports and refuse to deploy without its secrets.
       - run: |
-          if env -u POSTGRES_PASSWORD -u WEB_ORIGIN -u ADMIN_EMAILS -u N8N_ENCRYPTION_KEY docker compose -f compose.prod.yml config >/dev/null 2>&1; then
+          if env -u POSTGRES_PASSWORD -u WEB_ORIGIN -u ADMIN_EMAILS -u N8N_ENCRYPTION_KEY -u N8N_BASIC_AUTH_PASSWORD docker compose -f compose.prod.yml config >/dev/null 2>&1; then
             echo "compose.prod.yml must refuse to deploy without its required secrets"; exit 1
           fi
           docker compose -f compose.prod.yml config --format json \
@@ -89,3 +89,4 @@ jobs:
           WEB_ORIGIN: https://jobradar.example.test
           ADMIN_EMAILS: admin@example.test
           N8N_ENCRYPTION_KEY: ci-key
+          N8N_BASIC_AUTH_PASSWORD: ci-password

@@ -4,6 +4,8 @@
 #   deploy/smoke.sh http://localhost:18095 --signup            (creates a throwaway account and checks the session cookie)
 #   deploy/smoke.sh https://jobradar.vertexall.com --expect-signup closed    (use when ALLOW_SIGNUP=false)
 #   WORKER_SECRET=... deploy/smoke.sh <url>                   (also proves the worker's signature reaches the API)
+#   deploy/smoke.sh <url> --n8n-url https://jobradar-n8n.vertexall.com   (n8n must ask for a password; add
+#       --n8n-host-header jobradar-n8n.vertexall.com to test it on a local port)
 set -uo pipefail
 
 BASE="${1:?usage: smoke.sh <base-url> [--signup] [--expect-signup closed]}"
@@ -11,9 +13,13 @@ BASE="${BASE%/}"
 shift
 SIGNUP=0
 EXPECT_CLOSED=0
+N8N_URL=""
+N8N_HOST_HEADER=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --signup) SIGNUP=1 ;;
+    --n8n-url) shift; N8N_URL="${1:-}" ;;
+    --n8n-host-header) shift; N8N_HOST_HEADER="${1:-}" ;;
     --expect-signup) shift; [ "${1:-}" = "closed" ] && EXPECT_CLOSED=1 ;;
     *) echo "unknown option: $1" >&2; exit 2 ;;
   esac
@@ -56,6 +62,16 @@ echo "origin guard (WEB_ORIGIN must be this site)"
 body='{"email":"smoke@invalid.test","password":"wrong-password-123"}'
 check "this origin may write (wrong password, not bad_origin)" "$(status -X POST "$BASE/api/auth/login" -H "Origin: $BASE" -H 'Content-Type: application/json' -d "$body")" '^401$'
 check "another origin is refused" "$(status -X POST "$BASE/api/auth/login" -H 'Origin: https://evil.example' -H 'Content-Type: application/json' -d "$body")" '^403$'
+
+if [ -n "$N8N_URL" ]; then
+  echo "n8n gate (nothing is shown without the password)"
+  n8n_args=()
+  [ -n "$N8N_HOST_HEADER" ] && n8n_args=(-H "Host: $N8N_HOST_HEADER")
+  check "n8n asks for credentials" "$(status "${n8n_args[@]}" "${N8N_URL%/}/")" '^401$'
+  check "n8n challenges with Basic auth" "$(curl_ -D - -o /dev/null "${n8n_args[@]}" "${N8N_URL%/}/" | tr -d '\r' | grep -i '^www-authenticate:' || true)" '[Bb]asic'
+  check "a wrong password is refused" "$(status -u 'admin:definitely-wrong' "${n8n_args[@]}" "${N8N_URL%/}/")" '^401$'
+  check "no n8n page is leaked before the login" "$(curl_ "${n8n_args[@]}" "${N8N_URL%/}/" | grep -ci 'n8n' || true)" '^0$'
+fi
 
 if [ -n "${WORKER_SECRET:-}" ]; then
   echo "worker signature (sign the path the Lambda signs: without the /api prefix)"

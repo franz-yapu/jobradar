@@ -21,7 +21,9 @@ RUN pnpm --filter @jobradar/web exec vite build
 
 FROM caddy:2-alpine AS runtime
 COPY deploy/Caddyfile /etc/caddy/Caddyfile
+COPY deploy/web-entrypoint.sh /usr/local/bin/web-entrypoint.sh
 COPY --from=build /repo/apps/web/dist /srv
 EXPOSE 80
+ENTRYPOINT ["web-entrypoint.sh"]
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget -q -O /dev/null http://127.0.0.1/healthz || exit 1
