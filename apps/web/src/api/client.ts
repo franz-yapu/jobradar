@@ -6,6 +6,8 @@ import {
   PostingScoreSchema,
   PostingSchema,
   ProfileSchema,
+  ScoringBatchSchema,
+  ScoringBatchStartedSchema,
   ProvidersSchema,
   UserSchema,
 } from "@jobradar/shared";
@@ -21,6 +23,8 @@ import type {
   ProfileResponse,
   ProvidersResponse,
   SaveProfileInput,
+  ScoringBatchResponse,
+  ScoringBatchStartedResponse,
   UserResponse,
 } from "@jobradar/shared";
 import { z } from "zod";
@@ -58,6 +62,9 @@ export interface ApiClient {
   listPostings(params?: ListPostingsParams): Promise<PaginatedPostingsResponse>;
   createPosting(body: CreatePostingInput): Promise<PostingResponse>;
   scorePosting(postingId: string): Promise<PostingScoreResponse>;
+  /** Queues the newest unscored postings for background scoring; `id` is null when there is nothing to score. */
+  startScoringBatch(limit?: number): Promise<ScoringBatchStartedResponse>;
+  getScoringBatch(batchId: string): Promise<ScoringBatchResponse>;
   /** `null` when the profile has not been configured yet (404). */
   getProfile(): Promise<ProfileResponse | null>;
   saveProfile(body: SaveProfileInput): Promise<ProfileResponse>;
@@ -155,6 +162,9 @@ export function createApiClient({ baseUrl, fetchFn, onUnauthorized }: ClientOpti
     createPosting: (body) => request("/postings", PostingSchema, { method: "POST", body: JSON.stringify(body) }),
     scorePosting: (postingId) =>
       request(`/postings/${encodeURIComponent(postingId)}/score`, PostingScoreSchema, { method: "POST" }),
+    startScoringBatch: (limit) =>
+      request("/scoring/batches", ScoringBatchStartedSchema, { method: "POST", body: JSON.stringify(limit === undefined ? {} : { limit }) }),
+    getScoringBatch: (batchId) => request(`/scoring/batches/${encodeURIComponent(batchId)}`, ScoringBatchSchema),
     getProfile: async () => {
       try {
         return await request("/profile", ProfileSchema);

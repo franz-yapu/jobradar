@@ -39,7 +39,8 @@
     "scoreNewestHint": "Scores up to 10 jobs you have not scored yet.",
     "scoringProgress": "Scoring {{done}} of {{total}}…",
     "scoredCount": "Scored {{count}} jobs.",
-    "nothingToScore": "There is nothing new to score."
+    "nothingToScore": "There is nothing new to score.",
+    "batchFailed": "{{count}} jobs could not be scored."
   },
   "errors": {
     "network_error": "The API is unreachable. Is it running?",

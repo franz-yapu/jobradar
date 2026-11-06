@@ -5,10 +5,16 @@ import type * as ClientModule from "../api/client";
 import { ApiError } from "../api/client";
 import { renderApp } from "../test/render";
 
-const { listPostings, scorePosting, getProfile } = vi.hoisted(() => ({ listPostings: vi.fn(), scorePosting: vi.fn(), getProfile: vi.fn() }));
+const { listPostings, scorePosting, getProfile, startScoringBatch, getScoringBatch } = vi.hoisted(() => ({
+  listPostings: vi.fn(),
+  scorePosting: vi.fn(),
+  getProfile: vi.fn(),
+  startScoringBatch: vi.fn(),
+  getScoringBatch: vi.fn(),
+}));
 vi.mock("../api/client", async (importOriginal) => ({
   ...(await importOriginal<typeof ClientModule>()),
-  api: { listPostings, scorePosting, getProfile },
+  api: { listPostings, scorePosting, getProfile, startScoringBatch, getScoringBatch },
 }));
 
 const base = {
@@ -63,6 +69,8 @@ describe("Postings page", () => {
     listPostings.mockReset();
     scorePosting.mockReset();
     getProfile.mockReset();
+    startScoringBatch.mockReset();
+    getScoringBatch.mockReset();
     getProfile.mockResolvedValue({ version: 1 });
     listPostings.mockResolvedValue(page([FIT, REJECT, UNSCORED]));
   });
@@ -153,28 +161,65 @@ describe("Postings page", () => {
       expect(screen.queryByRole("button", { name: "Score the newest jobs" })).toBeNull();
     });
 
-    it("with a profile there is no banner, and the newest unscored jobs can be scored in one go", async () => {
-      listPostings.mockImplementation((params?: { verdict?: string }) =>
-        Promise.resolve(params?.verdict === "unscored" ? page([UNSCORED, { ...UNSCORED, id: "44444444-4444-4444-8444-444444444444" }]) : page([FIT, REJECT, UNSCORED])),
-      );
-      scorePosting.mockResolvedValue({});
+    const BATCH = "55555555-5555-4555-8555-555555555555";
+    const progress = (over: Partial<{ requested: number; queued: number; done: number; failed: number; errors: unknown[] }>) => ({
+      id: BATCH, requested: 2, queued: 0, done: 0, failed: 0, errors: [], createdAt: "2026-11-06T10:00:00.000Z", ...over,
+    });
+
+    it("with a profile there is no banner, and the newest unscored jobs are scored in the background", async () => {
+      startScoringBatch.mockResolvedValue({ id: BATCH, requested: 2 });
+      getScoringBatch.mockResolvedValue(progress({ done: 2 }));
       renderApp();
       await screen.findAllByTestId("posting-row");
       expect(screen.queryByText("Fill in your profile to see which jobs fit you.")).toBeNull();
 
       await userEvent.click(await screen.findByRole("button", { name: "Score the newest jobs" }));
       expect(await screen.findByText("Scored 2 jobs.")).toBeInTheDocument();
-      expect(scorePosting.mock.calls.map((call) => call[0])).toEqual([UNSCORED.id, "44444444-4444-4444-8444-444444444444"]);
-      expect(listPostings).toHaveBeenCalledWith(expect.objectContaining({ verdict: "unscored", pageSize: 10 }));
+      expect(startScoringBatch).toHaveBeenCalledWith(10);
+      expect(getScoringBatch).toHaveBeenCalledWith(BATCH);
+      expect(scorePosting).not.toHaveBeenCalled();
     });
 
-    it("stops and explains when the daily budget runs out in the middle", async () => {
-      listPostings.mockImplementation((params?: { verdict?: string }) => Promise.resolve(params?.verdict === "unscored" ? page([UNSCORED, FIT]) : page([FIT, REJECT, UNSCORED])));
-      scorePosting.mockResolvedValueOnce({}).mockRejectedValueOnce(new ApiError(429, "ai_budget_exceeded", "budget"));
+    it("shows the progress while jobs are queued, keeps polling and reloads the list as verdicts arrive", async () => {
+      startScoringBatch.mockResolvedValue({ id: BATCH, requested: 2 });
+      getScoringBatch
+        .mockResolvedValueOnce(progress({ queued: 1, done: 1 }))
+        .mockResolvedValue(progress({ done: 2 }));
       renderApp();
       await userEvent.click(await screen.findByRole("button", { name: "Score the newest jobs" }));
-      expect(await screen.findByText(/The daily AI budget is used up/)).toBeInTheDocument();
-      expect(scorePosting).toHaveBeenCalledTimes(2);
+      const button = await screen.findByRole("button", { name: "Scoring 1 of 2…" });
+      expect(button).toBeDisabled();
+      const loadsBefore = listPostings.mock.calls.length;
+      expect(await screen.findByText("Scored 2 jobs.", {}, { timeout: 5000 })).toBeInTheDocument();
+      expect(getScoringBatch.mock.calls.length).toBeGreaterThanOrEqual(2);
+      expect(listPostings.mock.calls.length).toBeGreaterThan(loadsBefore);
+    });
+
+    it("says there is nothing to score when the API queued nothing", async () => {
+      startScoringBatch.mockResolvedValue({ id: null, requested: 0 });
+      renderApp();
+      await userEvent.click(await screen.findByRole("button", { name: "Score the newest jobs" }));
+      expect(await screen.findByText("There is nothing new to score.")).toBeInTheDocument();
+      expect(getScoringBatch).not.toHaveBeenCalled();
+    });
+
+    it("explains why jobs failed, e.g. when the daily budget ran out in the middle", async () => {
+      startScoringBatch.mockResolvedValue({ id: BATCH, requested: 2 });
+      getScoringBatch.mockResolvedValue(
+        progress({ done: 1, failed: 1, errors: [{ postingId: UNSCORED.id, code: "ai_budget_exceeded" }] }),
+      );
+      renderApp();
+      await userEvent.click(await screen.findByRole("button", { name: "Score the newest jobs" }));
+      expect(await screen.findByText("1 jobs could not be scored.")).toBeInTheDocument();
+      expect(screen.getByText(/The daily AI budget is used up/)).toBeInTheDocument();
+      expect(screen.getByText("Scored 1 jobs.")).toBeInTheDocument();
+    });
+
+    it("explains an error starting the batch", async () => {
+      startScoringBatch.mockRejectedValue(new ApiError(422, "profile_not_configured", "no profile"));
+      renderApp();
+      await userEvent.click(await screen.findByRole("button", { name: "Score the newest jobs" }));
+      expect(await screen.findByText("Save your profile before scoring.")).toBeInTheDocument();
     });
 
     it("marks the postings you added yourself and not the shared ones", async () => {

@@ -62,6 +62,8 @@ Data belongs to the account that created it: postings (unique per account and UR
 | `GET` / `PUT` | `/profile` | The single candidate profile (`404` until saved; every `PUT` bumps `version`). Besides the criteria it holds `education`, `experience`, `languages` and `certifications` (optional lists) |
 | `POST` | `/profile/import-cv` | Upload a CV (`multipart/form-data`, field `file`, PDF up to 5 MB / 15 pages). Returns a **draft** profile to review (`200`, nothing is stored; `warnings` lists what could not be found). `400` no file, `413` too large, `415` `cv_not_pdf`, `422` `cv_no_text` / `cv_too_long` / `ai_refused`, `429` `ai_budget_exceeded`, `502` `ai_provider_error`, `503` `ai_not_configured`. The CV text is sent to the configured AI provider; contact data is never asked for nor stored |
 | `POST` | `/postings/:id/score` | Score a posting against the profile. `201` (history is kept), `400` bad id, `404` unknown posting, `422` `profile_not_configured` / `ai_refused`, `429` `ai_budget_exceeded`, `502` `ai_provider_error`, `503` `ai_not_configured` |
+| `POST` | `/scoring/batches` | Queue the newest unscored postings (own + catalog) for background scoring. Body `{ "limit": 1..10 }` (default 10). `202 { id, requested }`, `200 { id: null, requested: 0 }` when nothing is left, `400` bad limit, `422 profile_not_configured` |
+| `GET` | `/scoring/batches/:id` | Progress of a batch: `requested`, `queued`, `done`, `failed` and `errors[{ postingId, code }]`. `404` for another account's batch |
 | `GET` | `/postings/:id/score` | Latest score (`verdict`, `reasons`, `blockers`, profile/prompt version, model). `404` if never scored |
 | `GET` | `/ai/usage` | Today's (UTC) AI spend vs. the daily budget, calls and tokens |
 

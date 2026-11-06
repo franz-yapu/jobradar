@@ -6,6 +6,11 @@ const KNOWN_CODES = new Set(["ai_budget_exceeded", "ai_not_configured", "profile
   "invalid_credentials", "too_many_attempts", "email_taken", "weak_password", "signup_disabled", "bad_origin", "too_many_tokens", "unauthenticated", "password_required", "password_exists",
 ]);
 
+/** Translation key for a machine error code (also the ones a scoring batch reports per posting). */
+export function errorCodeKey(code: string): string {
+  return KNOWN_CODES.has(code) ? `errors.${code}` : "errors.generic";
+}
+
 /** Maps any error to a translated, human message. */
 export function errorKey(error: unknown): string {
   if (error instanceof ApiError) {

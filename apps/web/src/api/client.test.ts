@@ -32,6 +32,25 @@ describe("api client", () => {
     expect(fetchFn.mock.calls[0]?.[0]).toBe("/api/postings?verdict=fit&page=2");
   });
 
+  it("starts a scoring batch (202 or 200 with nothing queued) and reads its progress", async () => {
+    const id = "55555555-5555-4555-8555-555555555555";
+    const fetchFn = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(json({ id, requested: 3 }, 202))
+      .mockResolvedValueOnce(json({ id: null, requested: 0 }, 200))
+      .mockResolvedValueOnce(
+        json({ id, requested: 3, queued: 1, done: 1, failed: 1, errors: [{ postingId: POSTING.id, code: "ai_refused" }], createdAt: "2026-11-06T10:00:00.000Z" }),
+      );
+    const client = clientWith(fetchFn);
+    expect(await client.startScoringBatch(3)).toEqual({ id, requested: 3 });
+    expect(fetchFn.mock.calls[0]?.[0]).toBe("/api/scoring/batches");
+    expect(fetchFn.mock.calls[0]?.[1]).toMatchObject({ method: "POST", body: JSON.stringify({ limit: 3 }) });
+    expect(await client.startScoringBatch()).toEqual({ id: null, requested: 0 });
+    expect(fetchFn.mock.calls[1]?.[1]).toMatchObject({ body: "{}" });
+    expect(await client.getScoringBatch(id)).toMatchObject({ queued: 1, done: 1, failed: 1 });
+    expect(fetchFn.mock.calls[2]?.[0]).toBe(`/api/scoring/batches/${id}`);
+  });
+
   it("rejects a response that does not match the shared schema", async () => {
     const fetchFn = vi.fn<typeof fetch>().mockResolvedValue(json({ items: [{ nope: true }], page: 1, pageSize: 25, total: 1 }));
     await expect(clientWith(fetchFn).listPostings()).rejects.toBeInstanceOf(ContractError);

@@ -39,7 +39,8 @@
     "scoreNewestHint": "Evalúa hasta 10 empleos que aún no has evaluado.",
     "scoringProgress": "Evaluando {{done}} de {{total}}…",
     "scoredCount": "{{count}} empleos evaluados.",
-    "nothingToScore": "No hay nada nuevo por evaluar."
+    "nothingToScore": "No hay nada nuevo por evaluar.",
+    "batchFailed": "{{count}} empleos no se pudieron evaluar."
   },
   "errors": {
     "network_error": "No se puede conectar con la API. ¿Está en marcha?",

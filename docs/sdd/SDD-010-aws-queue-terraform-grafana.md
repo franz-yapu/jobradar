@@ -1,6 +1,6 @@
 # SDD-010 – Batch scoring queue (SQS + Lambda), Terraform and Grafana
 
-**Status:** Approved (2026-11-06) · T1, T2 done · **Week:** 4 · **Depends on:** SDD-002, 009 · **Split:** 010a queue + worker, 010b Terraform, 010c Grafana
+**Status:** Approved (2026-11-06) · T1, T2, T3 done · **Week:** 4 · **Depends on:** SDD-002, 009 · **Split:** 010a queue + worker, 010b Terraform, 010c Grafana
 
 ## Context
 Scoring is synchronous (`POST /postings/:id/score`) and "Score the newest jobs" makes the web call it up to 10 times in a row, so the browser must stay open and one slow or failing call stalls the rest. The README promises SQS, Lambda, Terraform and Grafana, but none exists: no queue port, no worker, no infra, no dashboards. `ai_calls` already stores tokens, latency, cost and status per call.
@@ -17,7 +17,7 @@ Batch scoring runs in the background through a queue (SQS + Lambda in AWS, in-pr
 |---|---|---|
 | T1 (010a) ✅ | Domain: `ScoringBatch`, `ScoringJob`, `ScoringQueue` port; use cases `StartScoringBatch`, `GetScoringBatch`, `ProcessScoringJob`; Prisma repo + migration; in-process adapter | Unit tests, Supertest |
 | T2 (010a) ✅ | `SqsScoringQueue` adapter, worker handler (Lambda entry point), internal endpoint | LocalStack integration test |
-| T3 (010a) | Web: "Score the newest jobs" starts a batch and polls progress | Component tests, E2E |
+| T3 (010a) ✅ | Web: "Score the newest jobs" starts a batch and polls progress | Component tests, E2E |
 | T4 (010b) | Terraform modules + `plan` in CI (no apply) | `terraform validate`, `plan` |
 | T5 (010c) | Grafana provisioning + dashboards, README screenshots | Local `docker compose up`, manual check |
 
