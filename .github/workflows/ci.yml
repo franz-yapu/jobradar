@@ -77,3 +77,13 @@ jobs:
       - run: docker build -f deploy/web.Dockerfile -t jobradar-web:ci .
       # What the API receives from the proxy: a client cannot choose its own IP.
       - run: deploy/check-proxy.sh jobradar-web:ci
+      # The production compose file must stay valid, publish no ports and refuse to deploy without its secrets.
+      - run: |
+          ! docker compose -f compose.prod.yml config >/dev/null 2>&1
+          docker compose -f compose.prod.yml config --format json \
+            | python3 -c "import sys,json; d=json.load(sys.stdin); assert not any(s.get('ports') for s in d['services'].values()), 'a service publishes ports'"
+        env:
+          POSTGRES_PASSWORD: ci-password
+          WEB_ORIGIN: https://jobradar.example.test
+          ADMIN_EMAILS: admin@example.test
+          N8N_ENCRYPTION_KEY: ci-key

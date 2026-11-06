@@ -1,0 +1,6 @@
+# Rehearsal only: publishes the web container on a local port so the production stack can be tested on a laptop.
+#   docker compose -p jr-local -f compose.prod.yml -f deploy/compose.local.yml --env-file <your env> up -d --build
+# Never used in Coolify (there the proxy routes by host name and nothing is published).
+services:
+  web:
+    ports: ["${LOCAL_WEB_PORT:-18095}:80"]

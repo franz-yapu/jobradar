@@ -11,6 +11,5 @@ apps/api/src/generated
 apps/api/evals/results
 infra
 docs
-n8n
 .claude
 .taste-skill

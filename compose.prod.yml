@@ -1,0 +1,126 @@
+# JobRadar in production (SDD-012), for Coolify's "Docker Compose" build pack (also works with plain docker compose).
+# At the repository root so build contexts and paths mean the same whoever runs it.
+# No `ports:` anywhere: Coolify's proxy (Traefik) routes the two public hosts to the services named below:
+#   jobradar.vertexall.com       -> web:80
+#   jobradar-n8n.vertexall.com   -> n8n:5678   (put Cloudflare Access in front BEFORE the first visit)
+# Postgres and the API are reachable only inside this project's network. Values come from the environment (Coolify's
+# UI or an .env file); see .env.prod.example. `${VAR:?}` makes a missing required secret stop the deploy.
+name: jobradar
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+services:
+  web:
+    build: { context: ., dockerfile: deploy/web.Dockerfile }
+    restart: unless-stopped
+    depends_on: { api: { condition: service_healthy } }
+    environment:
+      API_UPSTREAM: api:3000
+    mem_limit: 128m
+    logging: *logging
+
+  api:
+    build: { context: ., dockerfile: deploy/api.Dockerfile }
+    restart: unless-stopped
+    depends_on: { postgres: { condition: service_healthy } }
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-jobradar}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-jobradar}
+      # Exactly one reverse proxy (the web container) in front of the API; it normalises the client address.
+      TRUST_PROXY: "1"
+      WEB_ORIGIN: ${WEB_ORIGIN:?set WEB_ORIGIN, e.g. https://jobradar.vertexall.com}
+      ALLOW_SIGNUP: ${ALLOW_SIGNUP:-true}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:?set ADMIN_EMAILS}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+      AI_PROVIDER: ${AI_PROVIDER:-groq}
+      AI_MODEL: ${AI_MODEL:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_DAILY_BUDGET_USD: ${AI_DAILY_BUDGET_USD:-0.5}
+      # Open registration: all accounts together can never spend more than this per UTC day.
+      AI_GLOBAL_DAILY_BUDGET_USD: ${AI_GLOBAL_DAILY_BUDGET_USD:-2}
+      # Batch scoring through SQS + the worker Lambda (SDD-010). Empty = jobs run inside this process.
+      SQS_QUEUE_URL: ${SQS_QUEUE_URL:-}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      WORKER_SECRET: ${WORKER_SECRET:-}
+    mem_limit: 512m
+    logging: *logging
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-jobradar}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-jobradar}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    mem_limit: 512m
+    logging: *logging
+
+  backup:
+    build: { context: ., dockerfile: deploy/backup.Dockerfile }
+    restart: unless-stopped
+    depends_on: { postgres: { condition: service_healthy } }
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-jobradar}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB:-jobradar}
+      BACKUP_KEEP: ${BACKUP_KEEP:-14}
+      BACKUP_HOUR_UTC: ${BACKUP_HOUR_UTC:-3}
+    volumes:
+      - backups:/backups
+    healthcheck:
+      # Unhealthy when no dump is younger than 26 h: a silently failing backup shows up in Coolify.
+      test: ["CMD-SHELL", "find /backups -name 'jobradar-*.dump' -mmin -1560 | grep -q ."]
+      interval: 30m
+      timeout: 10s
+      retries: 1
+      start_period: 10m
+    mem_limit: 128m
+    logging: *logging
+
+  n8n:
+    build: { context: ., dockerfile: deploy/n8n.Dockerfile }
+    restart: unless-stopped
+    environment:
+      N8N_HOST: ${N8N_HOST:-jobradar-n8n.vertexall.com}
+      N8N_PROTOCOL: https
+      N8N_PORT: "5678"
+      WEBHOOK_URL: https://${N8N_HOST:-jobradar-n8n.vertexall.com}/
+      N8N_SECURE_COOKIE: "true"
+      # Cloudflare and Traefik sit in front: trust their two X-Forwarded-For hops.
+      N8N_PROXY_HOPS: "2"
+      # Credentials in the volume are encrypted with this key: keep it, or they cannot be read after a rebuild.
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?set N8N_ENCRYPTION_KEY (openssl rand -hex 32)}
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      GENERIC_TIMEZONE: America/La_Paz
+      TZ: America/La_Paz
+      # The workflows reach the API on the internal network, never through the internet.
+      JOBRADAR_API_URL: http://api:3000
+      JOBRADAR_API_TOKEN: ${JOBRADAR_API_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+    volumes:
+      - n8ndata:/home/node/.n8n
+    mem_limit: 768m
+    logging: *logging
+
+volumes:
+  pgdata:
+  backups:
+  n8ndata:
