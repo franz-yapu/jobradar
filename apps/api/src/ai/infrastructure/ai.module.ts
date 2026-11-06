@@ -20,7 +20,10 @@ export const AI_INNER_PROVIDER = Symbol("AI_INNER_PROVIDER");
     {
       provide: AI_PROVIDER,
       useFactory: (inner: AiProvider, calls: AiCallRepository) =>
-        new MeteredAiProvider(inner, calls, { dailyBudgetUsd: loadEnv().AI_DAILY_BUDGET_USD }),
+        new MeteredAiProvider(inner, calls, {
+          dailyBudgetUsd: loadEnv().AI_DAILY_BUDGET_USD,
+          globalDailyBudgetUsd: loadEnv().AI_GLOBAL_DAILY_BUDGET_USD,
+        }),
       inject: [AI_INNER_PROVIDER, AI_CALL_REPOSITORY],
     },
     {

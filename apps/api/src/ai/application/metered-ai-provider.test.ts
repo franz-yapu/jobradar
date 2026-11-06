@@ -39,13 +39,17 @@ function slow(inner: FakeAiProvider): AiProvider {
   };
 }
 
-function metered(budget = 1): MeteredAiProvider {
-  return new MeteredAiProvider(slow(fake), calls, { dailyBudgetUsd: budget, now });
+function metered(budget = 1, globalBudget?: number): MeteredAiProvider {
+  return new MeteredAiProvider(slow(fake), calls, {
+    dailyBudgetUsd: budget,
+    ...(globalBudget !== undefined && { globalDailyBudgetUsd: globalBudget }),
+    now,
+  });
 }
 
-function seed(costUsd: number, createdAt = new Date(clock), status: AiCall["status"] = "ok"): void {
+function seed(costUsd: number, createdAt = new Date(clock), status: AiCall["status"] = "ok", userId = USER): void {
   calls.calls.push({
-    id: crypto.randomUUID(), userId: USER, purpose: "scoring", model: "m", status, inputTokens: 1, outputTokens: 1,
+    id: crypto.randomUUID(), userId, purpose: "scoring", model: "m", status, inputTokens: 1, outputTokens: 1,
     cacheReadTokens: 0, cacheWriteTokens: 0, latencyMs: 1, costUsd, detail: null, createdAt,
   });
 }
@@ -160,5 +164,48 @@ describe("MeteredAiProvider budget", () => {
     seed(1);
     await expect(metered(1).generateStructured(request)).rejects.toBeInstanceOf(BudgetExceededError);
     expect(calls.calls.at(-1)).toMatchObject({ status: "budget_blocked", userId: USER });
+  });
+});
+
+describe("MeteredAiProvider global budget (open registration)", () => {
+  const OTHER = "user-b";
+
+  it("blocks an account that is under its own cap once ALL accounts together spent the global cap", async () => {
+    seed(0.6, new Date(clock), "ok", OTHER);
+    seed(0.5, new Date(clock), "ok", "user-c");
+    await expect(metered(5, 1).generateStructured(request)).rejects.toBeInstanceOf(BudgetExceededError);
+    expect(fake.requests).toHaveLength(0);
+    expect(calls.calls.at(-1)).toMatchObject({ status: "budget_blocked", userId: USER, costUsd: 0 });
+    expect(calls.calls.at(-1)?.detail).toMatch(/global/i);
+  });
+
+  it("allows the call while the global total is below the cap", async () => {
+    seed(0.5, new Date(clock), "ok", OTHER);
+    fake.willReturn({ ok: true }, usage);
+    expect((await metered(5, 1).generateStructured(request)).data).toEqual({ ok: true });
+  });
+
+  it("reports the account cap, not the global one, when the account itself is over", async () => {
+    seed(2, new Date(clock), "ok", USER);
+    await expect(metered(1, 100).generateStructured(request)).rejects.toBeInstanceOf(BudgetExceededError);
+    expect(calls.calls.at(-1)?.detail).not.toMatch(/global/i);
+  });
+
+  it("ignores other accounts' spend when no global cap is configured", async () => {
+    seed(50, new Date(clock), "ok", OTHER);
+    fake.willReturn({ ok: true }, usage);
+    expect((await metered(1).generateStructured(request)).data).toEqual({ ok: true });
+  });
+
+  it("starts a new global window at 00:00 UTC and does not count budget-blocked attempts", async () => {
+    seed(5, new Date(Date.parse("2026-03-09T23:59:00Z")), "ok", OTHER);
+    seed(5, new Date(clock), "budget_blocked", OTHER);
+    fake.willReturn({ ok: true }, usage);
+    expect((await metered(5, 1).generateStructured(request)).data).toEqual({ ok: true });
+  });
+
+  it("a global cap of 0 disables AI for everybody", async () => {
+    await expect(metered(5, 0).generateStructured(request)).rejects.toBeInstanceOf(BudgetExceededError);
+    expect(fake.requests).toHaveLength(0);
   });
 });

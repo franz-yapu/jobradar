@@ -73,7 +73,8 @@ Data belongs to the account that created it: postings (unique per account and UR
 | `AI_PROVIDER` | `anthropic` (default, production target) or `groq` (cheap trials) |
 | `ANTHROPIC_API_KEY` / `GROQ_API_KEY` | Key of the selected provider. The API boots without it; scoring answers `503` |
 | `AI_MODEL` | Optional; defaults to `claude-sonnet-5-5` / `openai/gpt-oss-20b`. Needs a price in `ai/infrastructure/pricing.ts` |
-| `AI_DAILY_BUDGET_USD` | Daily spend cap (UTC day). Over it, scoring answers `429` and no provider call is made |
+| `AI_DAILY_BUDGET_USD` | Daily spend cap per account (UTC day). Over it, scoring answers `429` and no provider call is made |
+| `AI_GLOBAL_DAILY_BUDGET_USD` | Optional daily cap on the spend of all accounts together (open registration). Same `429`; the blocked attempt is logged as `budget_blocked` with `global daily budget spent`. Anyone can use it up for everybody: a deliberate trade-off for a public demo |
 | `SQS_QUEUE_URL` | Optional. Batch scoring (`POST /scoring/batches`) runs in the API process; with a queue URL it goes through SQS and the worker (`apps/worker`) calls back the API. Needs `WORKER_SECRET` (32+ chars). `AWS_REGION`, and `AWS_ENDPOINT_URL` for LocalStack, are optional |
 
 Every AI call (including failures and budget blocks) is logged in `ai_calls` with tokens, latency and cost.

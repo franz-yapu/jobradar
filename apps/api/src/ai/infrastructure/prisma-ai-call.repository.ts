@@ -1,3 +1,4 @@
+import type { Prisma } from "../../generated/prisma/client.js";
 import type { PrismaService } from "../../shared/infrastructure/prisma/prisma.service.js";
 import type { AiCall, AiCallRepository, AiUsageTotals } from "../domain/ai-call.js";
 
@@ -9,8 +10,16 @@ export class PrismaAiCallRepository implements AiCallRepository {
   }
 
   async totalsSince(userId: string, since: Date): Promise<AiUsageTotals> {
+    return this.totals({ userId, createdAt: { gte: since }, status: { not: "budget_blocked" } });
+  }
+
+  async totalsAll(since: Date): Promise<AiUsageTotals> {
+    return this.totals({ createdAt: { gte: since }, status: { not: "budget_blocked" } });
+  }
+
+  private async totals(where: Prisma.AiCallWhereInput): Promise<AiUsageTotals> {
     const result = await this.prisma.aiCall.aggregate({
-      where: { userId, createdAt: { gte: since }, status: { not: "budget_blocked" } },
+      where,
       _sum: { costUsd: true, inputTokens: true, outputTokens: true },
       _count: { _all: true },
     });

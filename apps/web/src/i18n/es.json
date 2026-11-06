@@ -47,7 +47,7 @@
     "contract": "La API respondió con un formato inesperado.",
     "generic": "Algo salió mal.",
     "retry": "Reintentar",
-    "ai_budget_exceeded": "Se agotó el presupuesto diario de IA. Inténtalo mañana o sube AI_DAILY_BUDGET_USD.",
+    "ai_budget_exceeded": "Se agotó el presupuesto diario de IA. Inténtalo mañana.",
     "ai_not_configured": "La API no tiene un proveedor de IA configurado.",
     "profile_not_configured": "Guarda tu perfil antes de evaluar.",
     "ai_refused": "La IA se negó a evaluar esta oferta.",

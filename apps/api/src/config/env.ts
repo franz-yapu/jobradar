@@ -25,6 +25,11 @@ const EnvSchema = z.object({
   /** Defaults to the provider's recommended model. */
   AI_MODEL: z.string().trim().optional(),
   AI_DAILY_BUDGET_USD: z.coerce.number().min(0).default(1),
+  /**
+   * Optional cap on the spend of ALL accounts together per UTC day (open registration, SDD-012). Empty = no global cap
+   * (an empty value must not become 0, which would block every AI call).
+   */
+  AI_GLOBAL_DAILY_BUDGET_USD: optionalText.transform((value) => (value === undefined ? undefined : Number(value))).pipe(z.number().min(0).optional()),
   /** Open registration. Set to false to close it once the intended accounts exist. */
   ALLOW_SIGNUP: z
     .enum(["true", "false"])

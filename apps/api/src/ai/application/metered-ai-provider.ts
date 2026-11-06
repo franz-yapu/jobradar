@@ -13,7 +13,13 @@ import {
 } from "../domain/ai-provider.js";
 
 export interface MeteredOptions {
+  /** Per account, per UTC day. */
   dailyBudgetUsd: number;
+  /**
+   * Optional cap on the spend of ALL accounts together per UTC day. With open registration the per-account cap alone
+   * lets N accounts spend N times it; unset keeps the per-account behaviour only.
+   */
+  globalDailyBudgetUsd?: number | undefined;
   now?: () => Date;
 }
 
@@ -39,10 +45,19 @@ export class MeteredAiProvider implements AiProvider {
 
   async generateStructured<T>(request: GenerateStructuredRequest<T>): Promise<AiResult<T>> {
     const startedAt = this.now();
-    const { spentUsd } = await this.calls.totalsSince(request.userId, utcDayStart(startedAt));
+    const dayStart = utcDayStart(startedAt);
+    const { spentUsd } = await this.calls.totalsSince(request.userId, dayStart);
     if (spentUsd >= this.options.dailyBudgetUsd) {
       await this.record(request, this.inner.model, "budget_blocked", ZERO_USAGE, startedAt, "daily budget spent");
       throw new BudgetExceededError(spentUsd, this.options.dailyBudgetUsd);
+    }
+    const globalCap = this.options.globalDailyBudgetUsd;
+    if (globalCap !== undefined) {
+      const all = await this.calls.totalsAll(dayStart);
+      if (all.spentUsd >= globalCap) {
+        await this.record(request, this.inner.model, "budget_blocked", ZERO_USAGE, startedAt, "global daily budget spent");
+        throw new BudgetExceededError(all.spentUsd, globalCap);
+      }
     }
 
     let result: AiResult<T>;

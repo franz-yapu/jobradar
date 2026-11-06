@@ -235,3 +235,11 @@
 - **Verified in a container** against a throwaway Postgres: 12 migrations applied on a fresh database (including the Grafana role), second boot has none pending, `/health` 200, `/docs` 404, `Set-Cookie` has `Secure`, unsigned internal endpoint 401, runs as uid 1000, healthcheck healthy, a bad database password stops the container. Image 689 MB.
 - **Known noise:** Prisma prints "failed to detect the libssl/openssl version" even with OpenSSL installed; migrations and the app work, so it is left as is.
 - **VPS data received** (Contabo, Coolify, 7.8 GB RAM, 96 GB disk, other projects running): nothing was changed there. The deploy is the owner's step; I will not SSH in without being asked for a specific action.
+
+## 2026-11-06 – SDD-012 T2: global daily AI budget
+- **Done:** `AiCallRepository.totalsAll(since)` (Prisma and in-memory), `MeteredOptions.globalDailyBudgetUsd` checked after the account cap in `MeteredAiProvider`, env `AI_GLOBAL_DAILY_BUDGET_USD`. A blocked attempt is logged `budget_blocked` under the caller with `detail: "global daily budget spent"`; same `BudgetExceededError` and `429 ai_budget_exceeded`, so the web and the batch jobs (fail with that code, no provider call) needed no change.
+- **Env parsing:** an empty value means "no global cap", not 0 (0 would disable all AI); an explicit `0` is allowed and disables AI for everybody.
+- **Product text:** the budget error shown to users no longer names `AI_DAILY_BUDGET_USD` (an operator detail, now visible to anyone who registers).
+- **Tests:** 6 unit cases (cap crossed by other accounts' spend, below cap, account cap reported first, no cap, UTC day window and blocked rows not counted, cap 0), env parsing, and a Supertest scenario with two real accounts crossing the cap (429, provider not called, personal usage still under its own cap) plus a batch that fails with the budget code.
+- **Trade-off:** the cap is also a lever: anyone can exhaust the day's budget for everybody. Accepted for a demo; `ALLOW_SIGNUP=false` is the fallback.
+- **Not covered:** two requests racing at the cap can overshoot by one call each (same as the per-account cap).

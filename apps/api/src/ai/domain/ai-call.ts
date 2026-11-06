@@ -33,6 +33,8 @@ export interface AiCallRepository {
   save(call: AiCall): Promise<void>;
   /** Spend and tokens of ONE account since the instant (the budget is per account). */
   totalsSince(userId: string, since: Date): Promise<AiUsageTotals>;
+  /** Spend and tokens of ALL accounts together since the instant (the global cap that bounds open registration). */
+  totalsAll(since: Date): Promise<AiUsageTotals>;
 }
 
 /** Start (00:00 UTC) of the day containing `date`; the budget window. */

@@ -80,3 +80,17 @@ describe("production switches", () => {
     expect(() => loadEnv({ ...base, TRUST_PROXY: "9" })).toThrow();
   });
 });
+
+describe("AI_GLOBAL_DAILY_BUDGET_USD", () => {
+  const base = { DATABASE_URL: "x" };
+  it("is unset by default and when empty (an empty value must not mean 0, which would block all AI)", () => {
+    expect(loadEnv(base).AI_GLOBAL_DAILY_BUDGET_USD).toBeUndefined();
+    expect(loadEnv({ ...base, AI_GLOBAL_DAILY_BUDGET_USD: "" }).AI_GLOBAL_DAILY_BUDGET_USD).toBeUndefined();
+  });
+  it("accepts a number, including 0, and rejects negatives and text", () => {
+    expect(loadEnv({ ...base, AI_GLOBAL_DAILY_BUDGET_USD: "2" }).AI_GLOBAL_DAILY_BUDGET_USD).toBe(2);
+    expect(loadEnv({ ...base, AI_GLOBAL_DAILY_BUDGET_USD: "0" }).AI_GLOBAL_DAILY_BUDGET_USD).toBe(0);
+    expect(() => loadEnv({ ...base, AI_GLOBAL_DAILY_BUDGET_USD: "-1" })).toThrow();
+    expect(() => loadEnv({ ...base, AI_GLOBAL_DAILY_BUDGET_USD: "abc" })).toThrow();
+  });
+});

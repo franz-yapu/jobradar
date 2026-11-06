@@ -8,7 +8,14 @@ export class InMemoryAiCallRepository implements AiCallRepository {
   }
 
   async totalsSince(userId: string, since: Date): Promise<AiUsageTotals> {
-    const rows = this.calls.filter((c) => c.userId === userId && c.status !== "budget_blocked" && c.createdAt >= since);
+    return this.sum(this.calls.filter((c) => c.userId === userId && c.status !== "budget_blocked" && c.createdAt >= since));
+  }
+
+  async totalsAll(since: Date): Promise<AiUsageTotals> {
+    return this.sum(this.calls.filter((c) => c.status !== "budget_blocked" && c.createdAt >= since));
+  }
+
+  private sum(rows: AiCall[]): AiUsageTotals {
     return {
       spentUsd: rows.reduce((sum, c) => sum + c.costUsd, 0),
       calls: rows.length,

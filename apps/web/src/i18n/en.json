@@ -47,7 +47,7 @@
     "contract": "The API answered with an unexpected format.",
     "generic": "Something went wrong.",
     "retry": "Retry",
-    "ai_budget_exceeded": "The daily AI budget is used up. Try again tomorrow or raise AI_DAILY_BUDGET_USD.",
+    "ai_budget_exceeded": "The daily AI budget is used up. Try again tomorrow.",
     "ai_not_configured": "No AI provider is configured on the API.",
     "profile_not_configured": "Save your profile before scoring.",
     "ai_refused": "The AI refused to score this posting.",
