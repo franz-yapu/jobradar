@@ -26,7 +26,7 @@ remote scope, seniority, English level, contract type and stack match, with a cl
 | AI | Anthropic SDK (tool use), provider-agnostic port (Claude / OpenAI / Gemini), promptfoo evals |
 | Automation | n8n (self-hosted, workflows exported in `n8n/workflows`) |
 | Frontend | React 19, Vite, TypeScript, TanStack Query, Tailwind |
-| Cloud | AWS (S3, SQS, Lambda, RDS) provisioned with Terraform |
+| Cloud | VPS (Coolify) for the app; AWS (SQS, Lambda, IAM) provisioned with Terraform for the scoring queue, see ADR-0005 |
 | Quality | Vitest, Supertest, Playwright, ESLint, GitHub Actions |
 | Observability | Grafana reading `ai_calls` through a read-only role (no Prometheus), see `infra/grafana/README.md` |
 

@@ -63,3 +63,20 @@ describe("batch scoring queue", () => {
     expect(loadEnv({ DATABASE_URL: "x", SQS_QUEUE_URL: "", WORKER_SECRET: "" }).SQS).toBeNull();
   });
 });
+
+describe("production switches", () => {
+  const base = { DATABASE_URL: "x" };
+  it("serves Swagger by default and not when NODE_ENV=production, unless asked", () => {
+    expect(loadEnv(base).SWAGGER_ENABLED).toBe(true);
+    expect(loadEnv({ ...base, NODE_ENV: "production" }).SWAGGER_ENABLED).toBe(false);
+    expect(loadEnv({ ...base, NODE_ENV: "production", SWAGGER_ENABLED: "true" }).SWAGGER_ENABLED).toBe(true);
+    expect(loadEnv({ ...base, SWAGGER_ENABLED: "false" }).SWAGGER_ENABLED).toBe(false);
+    expect(() => loadEnv({ ...base, SWAGGER_ENABLED: "maybe" })).toThrow();
+  });
+  it("trusts no proxy by default and accepts a small hop count only", () => {
+    expect(loadEnv(base).TRUST_PROXY).toBe(0);
+    expect(loadEnv({ ...base, TRUST_PROXY: "1" }).TRUST_PROXY).toBe(1);
+    expect(() => loadEnv({ ...base, TRUST_PROXY: "-1" })).toThrow();
+    expect(() => loadEnv({ ...base, TRUST_PROXY: "9" })).toThrow();
+  });
+});

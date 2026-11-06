@@ -57,6 +57,13 @@ const EnvSchema = z.object({
   AWS_REGION: z.string().trim().default("us-east-1"),
   AWS_ENDPOINT_URL: optionalText,
   WORKER_SECRET: optionalText.pipe(z.string().min(32, "WORKER_SECRET needs at least 32 characters").optional()),
+  /**
+   * Number of reverse proxies in front of the API whose X-Forwarded-For is trusted (SDD-012). 0 = none: the socket
+   * address is the client. Wrong values either merge every client into one throttle bucket or let clients spoof IPs.
+   */
+  TRUST_PROXY: z.coerce.number().int().min(0).max(5).default(0),
+  /** Serve Swagger at /docs. Defaults to on, except when NODE_ENV=production. */
+  SWAGGER_ENABLED: z.enum(["true", "false"]).optional(),
   /** Origins allowed to call the API from a browser (comma separated). The dashboard's dev server by default. */
   WEB_ORIGIN: z
     .string()
@@ -90,8 +97,9 @@ export interface SqsSettings {
 
 export type Env = Omit<
   z.infer<typeof EnvSchema>,
-  "AI_MODEL" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "GOOGLE_REDIRECT_URI" | "SQS_QUEUE_URL" | "AWS_REGION" | "AWS_ENDPOINT_URL"
+  "AI_MODEL" | "GOOGLE_CLIENT_ID" | "GOOGLE_CLIENT_SECRET" | "GOOGLE_REDIRECT_URI" | "SQS_QUEUE_URL" | "AWS_REGION" | "AWS_ENDPOINT_URL" | "SWAGGER_ENABLED"
 > & {
+  SWAGGER_ENABLED: boolean;
   AI_MODEL: string;
   /** Null unless SQS_QUEUE_URL is set: batch scoring then runs in-process. */
   SQS: SqsSettings | null;
@@ -100,12 +108,15 @@ export type Env = Omit<
 };
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, SQS_QUEUE_URL, AWS_REGION, AWS_ENDPOINT_URL, ...env } =
+  const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, SQS_QUEUE_URL, AWS_REGION, AWS_ENDPOINT_URL, SWAGGER_ENABLED, ...env } =
     EnvSchema.parse(source);
   const sqs = SQS_QUEUE_URL ? { queueUrl: SQS_QUEUE_URL, region: AWS_REGION, endpoint: AWS_ENDPOINT_URL } : null;
   const google =
     GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET && GOOGLE_REDIRECT_URI
       ? { clientId: GOOGLE_CLIENT_ID, clientSecret: GOOGLE_CLIENT_SECRET, redirectUri: GOOGLE_REDIRECT_URI }
       : null;
-  return { ...env, AI_MODEL: env.AI_MODEL || DEFAULT_MODELS[env.AI_PROVIDER], GOOGLE: google, SQS: sqs };
+  return { ...env, AI_MODEL: env.AI_MODEL || DEFAULT_MODELS[env.AI_PROVIDER], GOOGLE: google,
+    SQS: sqs,
+    SWAGGER_ENABLED: SWAGGER_ENABLED === undefined ? source["NODE_ENV"] !== "production" : SWAGGER_ENABLED === "true",
+  };
 }

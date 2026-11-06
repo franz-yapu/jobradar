@@ -228,3 +228,10 @@
 - **Verified:** all 9 panel queries ran through Grafana's `/api/ds/query` against the dev database (47 calls, real latency/cost) with no SQL error; datasource health OK; palette checked with the dataviz validator (blue/orange/aqua, dark and light).
 - **Not verified:** a visual check of the rendered dashboard (Grafana login needed; to be done by the owner). Colours are set per series by name, so a new model shows in neutral grey until it gets an override.
 - **SDD-010 closed** except the end-to-end AWS run, which waits for hosting (SDD-012).
+
+## 2026-11-06 – SDD-012 T1: production image of the API
+- **Done:** `apps/api/build.mjs` (esbuild bundle, dependencies external, `@jobradar/shared` inlined), `deploy/api.Dockerfile` (multi-stage, `pnpm deploy --prod`, Prisma engine fetched at build time, non-root `node`, healthcheck), `deploy/api-entrypoint.sh` (`prisma migrate deploy` then start), `TRUST_PROXY`, `SWAGGER_ENABLED` (off under `NODE_ENV=production`), `setupTrustProxy`, ADR-0005, CI job that builds the image. `prisma` moved to `dependencies` (the container applies migrations).
+- **Deviation:** the SDD said `tsc` + `node dist`; the workspace package ships as `.ts`, so the API is bundled with esbuild instead. Safe because the code never relied on `emitDecoratorMetadata` (dev already runs through tsx/esbuild).
+- **Verified in a container** against a throwaway Postgres: 12 migrations applied on a fresh database (including the Grafana role), second boot has none pending, `/health` 200, `/docs` 404, `Set-Cookie` has `Secure`, unsigned internal endpoint 401, runs as uid 1000, healthcheck healthy, a bad database password stops the container. Image 689 MB.
+- **Known noise:** Prisma prints "failed to detect the libssl/openssl version" even with OpenSSL installed; migrations and the app work, so it is left as is.
+- **VPS data received** (Contabo, Coolify, 7.8 GB RAM, 96 GB disk, other projects running): nothing was changed there. The deploy is the owner's step; I will not SSH in without being asked for a specific action.
