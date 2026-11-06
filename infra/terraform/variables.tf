@@ -11,7 +11,7 @@ variable "project" {
 }
 
 variable "api_url" {
-  description = "Public HTTPS base URL of the JobRadar API; the worker calls it back (no trailing slash needed)."
+  description = "Public HTTPS base URL the worker calls back, as the browser would reach the API (https://jobradar.vertexall.com/api behind the Caddy proxy). No trailing slash needed."
   type        = string
 
   validation {

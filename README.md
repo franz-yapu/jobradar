@@ -122,6 +122,9 @@ How it is secured is in `docs/adr/ADR-0003-google-sign-in.md` and `docs/security
 ### Administrator and the shared catalog
 Jobs are collected once for everybody (the **shared catalog**) and every account sees them; profiles, verdicts and AI spend stay personal. The administrator is the account whose email is in `ADMIN_EMAILS` (in `.env`, comma separated) **and** that signed in with Google, because only Google verifies the email. The administrator creates the n8n token (API tokens screen, visible only to them); jobs published by n8n go to the catalog.
 
+## Deploying
+Production runs on a VPS with Coolify (`compose.prod.yml`), with AWS only for the scoring queue. Runbook, smoke test and backups: [`deploy/README.md`](deploy/README.md); decision: [ADR-0005](docs/adr/ADR-0005-production-hosting.md).
+
 ## Project structure
 ```
 apps/api        NestJS API (domain / application / infrastructure)

@@ -1,4 +1,5 @@
 # cp terraform.tfvars.example terraform.tfvars (git-ignored)
 region      = "us-east-1"
-api_url     = "https://api.example.com"
+# The worker signs /internal/... and appends it to this URL; the web proxy strips /api before the API sees it.
+api_url     = "https://jobradar.vertexall.com/api"
 alert_email = "you@example.com"
