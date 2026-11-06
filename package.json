@@ -13,7 +13,8 @@
     "quality": "pnpm lint && pnpm typecheck && pnpm test",
     "db:deploy": "pnpm --filter @jobradar/api db:deploy",
     "db:migrate": "pnpm --filter @jobradar/api db:migrate",
-    "e2e": "pnpm --filter @jobradar/web e2e"
+    "e2e": "pnpm --filter @jobradar/web e2e",
+    "grafana:setup": "bash infra/grafana/setup-reader.sh"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

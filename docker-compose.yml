@@ -31,9 +31,18 @@ services:
       - n8ndata:/home/node/.n8n
       - ./n8n/workflows:/workflows:ro
   grafana:
-    image: grafana/grafana:latest
+    # Pinned: the provisioned dashboard was built and checked on this version.
+    image: grafana/grafana:13.3.0
     ports: ["${GRAFANA_PORT:-3001}:3000"]
-    volumes: [grafanadata:/var/lib/grafana]
+    depends_on: [postgres]
+    environment:
+      # Password of the read-only grafana_reader role (set it with `pnpm grafana:setup`)
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:-}
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/ai.json
+    volumes:
+      - grafanadata:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
   # Only for the SQS integration test (`docker compose --profile aws up -d localstack`); never started by default.
   localstack:
     profiles: ["aws"]

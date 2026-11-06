@@ -28,7 +28,7 @@ remote scope, seniority, English level, contract type and stack match, with a cl
 | Frontend | React 19, Vite, TypeScript, TanStack Query, Tailwind |
 | Cloud | AWS (S3, SQS, Lambda, RDS) provisioned with Terraform |
 | Quality | Vitest, Supertest, Playwright, ESLint, GitHub Actions |
-| Observability | Grafana + Prometheus |
+| Observability | Grafana reading `ai_calls` through a read-only role (no Prometheus), see `infra/grafana/README.md` |
 
 ## Quick start
 ```bash
