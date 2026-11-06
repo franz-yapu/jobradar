@@ -215,3 +215,9 @@
 - **Not kept:** the browser-side loop over `POST /postings/:id/score` (single scoring from a row is unchanged).
 - **Known limit:** reopening the page does not resume following a batch (the id lives in component state); the scores still appear in the list. Acceptable for now, cheap to add later with `sessionStorage`.
 - **Verified:** `pnpm quality` and the Playwright suite (5 tests, in-process queue) green.
+
+## 2026-11-06 – SDD-010 T4: Terraform for the queue and the worker
+- **Done:** `infra/terraform` (SQS jobs + DLQ with 3 deliveries and SSE, Lambda worker Node 22 arm64 with `ReportBatchItemFailures` and concurrency capped at 2, least-privilege role, `api-sender` policy, DLQ alarm and US$5 budget when `alert_email` is set, remote state bucket in `bootstrap/`), `apps/worker` bundled with esbuild (2.8 KB, `@aws-sdk/*` external) and reading the secret from SSM at cold start.
+- **Verified without AWS:** Terraform 1.17.1 (checksum checked, installed in `~/.local/bin`): `fmt`, `validate` and `terraform test` (mocked provider, 6 runs: wiring, no wildcard IAM, alarms, variable validation). Two deliberate mutations (receive count 5, `sqs:*`) made the tests fail. Added a `terraform` job to CI. **No `plan`/`apply` has run**: no credentials here; the owner applies (README steps).
+- **Deviations from the SDD:** (1) the secret is created by hand with `aws ssm put-parameter` and Terraform only grants read access, so the value never enters the state; the Lambda reads one parameter, not two (`API_URL` is a plain environment variable). (2) The Lambda zip is uploaded directly by Terraform; the only S3 bucket is the state one. (3) A flat root module instead of nested modules: it is ~150 lines.
+- **Open:** the Lambda needs a public HTTPS `api_url`, which waits for hosting (SDD-012). `maxReceiveCount` 3 and `AI_DAILY_BUDGET_USD` interact: a budget stop fails jobs without retries, so the DLQ only fills on network or auth problems.

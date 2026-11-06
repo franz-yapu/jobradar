@@ -8,3 +8,8 @@ apps/api/evals/results
 apps/web/playwright-report
 apps/web/test-results
 .taste-skill
+infra/terraform/**/.terraform/
+infra/terraform/**/*.tfstate*
+infra/terraform/**/*.tfvars
+infra/terraform/**/backend.hcl
+infra/terraform/.build

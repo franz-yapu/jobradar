@@ -1,6 +1,6 @@
 import { verifyWorkerRequest } from "@jobradar/shared/worker-signature";
 import { describe, expect, it } from "vitest";
-import { createHandler } from "./handler.js";
+import { createHandler, loadSecret } from "./handler.js";
 
 const SECRET = "s".repeat(32);
 const JOB = "11111111-1111-4111-8111-111111111111";
@@ -50,5 +50,21 @@ describe("worker handler", () => {
       ],
     });
     expect(result.batchItemFailures.map((f) => f.itemIdentifier)).toEqual(["m500", "mnet", "mpoison", "mbadid"]);
+  });
+});
+
+describe("loadSecret", () => {
+  it("reads the SecureString parameter named by WORKER_SECRET_PARAM", async () => {
+    const seen: string[] = [];
+    const secret = await loadSecret({ WORKER_SECRET_PARAM: "/jobradar/worker-secret" }, async (name) => {
+      seen.push(name);
+      return "from-ssm";
+    });
+    expect(secret).toBe("from-ssm");
+    expect(seen).toEqual(["/jobradar/worker-secret"]);
+  });
+  it("prefers a literal WORKER_SECRET (local runs) and fails when neither is set", async () => {
+    expect(await loadSecret({ WORKER_SECRET: "literal", WORKER_SECRET_PARAM: "/x" }, async () => "no")).toBe("literal");
+    await expect(loadSecret({}, async () => "x")).rejects.toThrow(/WORKER_SECRET_PARAM/);
   });
 });

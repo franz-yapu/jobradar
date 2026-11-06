@@ -5,8 +5,15 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "build": "esbuild src/handler.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/index.mjs --external:@aws-sdk/*"
   },
-  "dependencies": { "@jobradar/shared": "workspace:^" },
-  "devDependencies": { "@types/node": "^22" }
+  "dependencies": {
+    "@jobradar/shared": "workspace:^"
+  },
+  "devDependencies": {
+    "@aws-sdk/client-ssm": "^3.1163.0",
+    "@types/node": "^22",
+    "esbuild": "^0.28.2"
+  }
 }

@@ -56,10 +56,39 @@ export function createHandler(deps: WorkerDeps): (event: SqsEvent) => Promise<Sq
   };
 }
 
-/** Lambda entry point: configuration comes from the environment, validated on cold start. */
-export const handler = (event: SqsEvent): Promise<SqsBatchResponse> => {
-  const apiUrl = process.env["API_URL"];
-  const secret = process.env["WORKER_SECRET"];
-  if (!apiUrl || !secret) throw new Error("API_URL and WORKER_SECRET are required");
-  return createHandler({ apiUrl, secret })(event);
+export interface SecretEnv {
+  WORKER_SECRET?: string | undefined;
+  WORKER_SECRET_PARAM?: string | undefined;
+}
+
+/**
+ * The shared secret comes from SSM Parameter Store (SecureString) in AWS, so it is never in the Lambda
+ * configuration or in Terraform state. `WORKER_SECRET` is accepted for local runs and tests.
+ */
+export async function loadSecret(env: SecretEnv, getParameter: (name: string) => Promise<string>): Promise<string> {
+  if (env.WORKER_SECRET) return env.WORKER_SECRET;
+  if (env.WORKER_SECRET_PARAM) return getParameter(env.WORKER_SECRET_PARAM);
+  throw new Error("WORKER_SECRET_PARAM (or WORKER_SECRET) is required");
+}
+
+async function ssmGetParameter(name: string): Promise<string> {
+  // Provided by the Lambda runtime (kept external in the bundle); imported lazily so tests do not need it.
+  const { SSMClient, GetParameterCommand } = await import("@aws-sdk/client-ssm");
+  const out = await new SSMClient({}).send(new GetParameterCommand({ Name: name, WithDecryption: true }));
+  const value = out.Parameter?.Value;
+  if (!value) throw new Error(`SSM parameter ${name} has no value`);
+  return value;
+}
+
+let cached: ReturnType<typeof createHandler> | undefined;
+
+/** Lambda entry point: configuration comes from the environment; the secret is read once per cold start. */
+export const handler = async (event: SqsEvent): Promise<SqsBatchResponse> => {
+  if (!cached) {
+    const apiUrl = process.env["API_URL"];
+    if (!apiUrl) throw new Error("API_URL is required");
+    const secret = await loadSecret(process.env, ssmGetParameter);
+    cached = createHandler({ apiUrl, secret });
+  }
+  return cached(event);
 };
