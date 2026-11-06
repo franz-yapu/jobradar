@@ -41,7 +41,7 @@ override_data {
 
 variables {
   api_url         = "https://api.example.com"
-  worker_dist_dir = "tests/fixtures/dist"
+  worker_dist_dir = "tests/fixtures/worker"
 }
 
 run "queue_and_worker_wiring" {
