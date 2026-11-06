@@ -27,6 +27,7 @@ model Posting {
   publishedAt DateTime?
   createdAt   DateTime       @default(now())
   scores      PostingScore[]
+  scoringJobs ScoringJob[]
   /// Owner (ADR-0002). Null means a catalog posting, visible to every account (ADR-0004).
   userId      String?        @db.Uuid
   user        User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -164,6 +165,8 @@ model User {
   postings        Posting[]
   profile         CandidateProfile?
   postingScores   PostingScore[]
+  scoringBatches  ScoringBatch[]
+  scoringJobs     ScoringJob[]
   aiCalls         AiCall[]
   apiTokens       ApiToken[]
 
@@ -216,4 +219,43 @@ model OAuthFlow {
 
   @@index([expiresAt])
   @@map("oauth_flows")
+}
+
+enum ScoringJobStatus {
+  queued
+  done
+  failed
+}
+
+/// A background run that scores an account's newest unscored postings (SDD-010).
+model ScoringBatch {
+  id        String       @id @default(uuid()) @db.Uuid
+  userId    String       @db.Uuid
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requested Int
+  createdAt DateTime     @default(now())
+  jobs      ScoringJob[]
+
+  @@index([userId, createdAt])
+  @@map("scoring_batches")
+}
+
+/// One posting to score for one account within a batch.
+model ScoringJob {
+  id        String           @id @default(uuid()) @db.Uuid
+  batchId   String           @db.Uuid
+  batch     ScoringBatch     @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  userId    String           @db.Uuid
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postingId String           @db.Uuid
+  posting   Posting          @relation(fields: [postingId], references: [id], onDelete: Cascade)
+  status    ScoringJobStatus @default(queued)
+  /// Machine code of the failure; null unless failed.
+  errorCode String?
+  updatedAt DateTime         @default(now())
+
+  @@unique([batchId, postingId])
+  @@index([batchId])
+  @@index([status])
+  @@map("scoring_jobs")
 }

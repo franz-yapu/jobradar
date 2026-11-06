@@ -198,3 +198,9 @@
 - **n8n:** workflow 1 sends `scope: "catalog"` and fails loudly on 403; the token must come from the administrator account.
 - **Tests that read `.env`:** the "Google not configured" test now clears the GOOGLE_* variables itself, so a developer's real `.env` cannot break it.
 
+
+## 2026-11-06 – SDD-010 T1: batch scoring behind a queue port
+- **Done:** `ScoringBatch` / `ScoringJob` tables (migration `20261106120000_add_scoring_batches`), `ScoringQueue` port, `StartScoringBatch`, `GetScoringBatch`, `ProcessScoringJob`, in-process queue (default), `POST /scoring/batches` (`202`, `200` with `requested: 0`, `422 profile_not_configured`, `400` bad limit) and `GET /scoring/batches/:id` (`404` for another account's batch).
+- **Failure handling:** a failed job is recorded with the machine code and never thrown, so a queue will not retry it. Budget, missing configuration or missing profile fail the rest of the batch without more AI calls. A job that is no longer `queued` is skipped (redelivery never scores twice; the update is conditional in SQL).
+- **In-process limits:** jobs still queued when the API stops stay `queued` (no recovery in T1); SQS in T2 is the durable path.
+- **Not done yet:** the web still scores one by one (T3), the SQS adapter and the signed worker endpoint (T2). `pnpm quality` green.
