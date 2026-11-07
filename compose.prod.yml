@@ -111,6 +111,9 @@ services:
       N8N_SECURE_COOKIE: "true"
       # Traefik and the web container (Caddy) sit in front: trust their two X-Forwarded-For hops.
       N8N_PROXY_HOPS: "2"
+      # The editor is told about runs and saves over this channel. Server-sent events are plain HTTP, so they pass the Caddy password gate
+      # and Traefik without a WebSocket upgrade (which left the editor stuck on "No network connection").
+      N8N_PUSH_BACKEND: sse
       # Credentials in the volume are encrypted with this key: keep it, or they cannot be read after a rebuild.
       N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?set N8N_ENCRYPTION_KEY (openssl rand -hex 32)}
       N8N_DIAGNOSTICS_ENABLED: "false"
