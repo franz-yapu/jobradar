@@ -13,3 +13,4 @@ infra/terraform/**/*.tfstate*
 infra/terraform/**/*.tfvars
 infra/terraform/**/backend.hcl
 infra/terraform/.build
+infra/terraform/**/*_override.tf
