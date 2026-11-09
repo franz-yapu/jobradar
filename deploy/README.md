@@ -59,6 +59,14 @@ The first deploy applies the database migrations (the API container runs `prisma
    Add the Telegram credential in the n8n UI (`n8n/workflows/README.md`), run workflow 01 once by hand, then activate both.
 
 ## 6. AWS queue and worker (you)
+> **Optional, and not deployed yet.** Without it the API scores batches in its own process and everything works. On 2026-11-09 this was tried on a
+> new account on the AWS **Free plan**: its organization policy (an SCP you cannot see or change) denied `s3:CreateBucket` and `ssm:PutParameter`
+> (`explicit deny in a service control policy`), so the state bucket and the worker secret could not be created, and the rest would most likely fail
+> too. Nothing was created in the account. The way forward is a **Paid plan** account (it ends the "cannot be charged" protection: use a card you
+> can lock and keep the budget alarm). Until then, rehearse the whole chain locally with LocalStack:
+> `docker compose --profile aws up -d localstack` and `RUN_LOCALSTACK=1 pnpm --filter @jobradar/api exec vitest run test/sqs-localstack`.
+> If you only need a trial of the Terraform with the state on your machine, add a git-ignored `infra/terraform/backend_override.tf` that sets `backend "local" {}`.
+
 Needs the AWS CLI and Terraform on your machine, an AWS account and an alert e-mail. Everything is in [`infra/terraform/README.md`](../infra/terraform/README.md); the values that matter:
 ```bash
 terraform -chdir=infra/terraform/bootstrap init && terraform -chdir=infra/terraform/bootstrap apply   # state bucket, once

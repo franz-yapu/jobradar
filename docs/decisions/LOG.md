@@ -273,3 +273,7 @@
 - **Client address:** the VPS is reachable without Cloudflare, so `CF-Connecting-IP` is forgeable. Default is now `CLIENT_IP_HEADERS=X-Forwarded-For` from private peers only, read from the right (`trusted_proxies_strict`; `check-proxy.sh` caught that Caddy's default takes the leftmost entry, which a client can prepend). The Cloudflare header stays available as an opt-in. Supersedes the "restrict the VPS to Cloudflare ranges" advice of the T3 entry.
 - **Verified locally with the real compose stack:** `check-proxy.sh` (defaults, opt-in, untrusted peer, gate with right/wrong user and password, fail-closed without password), `smoke.sh --n8n-url` with the n8n host header (401 + Basic challenge, no n8n content leaked), the real n8n editor loads with the password and `/healthz` of the n8n host answers, the app's Playwright spec still passes (4/4), n8n still reaches `http://api:3000` internally.
 - **Not covered:** no lock-out on repeated wrong passwords (bcrypt cost slows guessing; the password must be long and random).
+
+## 2026-11-09 – AWS deployment postponed (SDD-010 / SDD-012)
+- Tried `terraform apply` of the bootstrap on a new AWS Free-plan account: `s3:CreateBucket` and `ssm:PutParameter` are denied by an organization SCP outside our control. Nothing was created.
+- Decision: do not upgrade to the Paid plan for now (single card, no spending protection). Production keeps in-process batch scoring. The queue and worker stay verified with LocalStack (2/2 passing). Runbook step 6 documents this.
